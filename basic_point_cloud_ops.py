@@ -1,0 +1,86 @@
+import open3d
+from open3d.geometry import KDTreeSearchParamHybrid, KDTreeSearchParamKNN, KDTreeSearchParamRadius
+import time
+from utils import format_number
+
+
+def load_point_cloud(path, voxel_down_sample=True, voxel_down_sample_size=0.05, verbose=True):
+    if verbose:
+        print("Loading point cloud...")
+
+    start_time = time.time()
+    pcd = open3d.io.read_point_cloud(path, print_progress=True)
+    end_time = time.time()
+
+    if verbose:
+        num_pts = format_number(len(pcd.points))
+        elapsed_time = str(round(end_time - start_time, 2))
+        print(f"Loaded point cloud with {num_pts} points [{elapsed_time}s]")
+
+    if not voxel_down_sample:
+        return pcd
+
+    num_points_original = len(pcd.points)
+    npof = format_number(num_points_original)  # Number Points Original Formatted
+    start_time = time.time()
+    pcd = pcd.voxel_down_sample(voxel_size=voxel_down_sample_size)
+    end_time = time.time()
+
+    if verbose:
+        elapsed = str(round(end_time - start_time, 2))  # The number of seconds elapsed during downsampling operation
+        num_pts = format_number(len(pcd.points))
+        ratio = str(round(float(len(pcd.points)) / float(num_points_original) * 100))
+        print(f"Downsampled {npof} pts -> {num_pts} pts ({ratio}%) (voxel size {voxel_down_sample_size}) [{elapsed}s]")
+
+    return pcd
+
+
+def estimate_normals(point_cloud, max_nn=None, radius=None, orient=None, normalize=True, verbose=True):
+    start_time = time.time()
+    if verbose:
+        print("Estimating normals...")
+
+    params_str = "Invalid Parameters"
+    max_nn_valid = max_nn is not None and isinstance(max_nn, int) and max_nn > 0
+
+    # From open3d docs: "neighbors search radius parameter to use HybridSearch. [Recommended ~1.4x voxel size]"
+    radius_valid = radius is not None and isinstance(radius, float) and radius > 0.0
+
+    if not max_nn_valid and not radius_valid:
+        print(f"WARNING: Both max_nn ({max_nn}) and radius ({radius}) values are invalid. Using default max_nn=30.")
+        print("If this is not desired behaviour, please check the entered values and re-run.")
+        max_nn = 30
+        max_nn_valid = True
+
+    if max_nn_valid and radius_valid:
+        params_str = f"Max NN={max_nn}, radius={radius}"
+        point_cloud.estimate_normals(search_param=KDTreeSearchParamHybrid(radius=radius, max_nn=max_nn))
+    elif max_nn_valid:
+        params_str = f"Max NN={max_nn}"
+        point_cloud.estimate_normals(search_param=KDTreeSearchParamKNN(max_nn))
+    elif radius_valid:
+        params_str = f"Max NN={max_nn}"
+        point_cloud.estimate_normals(search_param=KDTreeSearchParamRadius(radius))
+    else:
+        print("Point cloud normal estimation failed, parameters invalid.")
+        return
+
+    if normalize:
+        point_cloud.normalize_normals()
+
+    end_time = time.time()
+    if verbose:
+        elapsed_time = str(round(end_time - start_time, 2))
+        print(f"Estimated normals ({params_str}) (Normalized={normalize}) [{elapsed_time}s]")
+
+    if orient is None or not isinstance(orient, int) or orient <= 0:
+        return
+
+    if verbose:
+        print("Orienting normals w.r.t. tangent plane...")
+    start_time = time.time()
+    point_cloud.orient_normals_consistent_tangent_plane(orient)
+    end_time = time.time()
+    if verbose:
+        elapsed_time = str(round(end_time - start_time, 2))
+        print(f"Oriented normals (KNN={orient}) [{elapsed_time}s]")
