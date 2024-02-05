@@ -13,9 +13,9 @@ if __name__ == "__main__":
     pcd = load_point_cloud(point_cloud_path, voxel_down_sample=True, voxel_down_sample_size=voxel_size, verbose=True)
     estimate_normals(pcd, max_nn=30, radius=0.4, orient=30, normalize=True)
 
-    mesh = surface_reconstruction.SPSR(pcd, octree_max_depth=10)
+    mesh = surface_reconstruction.SPSR(pcd, octree_max_depth=8)
     evaluation.evaluate_point_cloud_mesh(pcd, mesh)
-    open3d.visualization.draw_geometries([mesh])
+    open3d.visualization.draw_geometries([pcd], mesh_show_back_face=True)
 
     # pcd2_tree = open3d.geometry.KDTreeFlann(pcd2)
     # [k, idx, _] = pcd_tree.search_knn_vector_3d(pcd2.points[idx_b], 50)

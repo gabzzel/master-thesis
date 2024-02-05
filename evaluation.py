@@ -25,16 +25,21 @@ def evaluate_point_cloud_mesh(point_cloud: PointCloud, mesh: TriangleMesh):
     pcd_points = np.asarray(point_cloud.points)
     mesh_points = np.asarray(mesh.vertices)
     start_time = time.time()
-    hausdorff = pcu.hausdorff_distance(pcd_points, mesh_points)
-    chamfer = pcu.chamfer_distance(pcd_points, mesh_points)
+    hausdorff = round(pcu.hausdorff_distance(pcd_points, mesh_points), 4)
+    chamfer = round(pcu.chamfer_distance(pcd_points, mesh_points), 4)
 
     # Compute point cloud to mesh surfaces distances.
     rcs = RaycastingScene()
     tensor_mesh = open3d.t.geometry.TriangleMesh.from_legacy(mesh)
     rcs.add_triangles(tensor_mesh)
     pts = Tensor(np.array(pcd_points).astype(dtype=np.float32))
-    distances = rcs.compute_distance(query_points=pts).numpy()
-    max_distance = str(round(distances.max(), 4))
+    distances = rcs.compute_distance(query_points=pts).numpy().astype(dtype=np.float32)
+    max_distance = np.max(distances)
+    distances_norm = distances / max_distance
+    colors = np.asarray(point_cloud.colors)
+    colors[:, 0] = distances_norm
+    colors[:, 1] = 0.5
+    colors[:, 2] = 0.5
 
     end_time = time.time()
     elapsed_time = str(round(end_time - start_time, 3))
