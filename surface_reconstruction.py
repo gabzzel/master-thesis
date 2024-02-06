@@ -1,6 +1,6 @@
 import time
 from open3d.utility import DoubleVector
-from open3d.geometry import TriangleMesh
+from open3d.geometry import TriangleMesh, PointCloud
 from utils import format_number
 import numpy as np
 
@@ -17,7 +17,20 @@ def BPA(point_cloud, radii, verbose=True):
     return mesh
 
 
-def SPSR(point_cloud, octree_max_depth=8, density_quantile_threshold=0.1, verbose=True):
+def SPSR(point_cloud: PointCloud, octree_max_depth=8, density_quantile_threshold=0.1, verbose=True) -> TriangleMesh:
+    """
+    Create a triangulated mesh using Screened Poisson Surface Reconstruction.
+    This function is a spiced up wrapper for the Open3D implementation.
+
+    :param point_cloud: The Open3D PointCloud object out of which the mesh will be constructed.
+    :param octree_max_depth: The maximum depth of the constructed octree which is used by the SPSR algorithm.
+    A higher value indicates higher detail and a finer grained mesh, at the cost of computing time.
+    :param density_quantile_threshold: Points with a density (i.e. support) below the quantile will be removed,
+    cleaning up the mesh. Set to 0 to ignore.
+
+    :return: Returns a TriangleMesh created using SPSR.
+    """
+
     start_time = time.time()
 
     # Densities is by how many vertices the other vertex is supported

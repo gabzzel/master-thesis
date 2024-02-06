@@ -4,6 +4,8 @@ from basic_point_cloud_ops import load_point_cloud, estimate_normals
 import surface_reconstruction
 import evaluation
 import open3d
+import utils
+import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
@@ -11,11 +13,15 @@ if __name__ == "__main__":
     point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\etvr\\enfsi-2023_reduced_cloud.pcd"
     voxel_size = 0.02
     pcd = load_point_cloud(point_cloud_path, voxel_down_sample=True, voxel_down_sample_size=voxel_size, verbose=True)
-    estimate_normals(pcd, max_nn=30, radius=0.4, orient=30, normalize=True)
+    estimate_normals(pcd, max_nn=30, radius=0.4, orient=None, normalize=True)
 
-    mesh = surface_reconstruction.SPSR(pcd, octree_max_depth=8)
-    evaluation.evaluate_point_cloud_mesh(pcd, mesh)
-    open3d.visualization.draw_geometries([pcd], mesh_show_back_face=True)
+    mesh = surface_reconstruction.SPSR(pcd, octree_max_depth=10)
+    #evaluation.evaluate_point_cloud_mesh(pcd, mesh)
+
+    # Clean the mesh and return the aspect ratios (if calculated, which is done when aspect ratio threshold are > 0)
+    aspect_ratios = utils.clean_mesh(mesh)
+    evaluation.evaluate_mesh(mesh, aspect_ratios=aspect_ratios)
+    open3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
 
     # pcd2_tree = open3d.geometry.KDTreeFlann(pcd2)
     # [k, idx, _] = pcd_tree.search_knn_vector_3d(pcd2.points[idx_b], 50)
