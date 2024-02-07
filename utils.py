@@ -48,6 +48,21 @@ def get_mesh_aspect_ratios(mesh: TriangleMesh):
     return aspect_ratios
 
 
+def get_mesh_edge_lengths(mesh: TriangleMesh):
+    vertices = np.asarray(mesh.vertices)
+    triangles = np.asarray(mesh.triangles)
+
+    # Compute edge lengths and remove duplicates!
+    edges = np.sort(triangles[:, [0, 1]])  # Sort the vertices by index, take only the first and second vertex
+    edges = np.unique(edges, axis=0)  # Only keep the unique ones
+    edges = np.vstack((edges, np.sort(triangles[:, [1, 2]])))
+    edges = np.unique(edges, axis=0)
+    edges = np.vstack((edges, np.sort(triangles[:, [2, 0]])))
+    edges = np.unique(edges, axis=0)
+    edge_lengths = np.linalg.norm(vertices[edges[:, 0]] - vertices[edges[:, 1]], axis=1)
+    return edge_lengths
+
+
 def clean_mesh(mesh: TriangleMesh, ar_quantile_threshold=0.95, ar_abs_threshold=1000, verbose=True):
     """
     Clean up a mesh:
@@ -75,6 +90,7 @@ def clean_mesh(mesh: TriangleMesh, ar_quantile_threshold=0.95, ar_abs_threshold=
     mesh.remove_duplicated_triangles()
     mesh.remove_degenerate_triangles()
 
+    # Remove all aspect ratios that exceed the threshold(s)
     ar_quantile_threshold = min(1.0, max(ar_quantile_threshold, 0.0))
     aspect_ratios = None
     if ar_quantile_threshold > 0 or ar_abs_threshold > 0:
@@ -87,9 +103,10 @@ def clean_mesh(mesh: TriangleMesh, ar_quantile_threshold=0.95, ar_abs_threshold=
             threshold = np.quantile(aspect_ratios, ar_quantile_threshold)
         else:
             threshold = ar_abs_threshold
-
+        print(f"Actual aspect ratio threshold: {threshold}")
         triangles_to_remove = aspect_ratios >= threshold
         mesh.remove_triangles_by_mask(triangles_to_remove)
+        aspect_ratios = aspect_ratios[aspect_ratios < threshold]
 
     nvc = len(mesh.vertices)
     ntc = len(mesh.triangles)
@@ -98,4 +115,5 @@ def clean_mesh(mesh: TriangleMesh, ar_quantile_threshold=0.95, ar_abs_threshold=
         elapsed = round(end_time - start_time, 3)
         print(f"Cleaned mesh ({format_number(nvo)} -> {format_number(nvc)} verts, {format_number(nto)} -> {format_number(ntc)} tris) [{elapsed}s]")
 
+    # TODO, remove aspect ratios outside threshold before retunring!
     return aspect_ratios

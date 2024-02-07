@@ -4,7 +4,16 @@ import time
 from utils import format_number
 
 
-def load_point_cloud(path, voxel_down_sample=True, voxel_down_sample_size=0.05, verbose=True):
+def load_point_cloud(path, down_sample_method=None, down_sample_param=None, verbose=True):
+    """
+    Load a point cloud into Open3D format.
+
+    :param down_sample_method: Either None, 'voxel' or 'random'.
+    :param down_sample_param: Depending on the down sample method:
+    Either the ratio of random points that will be kept [0-1] when random down sampling or
+    The size of the voxels used during down sampling
+    """
+
     if verbose:
         print("Loading point cloud...")
 
@@ -17,20 +26,30 @@ def load_point_cloud(path, voxel_down_sample=True, voxel_down_sample_size=0.05, 
         elapsed_time = str(round(end_time - start_time, 2))
         print(f"Loaded point cloud with {num_pts} points [{elapsed_time}s]")
 
-    if not voxel_down_sample:
+    if down_sample_method is None:
+        return pcd
+
+    if not isinstance(down_sample_method, str) or down_sample_method not in ['voxel', 'random']:
+        print(f"Invalid downsampling method {down_sample_method}. Cancelling downsampling.")
         return pcd
 
     num_points_original = len(pcd.points)
     npof = format_number(num_points_original)  # Number Points Original Formatted
     start_time = time.time()
-    pcd = pcd.voxel_down_sample(voxel_size=voxel_down_sample_size)
+
+    if down_sample_method == 'voxel':
+        pcd = pcd.voxel_down_sample(voxel_size=down_sample_param)
+    elif down_sample_method == 'random':
+        down_sample_param = max(0, min(1, down_sample_param))
+        pcd = pcd.random_down_sample(sampling_ratio=down_sample_param)
+
     end_time = time.time()
 
     if verbose:
         elapsed = str(round(end_time - start_time, 2))  # The number of seconds elapsed during downsampling operation
         num_pts = format_number(len(pcd.points))
         ratio = str(round(float(len(pcd.points)) / float(num_points_original) * 100))
-        print(f"Downsampled {npof} pts -> {num_pts} pts ({ratio}%) (voxel size {voxel_down_sample_size}) [{elapsed}s]")
+        print(f"Downsampled {npof} pts -> {num_pts} pts ({ratio}%) ({down_sample_method} @ {down_sample_param}) [{elapsed}s]")
 
     return pcd
 

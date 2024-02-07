@@ -11,11 +11,11 @@ import matplotlib.pyplot as plt
 if __name__ == "__main__":
 
     point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\etvr\\enfsi-2023_reduced_cloud.pcd"
-    voxel_size = 0.02
-    pcd = load_point_cloud(point_cloud_path, voxel_down_sample=True, voxel_down_sample_size=voxel_size, verbose=True)
+    voxel_size = 0.05
+    pcd = load_point_cloud(point_cloud_path, down_sample_method='random', down_sample_param=0.1, verbose=True)
     estimate_normals(pcd, max_nn=30, radius=0.4, orient=None, normalize=True)
 
-    mesh = surface_reconstruction.SPSR(pcd, octree_max_depth=10)
+    mesh = surface_reconstruction.SPSR(pcd, octree_max_depth=8)
     #evaluation.evaluate_point_cloud_mesh(pcd, mesh)
 
     # Clean the mesh and return the aspect ratios (if calculated, which is done when aspect ratio threshold are > 0)
