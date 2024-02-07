@@ -1,18 +1,15 @@
-import pclpy  # https://github.com/davidcaron/pclpy
-from pclpy import pcl
-from basic_point_cloud_ops import load_point_cloud, estimate_normals
-import surface_reconstruction
-import evaluation
 import open3d
-import utils
-import matplotlib.pyplot as plt
 
+import evaluation
+import surface_reconstruction
+import utils
+from basic_point_cloud_ops import load_point_cloud, estimate_normals
 
 if __name__ == "__main__":
 
     point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\etvr\\enfsi-2023_reduced_cloud.pcd"
     voxel_size = 0.05
-    pcd = load_point_cloud(point_cloud_path, down_sample_method='random', down_sample_param=0.1, verbose=True)
+    pcd = load_point_cloud(point_cloud_path, down_sample_method='random', down_sample_param=0.01, verbose=True)
     estimate_normals(pcd, max_nn=30, radius=0.4, orient=None, normalize=True)
 
     mesh = surface_reconstruction.SPSR(pcd, octree_max_depth=8)

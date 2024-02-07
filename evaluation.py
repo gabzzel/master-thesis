@@ -1,13 +1,13 @@
+import time
+
+import matplotlib.pyplot as plt
+import numpy as np
 import open3d
+import point_cloud_utils as pcu  # https://github.com/fwilliams/point-cloud-utils (Hausdorff, normals, Chamfer)
+from open3d.core import Tensor
 from open3d.geometry import TriangleMesh, PointCloud
 from open3d.t.geometry import RaycastingScene
-from open3d.core import Tensor
-# import pclpy  # https://github.com/davidcaron/pclpy
-# from pclpy import pcl
-import point_cloud_utils as pcu  # https://github.com/fwilliams/point-cloud-utils (Hausdorff, normals, Chamfer)
-import numpy as np
-import time
-import matplotlib.pyplot as plt
+
 import utils
 
 
@@ -52,17 +52,23 @@ def evaluate_point_cloud_mesh(point_cloud: PointCloud, mesh: TriangleMesh):
 
 
 def evaluate_mesh(mesh: TriangleMesh, aspect_ratios=None):
-    edge_lengths = utils.get_mesh_edge_lengths(mesh)
+    if not mesh.has_triangle_normals():
+        mesh.compute_triangle_normals()
+
+    # Expose everything we need.
+    vertices = np.asarray(mesh.vertices)
+    vertex_normals = np.asarray(mesh.vertex_normals)
+    triangles = np.asarray(mesh.triangles)
+    triangle_normals = np.asarray(mesh.triangle_normals)
+
+    # Edge length statistics
+    edge_lengths = utils.get_mesh_edge_lengths(vertices, triangles)
     utils.get_stats(edge_lengths, name="Edge Lengths", print_only=True)
 
-    # If we do not get the aspect ratios, calculate them ourselves.
+    # Aspect Ratio statistics
     if aspect_ratios is None:
-        aspect_ratios = utils.get_mesh_aspect_ratios(mesh)
-
+        aspect_ratios = utils.get_mesh_aspect_ratios(vertices, triangles)
     utils.get_stats(aspect_ratios, name="Aspect Ratios", print_only=True)
-
-    vertices = np.asarray(mesh.vertices)
-    triangles = np.asarray(mesh.triangles)
 
     # cv is the index of the connected component of each vertex
     # nv is the number of vertices per component
@@ -73,37 +79,10 @@ def evaluate_mesh(mesh: TriangleMesh, aspect_ratios=None):
     largest_component_ratio = round(np.max(nf) / np.sum(nf) * 100.0, 3)
     print(f"Connectivity: Connected Components={num_conn_comp}, largest component ration={largest_component_ratio}")
 
-    if not mesh.has_triangle_normals():
-        mesh.compute_triangle_normals()
-
-    triangle_normals = np.asarray(mesh.triangle_normals)
-
-    triangles_sorted = np.sort(triangles, axis=1)
-    triangle_count = len(triangles_sorted)
-    triangle_indices = np.arange(triangle_count)
-
-    # Add the indices to the sorted triangles
-    triangles_sorted = np.hstack((triangle_indices[:, np.newaxis], triangles_sorted))
-
-    print(f"Calculating normal deviations")
-    dots = []
-
-    for i in range(triangle_count):
-        current_triangle = triangles_sorted[i]
-        to_compare_against = triangles_sorted[i+1:triangle_count]
-        compare = triangles_sorted[i] == to_compare_against
-        sums = np.sum(compare, axis=1)
-        adjacent = to_compare_against[sums == 2]
-        if len(adjacent) == 0:
-            continue
-
-        current_triangle_normal = triangle_normals[current_triangle[0]]
-        adjacent_normals = triangle_normals[adjacent[:, 0]]
-        dots += np.clip(np.dot(adjacent_normals, current_triangle_normal), -1.0, 1.0).tolist()
-
-
-    angles = np.degrees(np.arccos(dots))
-    utils.get_stats(angles, name="Normal Deviations")
+    curvatures = utils.get_mesh_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1)
+    utils.get_stats(curvatures, "Curvature", print_only=True)
+    # deviations = utils.get_mesh_triangle_normal_deviations(mesh)
+    # utils.get_stats(deviations, name="Normal Deviations")
 
     # print(f"Principal Curvatures: Magnitudes Min={k1}, Max={k2}. Directions {d1} and {d2}")
     # plt.hist(aspect_ratios, histtype='step', log=True, bins=100, label="Aspect Ratios")

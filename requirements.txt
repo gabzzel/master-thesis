@@ -1,0 +1,5 @@
+pclpy~=0.12.0
+open3d~=0.17.0
+matplotlib~=3.5.3
+numpy~=1.21.6
+trimesh~=4.1.3

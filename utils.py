@@ -1,6 +1,7 @@
 import numpy as np
 from open3d.geometry import TriangleMesh
 import time
+import trimesh
 
 
 def format_number(number, digits=1):
@@ -29,10 +30,7 @@ def get_stats(a: np.array, name: str, print_only=True, round_digits=3):
         return _max, _min, avg, med, std
 
 
-def get_mesh_aspect_ratios(mesh: TriangleMesh):
-    triangles = np.asarray(mesh.triangles)
-    vertices = np.asarray(mesh.vertices)
-
+def get_mesh_aspect_ratios(vertices: np.ndarray, triangles: np.ndarray):
     # Compute edge lengths for each triangle
     edge_lengths = np.zeros((len(triangles), 3))
     for i in range(3):
@@ -48,10 +46,7 @@ def get_mesh_aspect_ratios(mesh: TriangleMesh):
     return aspect_ratios
 
 
-def get_mesh_edge_lengths(mesh: TriangleMesh):
-    vertices = np.asarray(mesh.vertices)
-    triangles = np.asarray(mesh.triangles)
-
+def get_mesh_edge_lengths(vertices, triangles):
     # Compute edge lengths and remove duplicates!
     edges = np.sort(triangles[:, [0, 1]])  # Sort the vertices by index, take only the first and second vertex
     edges = np.unique(edges, axis=0)  # Only keep the unique ones
@@ -107,6 +102,7 @@ def clean_mesh(mesh: TriangleMesh, ar_quantile_threshold=0.95, ar_abs_threshold=
         triangles_to_remove = aspect_ratios >= threshold
         mesh.remove_triangles_by_mask(triangles_to_remove)
         aspect_ratios = aspect_ratios[aspect_ratios < threshold]
+        mesh.remove_unreferenced_vertices()
 
     nvc = len(mesh.vertices)
     ntc = len(mesh.triangles)
@@ -117,3 +113,53 @@ def clean_mesh(mesh: TriangleMesh, ar_quantile_threshold=0.95, ar_abs_threshold=
 
     # TODO, remove aspect ratios outside threshold before retunring!
     return aspect_ratios
+
+
+def get_mesh_triangle_normal_deviations(mesh: TriangleMesh):
+    triangles = np.asarray(mesh.triangles)
+    triangle_normals = np.asarray(mesh.triangle_normals)
+
+    triangles_sorted = np.sort(triangles, axis=1)
+    triangle_count = len(triangles_sorted)
+    triangle_indices = np.arange(triangle_count)
+
+    # Add the indices to the sorted triangles
+    triangles_sorted = np.hstack((triangle_indices[:, np.newaxis], triangles_sorted))
+    print(f"Calculating normal deviations")
+    dots = []
+
+    for i in range(triangle_count):
+        current_triangle = triangles_sorted[i]
+        to_compare_against = triangles_sorted[i + 1:triangle_count]
+        compare = triangles_sorted[i] == to_compare_against
+        sums = np.sum(compare, axis=1)
+        adjacent = to_compare_against[sums == 2]
+        if len(adjacent) == 0:
+            continue
+
+        current_triangle_normal = triangle_normals[current_triangle[0]]
+        adjacent_normals = triangle_normals[adjacent[:, 0]]
+        dots += np.clip(np.dot(adjacent_normals, current_triangle_normal), -1.0, 1.0).tolist()
+
+    return np.degrees(np.arccos(dots))
+
+
+def get_mesh_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1):
+    """
+    Get the discrete mean curvature of the mesh.
+
+    :param vertices: The (n, 3) numpy array containing the vertices (coordinates) of the mesh
+    :param vertex_normals: The (n, 3) numpy array containing the vertex normals
+    :param triangles: The (n, 3) numpy array containing the triangles (i.e. vertex indices)
+    :param triangle_normals: The (n, 3) numpy array containing the triangle normals
+    :param sample_ratio: The ratio of points used to estimate curvature, e.g. 0.1 = 10% points are used
+    :param radius: The neighbour search radius used during curvature estimation. Higher values give a more global indication of the curvature, while lower values give a more fine-grained indication.
+    :returns: A 1D numpy array containing the curvatures for each sampled point.
+    """
+    sample_ratio = max(0.0, min(1.0, sample_ratio))
+    t_mesh = trimesh.Trimesh(vertices=vertices, faces=triangles, face_normals=triangle_normals,
+                             vertex_normals=vertex_normals)
+    rng = np.random.default_rng()
+    chosen_points = rng.choice(a=vertices, size=int(sample_ratio * len(vertices)))
+    curvature = trimesh.curvature.discrete_mean_curvature_measure(t_mesh, points=chosen_points, radius=radius)
+    return curvature
