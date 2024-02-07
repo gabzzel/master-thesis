@@ -8,6 +8,7 @@ def load_point_cloud(path, down_sample_method=None, down_sample_param=None, verb
     """
     Load a point cloud into Open3D format.
 
+    :param path: The path to the file from which to load the point cloud.
     :param down_sample_method: Either None, 'voxel' or 'random'.
     :param down_sample_param: Depending on the down sample method:
     Either the ratio of random points that will be kept [0-1] when random down sampling or
@@ -54,7 +55,24 @@ def load_point_cloud(path, down_sample_method=None, down_sample_param=None, verb
     return pcd
 
 
-def estimate_normals(point_cloud, max_nn=None, radius=None, orient=None, normalize=True, verbose=True):
+def estimate_normals(point_cloud: open3d.geometry.PointCloud,
+                     max_nn: int = None,
+                     radius: float = None,
+                     orient: int = None,
+                     normalize: bool = True,
+                     verbose: bool = True):
+    """
+    Estimate the normals for a point cloud. Functions as a wrapper for Open3D methods.
+
+    :param point_cloud: The point cloud for which to estimate the normals.
+    :param max_nn: The maximum amount of neighbours used to estimate the normal of a given point.
+    :param radius: The maximum radius in which neighbours will be used to estimate the normal of a given point.
+    :param orient: The amount of points used around a given point to align / orient normals consistently. Costly,
+    but can improve the quality of surface reconstruction or other calculations downstream. Set to None or 0 to ignore.
+    :param normalize: Whether to normalize the normals after calculation. [Recommended = True]
+    :param verbose: Whether to print the progress.
+    """
+
     start_time = time.time()
     if verbose:
         print("Estimating normals...")
@@ -62,7 +80,7 @@ def estimate_normals(point_cloud, max_nn=None, radius=None, orient=None, normali
     params_str = "Invalid Parameters"
     max_nn_valid = max_nn is not None and isinstance(max_nn, int) and max_nn > 0
 
-    # From open3d docs: "neighbors search radius parameter to use HybridSearch. [Recommended ~1.4x voxel size]"
+    # From Open3D docs: "neighbors search radius parameter to use HybridSearch. [Recommended ~1.4x voxel size]"
     radius_valid = radius is not None and isinstance(radius, float) and radius > 0.0
 
     if not max_nn_valid and not radius_valid:

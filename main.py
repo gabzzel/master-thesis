@@ -13,11 +13,10 @@ if __name__ == "__main__":
     estimate_normals(pcd, max_nn=30, radius=0.4, orient=None, normalize=True)
 
     mesh = surface_reconstruction.SPSR(pcd, octree_max_depth=8)
-    #evaluation.evaluate_point_cloud_mesh(pcd, mesh)
 
     # Clean the mesh and return the aspect ratios (if calculated, which is done when aspect ratio threshold are > 0)
-    aspect_ratios = utils.clean_mesh(mesh)
-    evaluation.evaluate_mesh(mesh, aspect_ratios=aspect_ratios)
+    _, aspect_ratios_clean = utils.clean_mesh(mesh)
+    evaluation.evaluate_mesh(mesh, aspect_ratios=aspect_ratios_clean)
     open3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
 
     # pcd2_tree = open3d.geometry.KDTreeFlann(pcd2)

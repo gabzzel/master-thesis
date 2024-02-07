@@ -58,27 +58,32 @@ def get_mesh_edge_lengths(vertices, triangles):
     return edge_lengths
 
 
-def clean_mesh(mesh: TriangleMesh, ar_quantile_threshold=0.95, ar_abs_threshold=1000, verbose=True):
+def clean_mesh(mesh: TriangleMesh,
+               aspect_ratio_quantile_threshold: float = 0.95,
+               aspect_ratio_abs_threshold: float = 1000,
+               verbose: bool = True):
     """
-    Clean up a mesh:
-    - Remove unreferenced vertices
-    - Remove duplicated triangles
-    - Remove degenerate triangles (i.e. triangles that reference the same vertex multiple times)
-    - Optionally remove all triangles with a large aspect ratio.
+    Clean up a mesh: \n
+    - Remove unreferenced vertices \n
+    - Remove duplicated triangles \n
+    - Remove degenerate triangles (i.e. triangles that reference the same vertex multiple times) \n
+    - Optionally remove all triangles with a large aspect ratio. \n
 
-    :param ar_quantile_threshold: Every triangle with an aspect ratio in the 'quantile' above
+    :param verbose: Whether to print the progress.
+    :param mesh: The mesh to clean up.
+    :param aspect_ratio_quantile_threshold: Every triangle with an aspect ratio in the 'quantile' above
     this threshold will be removed. Set to 0 to ignore.
-    :param ar_abs_threshold: Every triangle with an aspect ratio above this absolute value will
+    :param aspect_ratio_abs_threshold: Every triangle with an aspect ratio above this absolute value will
     be removed. Set to 0 to ignore.
     """
 
     if verbose:
-        print(f"Cleaning mesh... (Aspect Ratio Thresholds: Quantile={ar_quantile_threshold}," +
-              f"Absolute={ar_abs_threshold})")
+        print(f"Cleaning mesh... (Aspect Ratio Thresholds: Quantile={aspect_ratio_quantile_threshold}," +
+              f"Absolute={aspect_ratio_abs_threshold})")
 
     start_time = time.time()
-    nvo = len(mesh.vertices)  # Number of Vertices in Original
-    nto = len(mesh.triangles)
+    nvo = format_number(len(mesh.vertices), 2)  # Number of Vertices in Original
+    nto = format_number(len(mesh.triangles), 2)
 
     # Do some obvious cleanups
     mesh.remove_unreferenced_vertices()
@@ -86,39 +91,38 @@ def clean_mesh(mesh: TriangleMesh, ar_quantile_threshold=0.95, ar_abs_threshold=
     mesh.remove_degenerate_triangles()
 
     # Remove all aspect ratios that exceed the threshold(s)
-    ar_quantile_threshold = min(1.0, max(ar_quantile_threshold, 0.0))
+    aspect_ratio_quantile_threshold = min(1.0, max(aspect_ratio_quantile_threshold, 0.0))
     aspect_ratios = None
-    if ar_quantile_threshold > 0 or ar_abs_threshold > 0:
-        aspect_ratios = get_mesh_aspect_ratios(mesh)
+    aspect_ratios_remaining = None
+    if aspect_ratio_quantile_threshold > 0 or aspect_ratio_abs_threshold > 0:
+        vertices = np.asarray(mesh.vertices)
+        triangles = np.asarray(mesh.triangles)
+        aspect_ratios = get_mesh_aspect_ratios(vertices, triangles)
 
         threshold = 0
-        if ar_quantile_threshold > 0 and ar_abs_threshold > 0:
-            threshold = min(np.quantile(aspect_ratios, ar_quantile_threshold), ar_abs_threshold)
-        elif ar_quantile_threshold > 0:
-            threshold = np.quantile(aspect_ratios, ar_quantile_threshold)
+        if aspect_ratio_quantile_threshold > 0 and aspect_ratio_abs_threshold > 0:
+            threshold = min(np.quantile(aspect_ratios, aspect_ratio_quantile_threshold), aspect_ratio_abs_threshold)
+        elif aspect_ratio_quantile_threshold > 0:
+            threshold = np.quantile(aspect_ratios, aspect_ratio_quantile_threshold)
         else:
-            threshold = ar_abs_threshold
+            threshold = aspect_ratio_abs_threshold
         print(f"Actual aspect ratio threshold: {threshold}")
         triangles_to_remove = aspect_ratios >= threshold
         mesh.remove_triangles_by_mask(triangles_to_remove)
-        aspect_ratios = aspect_ratios[aspect_ratios < threshold]
+        aspect_ratios_remaining = aspect_ratios[aspect_ratios < threshold]
         mesh.remove_unreferenced_vertices()
 
-    nvc = len(mesh.vertices)
-    ntc = len(mesh.triangles)
+    nvc = format_number(len(mesh.vertices), 2)
+    ntc = format_number(len(mesh.triangles), 2)
     end_time = time.time()
     if verbose:
         elapsed = round(end_time - start_time, 3)
-        print(f"Cleaned mesh ({format_number(nvo)} -> {format_number(nvc)} verts, {format_number(nto)} -> {format_number(ntc)} tris) [{elapsed}s]")
+        print(f"Cleaned mesh ({nvo} -> {nvc} verts, {nto} -> {ntc} tris) [{elapsed}s]")
 
-    # TODO, remove aspect ratios outside threshold before retunring!
-    return aspect_ratios
+    return aspect_ratios, aspect_ratios_remaining
 
 
-def get_mesh_triangle_normal_deviations(mesh: TriangleMesh):
-    triangles = np.asarray(mesh.triangles)
-    triangle_normals = np.asarray(mesh.triangle_normals)
-
+def get_mesh_triangle_normal_deviations(triangles: np.ndarray, triangle_normals: np.ndarray):
     triangles_sorted = np.sort(triangles, axis=1)
     triangle_count = len(triangles_sorted)
     triangle_indices = np.arange(triangle_count)
@@ -144,7 +148,7 @@ def get_mesh_triangle_normal_deviations(mesh: TriangleMesh):
     return np.degrees(np.arccos(dots))
 
 
-def get_mesh_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1):
+def get_mesh_discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1):
     """
     Get the discrete mean curvature of the mesh.
 

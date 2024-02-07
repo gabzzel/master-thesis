@@ -79,10 +79,11 @@ def evaluate_mesh(mesh: TriangleMesh, aspect_ratios=None):
     largest_component_ratio = round(np.max(nf) / np.sum(nf) * 100.0, 3)
     print(f"Connectivity: Connected Components={num_conn_comp}, largest component ration={largest_component_ratio}")
 
-    curvatures = utils.get_mesh_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1)
+    curvatures = utils.get_mesh_discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1)
     utils.get_stats(curvatures, "Curvature", print_only=True)
-    # deviations = utils.get_mesh_triangle_normal_deviations(mesh)
-    # utils.get_stats(deviations, name="Normal Deviations")
+
+    deviations = utils.get_mesh_triangle_normal_deviations(triangles, triangle_normals)
+    utils.get_stats(deviations, name="Normal Deviations")
 
     # print(f"Principal Curvatures: Magnitudes Min={k1}, Max={k2}. Directions {d1} and {d2}")
     # plt.hist(aspect_ratios, histtype='step', log=True, bins=100, label="Aspect Ratios")
