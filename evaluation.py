@@ -71,11 +71,11 @@ def evaluate_mesh(mesh: TriangleMesh, aspect_ratios=None):
     print(f"Connectivity: Connected Components={num_conn_comp}, largest component ratio={largest_component_ratio}")
 
     # Curvatures (Discrete)
-    curvatures = utils.get_mesh_discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1)
-    utils.get_stats(curvatures, "Discrete Curvature", print_results=True)
+    #curvatures = utils.get_mesh_discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1)
+    #utils.get_stats(curvatures, "Discrete Curvature", print_results=True)
 
     # Normal Deviations
-    deviations = utils.get_mesh_triangle_normal_deviations(triangles, triangle_normals)
+    deviations = utils.get_mesh_triangle_normal_deviations_v2(triangles, triangle_normals, chunk_size=1000)
     utils.get_stats(deviations, name="Normal Deviations")
 
     # print(f"Principal Curvatures: Magnitudes Min={k1}, Max={k2}. Directions {d1} and {d2}")

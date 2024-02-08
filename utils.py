@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import open3d
 from open3d.cpu.pybind.core import Tensor
@@ -150,6 +152,47 @@ def get_mesh_triangle_normal_deviations(triangles: np.ndarray, triangle_normals:
         dots += np.clip(np.dot(adjacent_normals, current_triangle_normal), -1.0, 1.0).tolist()
 
     return np.degrees(np.arccos(dots))
+
+
+def get_mesh_triangle_normal_deviations_v2(triangles: np.ndarray, triangle_normals: np.ndarray, chunk_size=100):
+
+    # Prepare the triangles array
+    triangles_sorted = np.sort(triangles, axis=1)  # Sort the vertex indices within the triangles.
+    triangle_count = len(triangles_sorted)
+    index_pairs = []
+    sort_during = True
+
+    # Expected maximum memory size is triangle count * chunksize * dimensions (3) * integer bits (32)
+    # For example, for 300K triangles and chunk size default 100, expected memory size = 300K*100*3*32/8=720MB
+    num_chunks = int(math.ceil(triangle_count / chunk_size))
+    for i in range(0, triangle_count, chunk_size):
+        print(f"Processing chunk {int(i/chunk_size)+1} of {num_chunks}...")
+        chunk = triangles_sorted[i:i + chunk_size]
+
+        # Find out where the current chunk and all triangles are the same and take the sum
+        sums = np.sum(chunk[:, np.newaxis] == triangles_sorted, axis=2)
+
+        # Find the indices for both axes where the result (i.e. sums) are 2 (which means the triangles share 2 vertices)
+        indices = np.where(sums == 2)
+
+        # Stack and transpose these indices into the right shape
+        stacked = np.transpose(np.vstack((indices[0]+i, indices[1])))
+
+        # Optional! Sort the pairs within, and then get the unique pairs.
+        if sort_during:
+            stacked = np.unique(np.sort(stacked, axis=1), axis=0)
+
+        index_pairs.extend(stacked.tolist())
+
+    index_pairs = np.unique(np.sort(np.array(index_pairs), axis=1), axis=0)
+
+    # Calculate the angles in degrees between the normals
+    normals_left = triangle_normals[index_pairs[:, 0]]
+    normals_right = triangle_normals[index_pairs[:, 1]]
+    dots = np.sum(normals_left * normals_right, axis=1)
+    clipped_dots = np.clip(dots, -1.0, 1.0)
+    angles = np.degrees(np.arccos(clipped_dots))
+    return angles
 
 
 def get_mesh_discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1):
