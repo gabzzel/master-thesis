@@ -8,6 +8,7 @@ from open3d.geometry import TriangleMesh
 import time
 import trimesh
 from point_cloud_utils import k_nearest_neighbors
+from numba import njit, jit, prange
 
 
 def format_number(number, digits=1):
@@ -128,6 +129,28 @@ def clean_mesh(mesh: TriangleMesh,
     return aspect_ratios, aspect_ratios_remaining
 
 
+# TODO, make this work in parallel
+@njit
+def get_mesh_triangle_normal_deviations_naive(triangles: np.ndarray, triangle_normals: np.ndarray):
+    return []
+    # TODO
+    triangle_count: int = len(triangles)
+    normal_deviations = np.array([0.0], dtype=np.float64)
+
+    for i in prange(triangle_count):
+        for j in prange(i+1, triangle_count):
+            compare = triangles[i] == triangles[j]
+            if np.sum(compare) == 2:
+                normal1 = triangle_normals[i]
+                normal2 = triangle_normals[j]
+                dot = np.dot(normal1, normal2)
+                clip = np.maximum(-1.0, np.minimum(1.0, dot))
+                normal_deviations = np.append(normal_deviations, np.degrees(np.arccos(clip)))
+
+    normal_deviations = np.delete(normal_deviations, 0)
+    return normal_deviations
+
+
 def get_mesh_triangle_normal_deviations(triangles: np.ndarray, triangle_normals: np.ndarray):
     triangles_sorted = np.sort(triangles, axis=1)
     triangle_count = len(triangles_sorted)
@@ -154,19 +177,17 @@ def get_mesh_triangle_normal_deviations(triangles: np.ndarray, triangle_normals:
     return np.degrees(np.arccos(dots))
 
 
-def get_mesh_triangle_normal_deviations_v2(triangles: np.ndarray, triangle_normals: np.ndarray, chunk_size=100):
-
+def get_adjacent_triangle_pairs(triangles_sorted: np.ndarray, chunk_size: int = 100):
     # Prepare the triangles array
-    triangles_sorted = np.sort(triangles, axis=1)  # Sort the vertex indices within the triangles.
+
     triangle_count = len(triangles_sorted)
     index_pairs = []
-    sort_during = True
 
     # Expected maximum memory size is triangle count * chunksize * dimensions (3) * integer bits (32)
     # For example, for 300K triangles and chunk size default 100, expected memory size = 300K*100*3*32/8=720MB
-    num_chunks = int(math.ceil(triangle_count / chunk_size))
+    num_chunks: int = int(math.ceil(triangle_count / chunk_size))
     for i in range(0, triangle_count, chunk_size):
-        print(f"Processing chunk {int(i/chunk_size)+1} of {num_chunks}...")
+        print(f"Processing chunk {int(i / chunk_size) + 1} of {num_chunks}...")
         chunk = triangles_sorted[i:i + chunk_size]
 
         # Find out where the current chunk and all triangles are the same and take the sum
@@ -176,14 +197,16 @@ def get_mesh_triangle_normal_deviations_v2(triangles: np.ndarray, triangle_norma
         indices = np.where(sums == 2)
 
         # Stack and transpose these indices into the right shape
-        stacked = np.transpose(np.vstack((indices[0]+i, indices[1])))
+        stacked = np.transpose(np.vstack((indices[0] + i, indices[1])))
 
         # Optional! Sort the pairs within, and then get the unique pairs.
-        if sort_during:
-            stacked = np.unique(np.sort(stacked, axis=1), axis=0)
-
         index_pairs.extend(stacked.tolist())
+    return index_pairs
 
+
+def get_mesh_triangle_normal_deviations_v2(triangles: np.ndarray, triangle_normals: np.ndarray, chunk_size: int = 100):
+    triangles_sorted = np.sort(triangles, axis=1)  # Sort the vertex indices within the triangles.
+    index_pairs = get_adjacent_triangle_pairs(triangles_sorted, chunk_size)
     index_pairs = np.unique(np.sort(np.array(index_pairs), axis=1), axis=0)
 
     # Calculate the angles in degrees between the normals
@@ -232,6 +255,7 @@ def get_points_to_mesh_distances(points: np.ndarray, mesh: TriangleMesh):
     closest_points = rcs.compute_closest_points(pts)['points'].numpy()
     distances_pts_to_mesh = np.linalg.norm(points - closest_points, axis=1)
     return distances_pts_to_mesh
+
 
 def get_distances_closest_point(x, y):
     dists_y_to_x, corrs_y_to_x = k_nearest_neighbors(y, x, k=1, squared_distances=False)
