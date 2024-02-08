@@ -24,31 +24,22 @@ def evaluate_point_clouds(point_cloud_a: PointCloud, point_cloud_b: PointCloud):
 
 
 def evaluate_point_cloud_mesh(point_cloud: PointCloud, mesh: TriangleMesh):
-    # Computer Chamfer and Hausdorff distances.
     pcd_points = np.asarray(point_cloud.points)
     mesh_points = np.asarray(mesh.vertices)
-    start_time = time.time()
+
+    # Compute Hausdorff and Chamfer distances
     hausdorff = round(pcu.hausdorff_distance(pcd_points, mesh_points), 4)
     chamfer = round(pcu.chamfer_distance(pcd_points, mesh_points), 4)
+    print(f"Hausdorff={hausdorff}, Chamfer={chamfer}")
 
-    # Compute point cloud to mesh surfaces distances.
-    rcs = RaycastingScene()
-    tensor_mesh = open3d.t.geometry.TriangleMesh.from_legacy(mesh)
-    rcs.add_triangles(tensor_mesh)
-    pts = Tensor(np.array(pcd_points).astype(dtype=np.float32))
-    distances = rcs.compute_distance(query_points=pts).numpy().astype(dtype=np.float32)
-    max_distance = np.max(distances)
-    distances_norm = distances / max_distance
-    colors = np.asarray(point_cloud.colors)
-    colors[:, 0] = distances_norm
-    colors[:, 1] = np.full_like(distances_norm, 0.9)
-    colors[:, 2] = np.full_like(distances_norm, 0.9)
+    distances_pts_to_mesh = utils.get_points_to_mesh_distances(pcd_points, mesh)
+    distance_results = utils.get_stats(distances_pts_to_mesh, "Point-to-mesh distances", return_results=True)
 
-    end_time = time.time()
-    elapsed_time = str(round(end_time - start_time, 3))
-    print(f"Evaluated. Hausdorff={hausdorff}, Chamfer={chamfer}, Max Dist={max_distance} [{elapsed_time}s]")
-
-    plt.hist(distances, histtype='step', log=True, bins=100)
+    distances_normalized = distances_pts_to_mesh / distance_results[0]  # Index 0 is the max distance.
+    colors = np.full(shape=(len(distances_normalized), 3), fill_value=0.0)
+    colors[:, 0] = distances_normalized
+    point_cloud.colors = open3d.utility.Vector3dVector(colors)
+    plt.hist(distances_pts_to_mesh, histtype='step', log=True, bins=100)
 
 
 def evaluate_mesh(mesh: TriangleMesh, aspect_ratios=None):
@@ -63,12 +54,12 @@ def evaluate_mesh(mesh: TriangleMesh, aspect_ratios=None):
 
     # Edge length statistics
     edge_lengths = utils.get_mesh_edge_lengths(vertices, triangles)
-    utils.get_stats(edge_lengths, name="Edge Lengths", print_only=True)
+    utils.get_stats(edge_lengths, name="Edge Lengths", print_results=True)
 
     # Aspect Ratio statistics
     if aspect_ratios is None:
         aspect_ratios = utils.get_mesh_aspect_ratios(vertices, triangles)
-    utils.get_stats(aspect_ratios, name="Aspect Ratios", print_only=True)
+    utils.get_stats(aspect_ratios, name="Aspect Ratios", print_results=True)
 
     # cv is the index of the connected component of each vertex
     # nv is the number of vertices per component
@@ -77,11 +68,13 @@ def evaluate_mesh(mesh: TriangleMesh, aspect_ratios=None):
     cv, nv, cf, nf = pcu.connected_components(vertices, triangles)
     num_conn_comp = len(nf)  # Number of connected components (according to triangles)
     largest_component_ratio = round(np.max(nf) / np.sum(nf) * 100.0, 3)
-    print(f"Connectivity: Connected Components={num_conn_comp}, largest component ration={largest_component_ratio}")
+    print(f"Connectivity: Connected Components={num_conn_comp}, largest component ratio={largest_component_ratio}")
 
+    # Curvatures (Discrete)
     curvatures = utils.get_mesh_discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1)
-    utils.get_stats(curvatures, "Curvature", print_only=True)
+    utils.get_stats(curvatures, "Discrete Curvature", print_results=True)
 
+    # Normal Deviations
     deviations = utils.get_mesh_triangle_normal_deviations(triangles, triangle_normals)
     utils.get_stats(deviations, name="Normal Deviations")
 

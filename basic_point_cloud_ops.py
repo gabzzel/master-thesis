@@ -4,7 +4,7 @@ import time
 from utils import format_number
 
 
-def load_point_cloud(path, down_sample_method=None, down_sample_param=None, verbose=True):
+def load_point_cloud(path, down_sample_method=None, down_sample_param=None, verbose=True) -> open3d.geometry.PointCloud:
     """
     Load a point cloud into Open3D format.
 
@@ -13,6 +13,7 @@ def load_point_cloud(path, down_sample_method=None, down_sample_param=None, verb
     :param down_sample_param: Depending on the down sample method:
     Either the ratio of random points that will be kept [0-1] when random down sampling or
     The size of the voxels used during down sampling
+    :returns: The loaded point cloud, in Open3D format.
     """
 
     if verbose:

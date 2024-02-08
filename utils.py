@@ -1,7 +1,11 @@
 import numpy as np
+import open3d
+from open3d.cpu.pybind.core import Tensor
+from open3d.cpu.pybind.t.geometry import RaycastingScene
 from open3d.geometry import TriangleMesh
 import time
 import trimesh
+from point_cloud_utils import k_nearest_neighbors
 
 
 def format_number(number, digits=1):
@@ -17,16 +21,16 @@ def format_number(number, digits=1):
     return str(number)
 
 
-def get_stats(a: np.array, name: str, print_only=True, round_digits=3):
+def get_stats(a: np.array, name: str, print_results=True, round_digits=3, return_results=False):
     _max = round(np.max(a), round_digits)
     _min = round(np.min(a), round_digits)
     avg = round(np.average(a), round_digits)
-    med = round(np.median(a), round_digits)
-    std = round(np.std(a), round_digits)
+    med = round(np.median(a=a), round_digits)
+    std = round(np.std(a=a), round_digits)
 
-    if print_only:
+    if print_results:
         print(f"{name} stats: Max={_max}, Min={_min}, Avg/Mean={avg}, Med={med}, Std={std}")
-    else:
+    if return_results:
         return _max, _min, avg, med, std
 
 
@@ -167,3 +171,26 @@ def get_mesh_discrete_curvature(vertices, vertex_normals, triangles, triangle_no
     chosen_points = rng.choice(a=vertices, size=int(sample_ratio * len(vertices)))
     curvature = trimesh.curvature.discrete_mean_curvature_measure(t_mesh, points=chosen_points, radius=radius)
     return curvature
+
+
+def get_points_to_mesh_distances(points: np.ndarray, mesh: TriangleMesh):
+    """
+    Compute the distances from a set of points to the closest points on the surface of a mesh.
+
+    :param points: A (n, 3) numpy array containing the query point coordinates.
+    :param mesh: An Open3D triangulated mesh which represents the target for the distance calculations.
+    :returns: A 1D numpy array containing the distances from the query points to the closest point on the target mesh.
+    """
+
+    rcs = RaycastingScene()
+    tensor_mesh = open3d.t.geometry.TriangleMesh.from_legacy(mesh)
+    rcs.add_triangles(tensor_mesh)
+    pts = Tensor(np.array(points).astype(dtype=np.float32))
+    closest_points = rcs.compute_closest_points(pts)['points'].numpy()
+    distances_pts_to_mesh = np.linalg.norm(points - closest_points, axis=1)
+    return distances_pts_to_mesh
+
+def get_distances_closest_point(x, y):
+    dists_y_to_x, corrs_y_to_x = k_nearest_neighbors(y, x, k=1, squared_distances=False)
+    dists_x_to_y = np.linalg.norm(x[corrs_y_to_x] - y, axis=-1, ord=2)
+    return dists_x_to_y
