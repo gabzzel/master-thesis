@@ -7,7 +7,6 @@ from open3d.cpu.pybind.t.geometry import RaycastingScene
 from open3d.geometry import TriangleMesh
 import time
 from point_cloud_utils import k_nearest_neighbors
-from numba import njit, prange
 
 import mesh_quality
 from mesh_quality import aspect_ratios
@@ -30,8 +29,8 @@ def get_stats(a: np.array, name: str, print_results=True, round_digits=3, return
     _max = round(np.max(a), round_digits)
     _min = round(np.min(a), round_digits)
     avg = round(np.average(a), round_digits)
-    med = round(np.median(a=a), round_digits)
-    std = round(np.std(a=a), round_digits)
+    med = round(float(np.median(a=a)), round_digits)
+    std = round(float(np.std(a=a)), round_digits)
 
     if print_results:
         print(f"{name} stats: Max={_max}, Min={_min}, Avg/Mean={avg}, Med={med}, Std={std}")
@@ -114,28 +113,6 @@ def clean_mesh(mesh: TriangleMesh,
     return ar, aspect_ratios_remaining
 
 
-# TODO, make this work in parallel
-@njit
-def get_mesh_triangle_normal_deviations_naive(triangles: np.ndarray, triangle_normals: np.ndarray):
-    return []
-    # TODO
-    triangle_count: int = len(triangles)
-    normal_deviations = np.array([0.0], dtype=np.float64)
-
-    for i in prange(triangle_count):
-        for j in prange(i+1, triangle_count):
-            compare = triangles[i] == triangles[j]
-            if np.sum(compare) == 2:
-                normal1 = triangle_normals[i]
-                normal2 = triangle_normals[j]
-                dot = np.dot(normal1, normal2)
-                clip = np.maximum(-1.0, np.minimum(1.0, dot))
-                normal_deviations = np.append(normal_deviations, np.degrees(np.arccos(clip)))
-
-    normal_deviations = np.delete(normal_deviations, 0)
-    return normal_deviations
-
-
 def get_mesh_triangle_normal_deviations(triangles: np.ndarray, triangle_normals: np.ndarray):
     triangles_sorted = np.sort(triangles, axis=1)
     triangle_count = len(triangles_sorted)
@@ -160,47 +137,6 @@ def get_mesh_triangle_normal_deviations(triangles: np.ndarray, triangle_normals:
         dots += np.clip(np.dot(adjacent_normals, current_triangle_normal), -1.0, 1.0).tolist()
 
     return np.degrees(np.arccos(dots))
-
-
-def get_adjacent_triangle_pairs(triangles_sorted: np.ndarray, chunk_size: int = 100):
-    # Prepare the triangles array
-
-    triangle_count = len(triangles_sorted)
-    index_pairs = []
-
-    # Expected maximum memory size is triangle count * chunksize * dimensions (3) * integer bits (32)
-    # For example, for 300K triangles and chunk size default 100, expected memory size = 300K*100*3*32/8=720MB
-    num_chunks: int = int(math.ceil(triangle_count / chunk_size))
-    for i in range(0, triangle_count, chunk_size):
-        print(f"Processing chunk {int(i / chunk_size) + 1} of {num_chunks}...")
-        chunk = triangles_sorted[i:i + chunk_size]
-
-        # Find out where the current chunk and all triangles are the same and take the sum
-        sums = np.sum(chunk[:, np.newaxis] == triangles_sorted, axis=2)
-
-        # Find the indices for both axes where the result (i.e. sums) are 2 (which means the triangles share 2 vertices)
-        indices = np.where(sums == 2)
-
-        # Stack and transpose these indices into the right shape
-        stacked = np.transpose(np.vstack((indices[0] + i, indices[1])))
-
-        # Optional! Sort the pairs within, and then get the unique pairs.
-        index_pairs.extend(stacked.tolist())
-    return index_pairs
-
-
-def get_mesh_triangle_normal_deviations_v2(triangles: np.ndarray, triangle_normals: np.ndarray, chunk_size: int = 100):
-    triangles_sorted = np.sort(triangles, axis=1)  # Sort the vertex indices within the triangles.
-    index_pairs = get_adjacent_triangle_pairs(triangles_sorted, chunk_size)
-    index_pairs = np.unique(np.sort(np.array(index_pairs), axis=1), axis=0)
-
-    # Calculate the angles in degrees between the normals
-    normals_left = triangle_normals[index_pairs[:, 0]]
-    normals_right = triangle_normals[index_pairs[:, 1]]
-    dots = np.sum(normals_left * normals_right, axis=1)
-    clipped_dots = np.clip(dots, -1.0, 1.0)
-    angles = np.degrees(np.arccos(clipped_dots))
-    return angles
 
 
 def get_points_to_mesh_distances(points: np.ndarray, mesh: TriangleMesh):
