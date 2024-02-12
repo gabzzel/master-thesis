@@ -4,11 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import open3d
 import point_cloud_utils as pcu  # https://github.com/fwilliams/point-cloud-utils (Hausdorff, normals, Chamfer)
-from open3d.core import Tensor
 from open3d.geometry import TriangleMesh, PointCloud
-from open3d.t.geometry import RaycastingScene
 
 import utils
+import mesh_quality
 
 
 def evaluate_point_clouds(point_cloud_a: PointCloud, point_cloud_b: PointCloud):
@@ -58,7 +57,7 @@ def evaluate_mesh(mesh: TriangleMesh, aspect_ratios=None):
 
     # Aspect Ratio statistics
     if aspect_ratios is None:
-        aspect_ratios = utils.get_mesh_aspect_ratios(vertices, triangles)
+        aspect_ratios = mesh_quality.aspect_ratios(vertices, triangles)
     utils.get_stats(aspect_ratios, name="Aspect Ratios", print_results=True)
 
     # cv is the index of the connected component of each vertex
@@ -71,13 +70,12 @@ def evaluate_mesh(mesh: TriangleMesh, aspect_ratios=None):
     print(f"Connectivity: Connected Components={num_conn_comp}, largest component ratio={largest_component_ratio}")
 
     # Curvatures (Discrete)
-    curvatures = utils.get_mesh_discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1)
+    curvatures = mesh_quality.discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1)
     utils.get_stats(curvatures, "Discrete Curvature", print_results=True)
 
     # Normal Deviations
-    deviations = utils.get_mesh_triangle_normal_deviations_v2(triangles, triangle_normals, chunk_size=500)
-    # deviations = utils.get_mesh_triangle_normal_deviations_naive(triangles, triangle_normals)
-    utils.get_stats(deviations, name="Normal Deviations", print_results=True)
+    #deviations = utils.get_mesh_triangle_normal_deviations_v2(triangles, triangle_normals, chunk_size=500)
+    #utils.get_stats(deviations, name="Normal Deviations", print_results=True)
 
     # print(f"Principal Curvatures: Magnitudes Min={k1}, Max={k2}. Directions {d1} and {d2}")
     # plt.hist(aspect_ratios, histtype='step', log=True, bins=100, label="Aspect Ratios")

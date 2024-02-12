@@ -6,9 +6,11 @@ from open3d.cpu.pybind.core import Tensor
 from open3d.cpu.pybind.t.geometry import RaycastingScene
 from open3d.geometry import TriangleMesh
 import time
-import trimesh
 from point_cloud_utils import k_nearest_neighbors
-from numba import njit, jit, prange
+from numba import njit, prange
+
+import mesh_quality
+from mesh_quality import aspect_ratios
 
 
 def format_number(number, digits=1):
@@ -35,22 +37,6 @@ def get_stats(a: np.array, name: str, print_results=True, round_digits=3, return
         print(f"{name} stats: Max={_max}, Min={_min}, Avg/Mean={avg}, Med={med}, Std={std}")
     if return_results:
         return _max, _min, avg, med, std
-
-
-def get_mesh_aspect_ratios(vertices: np.ndarray, triangles: np.ndarray):
-    # Compute edge lengths for each triangle
-    edge_lengths = np.zeros((len(triangles), 3))
-    for i in range(3):
-        v0 = vertices[triangles[:, i]]
-        v1 = vertices[triangles[:, (i + 1) % 3]]
-        edge_lengths[:, i] = np.linalg.norm(v0 - v1, axis=1)
-
-    # Calculate aspect ratio for each triangle
-    min_edge_lengths = np.min(edge_lengths, axis=1)
-    max_edge_lengths = np.max(edge_lengths, axis=1)
-    min_edge_lengths[min_edge_lengths == 0] = np.finfo(float).eps  # Handle cases where min edge length is zero
-    aspect_ratios = max_edge_lengths / min_edge_lengths
-    return aspect_ratios
 
 
 def get_mesh_edge_lengths(vertices, triangles):
@@ -99,24 +85,23 @@ def clean_mesh(mesh: TriangleMesh,
 
     # Remove all aspect ratios that exceed the threshold(s)
     aspect_ratio_quantile_threshold = min(1.0, max(aspect_ratio_quantile_threshold, 0.0))
-    aspect_ratios = None
+    ar = None  # Aspect ratios.
     aspect_ratios_remaining = None
     if aspect_ratio_quantile_threshold > 0 or aspect_ratio_abs_threshold > 0:
         vertices = np.asarray(mesh.vertices)
         triangles = np.asarray(mesh.triangles)
-        aspect_ratios = get_mesh_aspect_ratios(vertices, triangles)
+        ar = mesh_quality.aspect_ratios(vertices, triangles)
 
-        threshold = 0
         if aspect_ratio_quantile_threshold > 0 and aspect_ratio_abs_threshold > 0:
-            threshold = min(np.quantile(aspect_ratios, aspect_ratio_quantile_threshold), aspect_ratio_abs_threshold)
+            threshold = min(np.quantile(ar, aspect_ratio_quantile_threshold), aspect_ratio_abs_threshold)
         elif aspect_ratio_quantile_threshold > 0:
-            threshold = np.quantile(aspect_ratios, aspect_ratio_quantile_threshold)
+            threshold = np.quantile(ar, aspect_ratio_quantile_threshold)
         else:
             threshold = aspect_ratio_abs_threshold
         print(f"Actual aspect ratio threshold: {threshold}")
-        triangles_to_remove = aspect_ratios >= threshold
+        triangles_to_remove = ar >= threshold
         mesh.remove_triangles_by_mask(triangles_to_remove)
-        aspect_ratios_remaining = aspect_ratios[aspect_ratios < threshold]
+        aspect_ratios_remaining = ar[ar < threshold]
         mesh.remove_unreferenced_vertices()
 
     nvc = format_number(len(mesh.vertices), 2)
@@ -126,7 +111,7 @@ def clean_mesh(mesh: TriangleMesh,
         elapsed = round(end_time - start_time, 3)
         print(f"Cleaned mesh ({nvo} -> {nvc} verts, {nto} -> {ntc} tris) [{elapsed}s]")
 
-    return aspect_ratios, aspect_ratios_remaining
+    return ar, aspect_ratios_remaining
 
 
 # TODO, make this work in parallel
@@ -218,27 +203,6 @@ def get_mesh_triangle_normal_deviations_v2(triangles: np.ndarray, triangle_norma
     return angles
 
 
-def get_mesh_discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1):
-    """
-    Get the discrete mean curvature of the mesh.
-
-    :param vertices: The (n, 3) numpy array containing the vertices (coordinates) of the mesh
-    :param vertex_normals: The (n, 3) numpy array containing the vertex normals
-    :param triangles: The (n, 3) numpy array containing the triangles (i.e. vertex indices)
-    :param triangle_normals: The (n, 3) numpy array containing the triangle normals
-    :param sample_ratio: The ratio of points used to estimate curvature, e.g. 0.1 = 10% points are used
-    :param radius: The neighbour search radius used during curvature estimation. Higher values give a more global indication of the curvature, while lower values give a more fine-grained indication.
-    :returns: A 1D numpy array containing the curvatures for each sampled point.
-    """
-    sample_ratio = max(0.0, min(1.0, sample_ratio))
-    t_mesh = trimesh.Trimesh(vertices=vertices, faces=triangles, face_normals=triangle_normals,
-                             vertex_normals=vertex_normals)
-    rng = np.random.default_rng()
-    chosen_points = rng.choice(a=vertices, size=int(sample_ratio * len(vertices)))
-    curvature = trimesh.curvature.discrete_mean_curvature_measure(t_mesh, points=chosen_points, radius=radius)
-    return curvature
-
-
 def get_points_to_mesh_distances(points: np.ndarray, mesh: TriangleMesh):
     """
     Compute the distances from a set of points to the closest points on the surface of a mesh.
@@ -249,6 +213,7 @@ def get_points_to_mesh_distances(points: np.ndarray, mesh: TriangleMesh):
     """
 
     rcs = RaycastingScene()
+    # noinspection PyArgumentList
     tensor_mesh = open3d.t.geometry.TriangleMesh.from_legacy(mesh)
     rcs.add_triangles(tensor_mesh)
     pts = Tensor(np.array(points).astype(dtype=np.float32))
