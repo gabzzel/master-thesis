@@ -31,9 +31,10 @@ def get_stats(a: np.array, name: str, print_results=True, round_digits=3, return
     avg = round(np.average(a), round_digits)
     med = round(float(np.median(a=a)), round_digits)
     std = round(float(np.std(a=a)), round_digits)
+    count = len(a)
 
     if print_results:
-        print(f"{name} stats: Max={_max}, Min={_min}, Avg/Mean={avg}, Med={med}, Std={std}")
+        print(f"{name} stats: Count={count}, Max={_max}, Min={_min}, Avg/Mean={avg}, Med={med}, Std={std}")
     if return_results:
         return _max, _min, avg, med, std
 

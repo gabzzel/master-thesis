@@ -1,7 +1,7 @@
 import time
-
 import trimesh
 import numpy as np
+import bisect
 
 
 def discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1):
@@ -47,12 +47,6 @@ def aspect_ratios(vertices: np.ndarray, triangles: np.ndarray):
 
 
 def triangle_normal_deviations_naive(triangles, triangle_normals):
-    indices = np.arange(len(triangles))
-
-    # Every triangle can only have a maximum of 3 neighbours that share an edge with this triangle.
-    # Given this observation, this array will contain the neighbouring indices for each triangle.
-    # neighbours = np.full(shape=(len(triangles), 3), fill_value=-1, dtype=int)
-
     deviations = []
     occurrences = np.zeros(shape=(len(triangles)))
 
@@ -93,21 +87,15 @@ def triangle_normal_deviations_naive(triangles, triangle_normals):
                 occurrences[tri_index] = 3
                 break
 
-
         end_time = time.time()
         print(f"Triangle {tri_index} took {str(round(end_time - start_time, 5))}s")
 
     return deviations
 
 
-def triangle_normal_deviations(triangles, triangle_normals):
+def triangle_normal_deviations_sorted(triangles, triangle_normals):
     indices = np.arange(len(triangles))
     triangles_incl_indices = np.hstack((triangles, indices[:, np.newaxis]))
-
-    # Every triangle can only have a maximum of 3 neighbours that share an edge with this triangle.
-    # Given this observation, this array will contain the neighbouring indices for each triangle.
-    # neighbours = np.full(shape=(len(triangles), 3), fill_value=-1, dtype=int)
-
 
     # This list contains 3 numpy arrays. Each of these inner arrays are 1D, which contain the indices (in order)
     # of the original triangles array. However, the order of the original triangle (array) indices are as if
@@ -140,10 +128,11 @@ def triangle_normal_deviations(triangles, triangle_normals):
         candidates = {}
 
         for target_vertex_index in range(3):
-            # The vertex we want to search for in other triangles whether they have it as well.
+            # Scalar: The vertex we want to search for in other triangles whether they have it as well.
             target_vertex = triangles[tri_index][target_vertex_index]
 
             for search_vertex_index in range(3):
+                # 1D array containing the vertices of all triangles at a specific index within the triangle.
                 search_range = tris_sorted_per_vertex[search_vertex_index][:, search_vertex_index]
 
                 # The first and last index in the *sorted* triangles array that also have the target vertex
@@ -181,5 +170,67 @@ def triangle_normal_deviations(triangles, triangle_normals):
 
     end_time = time.time()
     print(f"Normal deviations took {str(round(end_time - start_time, 5))}s")
+
+    return deviations
+
+
+def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, triangle_normals):
+    indices = np.arange(len(triangles))
+    triangles_incl_indices = np.hstack((triangles, indices[:, np.newaxis]))
+
+    # This list contains 3 numpy arrays. Each of these inner arrays are 1D, which contain the indices (in order)
+    # of the original triangles array. However, the order of the original triangle (array) indices are as if
+    # they would be if the original triangles would be ordered by x-th vertex. For example, at index 2, this array
+    # contains the 1D (sub) array which contains triangle indices in order of how they should be sorted when sorting
+    # on third vertex.
+    tris_sort_indices = []
+
+    # This list contains 3 numpy arrays. Each of these numpy arrays contains all triangles, but sorted according
+    # to a specific vertex. For example: at index 1, this array contains all triangles, sorted ascending by their
+    # second (at index 1) vertex.
+    tris_sorted_per_vertex = []
+
+    for target_vertex_index in range(3):
+        tris_sort_indices.append(np.argsort(triangles_incl_indices[:, target_vertex_index]))
+        tris_sorted_per_vertex.append(triangles_incl_indices[tris_sort_indices[target_vertex_index]])
+
+    deviations = []
+
+    for v1 in range(len(adjacency_list)):
+        vertex_neighbours = adjacency_list[v1]
+        T = set()  # Find all triangles T that contain this vertex v1
+
+        # Find all triangles with v1 at index i
+        for i in range(3):
+            search_range = tris_sorted_per_vertex[i][:, i]
+            found_index_min = np.searchsorted(a=search_range, v=v1, side='left')
+            found_index_max = np.searchsorted(a=search_range, v=v1, side='right')
+            if found_index_min == found_index_max:  # No triangles found.
+                continue
+            indices_in_sorted: np.ndarray = np.arange(start=found_index_min, stop=found_index_max)
+            triangles_indices: np.ndarray = tris_sorted_per_vertex[i][indices_in_sorted][:, 3]
+            T = T.union(set(triangles_indices))
+
+        # Find all triangles that have both v1 and its neighbour v2
+        for v2 in vertex_neighbours:
+            target_triangles = []
+            for triangle_with_v1_index in T:
+                t = triangles[triangle_with_v1_index]
+                if t[0] != v2 and t[1] != v2 and t[2] != v2:
+                    continue
+
+                # We have found a triangle with both v1 and v2!
+                target_triangles.append(triangle_normals[triangle_with_v1_index])
+
+                # Only 2 triangles can share an edge.
+                if len(target_triangles) == 2:
+                    break
+
+            # If we did not find two triangles that share the edge between v1 and v2, we can just continue.
+            if len(target_triangles) < 2:
+                continue
+
+            clipped_dot = np.clip(np.dot(target_triangles[0], target_triangles[1]), -1.0, 1.0)
+            deviations.append(np.degrees(np.arccos(clipped_dot)))
 
     return deviations

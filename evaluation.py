@@ -1,5 +1,5 @@
 import time
-
+import cProfile
 import matplotlib.pyplot as plt
 import numpy as np
 import open3d
@@ -44,6 +44,8 @@ def evaluate_point_cloud_mesh(point_cloud: PointCloud, mesh: TriangleMesh):
 def evaluate_mesh(mesh: TriangleMesh, aspect_ratios=None):
     if not mesh.has_triangle_normals():
         mesh.compute_triangle_normals()
+    if not mesh.has_adjacency_list():
+        mesh.compute_adjacency_list()
 
     # Expose everything we need.
     vertices = np.asarray(mesh.vertices)
@@ -74,9 +76,8 @@ def evaluate_mesh(mesh: TriangleMesh, aspect_ratios=None):
     #utils.get_stats(curvatures, "Discrete Curvature", print_results=True)
 
     # Normal Deviations
-    deviations = mesh_quality.triangle_normal_deviations(triangles, triangle_normals)
-    #deviations = utils.get_mesh_triangle_normal_deviations_v2(triangles, triangle_normals, chunk_size=500)
-    #utils.get_stats(deviations, name="Normal Deviations", print_results=True)
+    deviations = mesh_quality.triangle_normal_deviations_adjacency(mesh.adjacency_list, triangles, triangle_normals)
+    utils.get_stats(deviations, name="Normal Deviations", print_results=True)
 
     # print(f"Principal Curvatures: Magnitudes Min={k1}, Max={k2}. Directions {d1} and {d2}")
     # plt.hist(aspect_ratios, histtype='step', log=True, bins=100, label="Aspect Ratios")
