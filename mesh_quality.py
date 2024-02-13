@@ -208,7 +208,7 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
         for i in range(3):
             search_range = tris_sorted_per_vertex[i][:, i]
             found_index_min = np.searchsorted(a=search_range, v=v1, side='left')
-            found_index_max = np.searchsorted(a=search_range[found_index_min:], v=v1, side='right') + found_index_min
+            found_index_max = np.searchsorted(a=search_range, v=v1, side='right')
             if found_index_min == found_index_max:  # No triangles found.
                 continue
             indices_in_sorted: np.ndarray = np.arange(start=found_index_min, stop=found_index_max)
