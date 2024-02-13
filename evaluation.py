@@ -1,5 +1,6 @@
 import time
 import cProfile
+import pstats
 import matplotlib.pyplot as plt
 import numpy as np
 import open3d
@@ -47,6 +48,8 @@ def evaluate_mesh(mesh: TriangleMesh, aspect_ratios=None):
     if not mesh.has_adjacency_list():
         mesh.compute_adjacency_list()
 
+    mesh.normalize_normals()
+
     # Expose everything we need.
     vertices = np.asarray(mesh.vertices)
     vertex_normals = np.asarray(mesh.vertex_normals)
@@ -76,7 +79,13 @@ def evaluate_mesh(mesh: TriangleMesh, aspect_ratios=None):
     #utils.get_stats(curvatures, "Discrete Curvature", print_results=True)
 
     # Normal Deviations
-    deviations = mesh_quality.triangle_normal_deviations_adjacency(mesh.adjacency_list, triangles, triangle_normals)
+    pr = cProfile.Profile()
+    pr.enable()
+    deviations = mesh_quality.triangle_normal_deviations_adjacency(mesh.adjacency_list.copy(), triangles, triangle_normals)
+    pr.disable()
+    stats = pstats.Stats(pr)
+    stats.sort_stats(pstats.SortKey.CUMULATIVE)
+    stats.print_stats()
     utils.get_stats(deviations, name="Normal Deviations", print_results=True)
 
     # print(f"Principal Curvatures: Magnitudes Min={k1}, Max={k2}. Directions {d1} and {d2}")

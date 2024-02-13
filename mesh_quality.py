@@ -175,6 +175,7 @@ def triangle_normal_deviations_sorted(triangles, triangle_normals):
 
 
 def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, triangle_normals):
+    start_time = time.time()
     indices = np.arange(len(triangles))
     triangles_incl_indices = np.hstack((triangles, indices[:, np.newaxis]))
 
@@ -197,14 +198,17 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
     deviations = []
 
     for v1 in range(len(adjacency_list)):
-        vertex_neighbours = adjacency_list[v1]
+        vertex_neighbours: set = adjacency_list[v1]
+        if len(vertex_neighbours) == 0:
+            continue
+
         T = set()  # Find all triangles T that contain this vertex v1
 
         # Find all triangles with v1 at index i
         for i in range(3):
             search_range = tris_sorted_per_vertex[i][:, i]
             found_index_min = np.searchsorted(a=search_range, v=v1, side='left')
-            found_index_max = np.searchsorted(a=search_range, v=v1, side='right')
+            found_index_max = np.searchsorted(a=search_range[found_index_min:], v=v1, side='right') + found_index_min
             if found_index_min == found_index_max:  # No triangles found.
                 continue
             indices_in_sorted: np.ndarray = np.arange(start=found_index_min, stop=found_index_max)
@@ -213,6 +217,10 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
 
         # Find all triangles that have both v1 and its neighbour v2
         for v2 in vertex_neighbours:
+
+            # We only need to search every pair of vertices once. We can remove this.
+            adjacency_list[v2].remove(v1)
+
             target_triangles = []
             for triangle_with_v1_index in T:
                 t = triangles[triangle_with_v1_index]
@@ -230,7 +238,10 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
             if len(target_triangles) < 2:
                 continue
 
-            clipped_dot = np.clip(np.dot(target_triangles[0], target_triangles[1]), -1.0, 1.0)
+            # clipped_dot = np.clip(np.dot(target_triangles[0], target_triangles[1]), -1.0, 1.0)
+            clipped_dot = max(min(np.dot(target_triangles[0], target_triangles[1]), 1.0), -1.0)
             deviations.append(np.degrees(np.arccos(clipped_dot)))
 
+    end_time = time.time()
+    print(f"Normal deviations calculation took {round(end_time-start_time,3)}s")
     return deviations
