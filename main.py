@@ -19,7 +19,7 @@ if __name__ == "__main__":
     _, aspect_ratios_clean = utils.clean_mesh(mesh)
     evaluation.evaluate_mesh(mesh, aspect_ratios=aspect_ratios_clean)
     # evaluation.evaluate_point_cloud_mesh(pcd, mesh)
-    open3d.visualization.draw_geometries([pcd, mesh], mesh_show_back_face=True)
+    # open3d.visualization.draw_geometries([pcd, mesh], mesh_show_back_face=True)
 
     # pcd2_tree = open3d.geometry.KDTreeFlann(pcd2)
     # [k, idx, _] = pcd_tree.search_knn_vector_3d(pcd2.points[idx_b], 50)

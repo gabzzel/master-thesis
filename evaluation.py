@@ -87,7 +87,6 @@ def evaluate_mesh(mesh: TriangleMesh, aspect_ratios=None):
     stats.sort_stats(pstats.SortKey.CUMULATIVE)
     stats.print_stats()
     utils.get_stats(deviations, name="Normal Deviations", print_results=True)
-
     # print(f"Principal Curvatures: Magnitudes Min={k1}, Max={k2}. Directions {d1} and {d2}")
     # plt.hist(aspect_ratios, histtype='step', log=True, bins=100, label="Aspect Ratios")
     # plt.show()

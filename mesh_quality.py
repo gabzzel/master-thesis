@@ -1,8 +1,10 @@
+import cProfile
+import pstats
 import time
 import trimesh
 import numpy as np
 import bisect
-
+from functools import reduce
 
 def discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1):
     """
@@ -192,6 +194,7 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
     tris_sorted_per_vertex = []
     tris_sorted_per_vertex_single = []
 
+    # Use sorting to improve the speed dramatically of lookups
     for i in range(3):
         # The indices of the triangles, if they were sorted by vertices on vertex index 0, 1 or 2
         argsort = np.argsort(triangles_incl_indices[:, i])
@@ -201,37 +204,35 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
         triangles_sorted_by_vertex = triangles_incl_indices[tris_sort_indices[i]]
         tris_sorted_per_vertex.append(triangles_sorted_by_vertex)
         # The same, but only keeping the vertex itself saved
-        tris_sorted_per_vertex_single.append(triangles_sorted_by_vertex[:, i].tolist())
+        single = triangles_sorted_by_vertex[:, i]
+        tris_sorted_per_vertex_single.append(single.tolist())
 
     deviations = []
-
+    triangle_count = len(triangles)
     found_indices_min = [0, 0, 0]
-
     for v1 in range(len(adjacency_list)):
         vertex_neighbours: set = adjacency_list[v1]
         if len(vertex_neighbours) == 0:
             continue
 
-        T = set()  # Find all triangles T that contain this vertex v1
+        T = None
 
         # Find all triangles with v1 at index i
         for i in range(3):
-            # search_range = tris_sorted_per_vertex[i][:, i]
             search_range = tris_sorted_per_vertex_single[i]
-            # TODO optimize this so it the found index starts later, since the vertex index increases
-
-            found_index_min = bisect.bisect_left(search_range, v1, lo=found_indices_min[i])
+            found_index_min = bisect.bisect_left(search_range, v1, lo=found_indices_min[i], hi=triangle_count)
             found_indices_min[i] = found_index_min
-            found_index_max = bisect.bisect_right(search_range, v1, lo=found_index_min)
-
-            # found_index_min = np.searchsorted(a=search_range, v=v1, side='left')
-            # found_index_max = np.searchsorted(a=search_range, v=v1, side='right')
+            found_index_max = bisect.bisect_right(search_range, v1, lo=found_index_min, hi=triangle_count)
 
             if found_index_min == found_index_max:  # No triangles found.
                 continue
-            indices_in_sorted: np.ndarray = np.arange(start=found_index_min, stop=found_index_max)
-            triangles_indices: np.ndarray = tris_sorted_per_vertex[i][indices_in_sorted][:, 3]
-            T = T.union(set(triangles_indices))
+
+            indices_in_sorted: np.ndarray = indices[found_index_min:found_index_max]
+
+            if T is None:
+                T = set(tris_sorted_per_vertex[i][indices_in_sorted][:, 3])
+            else:
+                T = T.union(tris_sorted_per_vertex[i][indices_in_sorted][:, 3])
 
         # Find all triangles that have both v1 and its neighbour v2
         for v2 in vertex_neighbours:
@@ -239,26 +240,36 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
             # We only need to search every pair of vertices once. We can remove this.
             adjacency_list[v2].remove(v1)
 
-            target_triangles = []
+            t1 = None
+            t2 = None
+
             for triangle_with_v1_index in T:
                 t = triangles[triangle_with_v1_index]
                 if t[0] != v2 and t[1] != v2 and t[2] != v2:
                     continue
 
                 # We have found a triangle with both v1 and v2!
-                target_triangles.append(triangle_normals[triangle_with_v1_index])
+                if t1 is None:
+                    t1 = triangle_normals[triangle_with_v1_index]
+                elif t2 is None:
+                    t2 = triangle_normals[triangle_with_v1_index]
 
                 # Only 2 triangles can share an edge.
-                if len(target_triangles) == 2:
+                else:
                     break
 
             # If we did not find two triangles that share the edge between v1 and v2, we can just continue.
-            if len(target_triangles) < 2:
+            if t1 is None or t2 is None:
                 continue
 
-            # clipped_dot = np.clip(np.dot(target_triangles[0], target_triangles[1]), -1.0, 1.0)
-            clipped_dot = max(min(np.dot(target_triangles[0], target_triangles[1]), 1.0), -1.0)
-            deviations.append(np.degrees(np.arccos(clipped_dot)))
+            # Make sure dot value is valid.
+            dot = np.dot(t1, t2)
+            if dot > 1.0:
+                dot = 1.0
+            elif dot < -1.0:
+                dot = -1.0
+
+            deviations.append(np.degrees(np.arccos(dot)))
 
     end_time = time.time()
     print(f"Normal deviations calculation took {round(end_time-start_time,3)}s")
