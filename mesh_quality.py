@@ -190,12 +190,22 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
     # to a specific vertex. For example: at index 1, this array contains all triangles, sorted ascending by their
     # second (at index 1) vertex.
     tris_sorted_per_vertex = []
+    tris_sorted_per_vertex_single = []
 
-    for target_vertex_index in range(3):
-        tris_sort_indices.append(np.argsort(triangles_incl_indices[:, target_vertex_index]))
-        tris_sorted_per_vertex.append(triangles_incl_indices[tris_sort_indices[target_vertex_index]])
+    for i in range(3):
+        # The indices of the triangles, if they were sorted by vertices on vertex index 0, 1 or 2
+        argsort = np.argsort(triangles_incl_indices[:, i])
+        tris_sort_indices.append(argsort)
+
+        # The triangles when they are sorted by that specific vertex index
+        triangles_sorted_by_vertex = triangles_incl_indices[tris_sort_indices[i]]
+        tris_sorted_per_vertex.append(triangles_sorted_by_vertex)
+        # The same, but only keeping the vertex itself saved
+        tris_sorted_per_vertex_single.append(triangles_sorted_by_vertex[:, i].tolist())
 
     deviations = []
+
+    found_indices_min = [0, 0, 0]
 
     for v1 in range(len(adjacency_list)):
         vertex_neighbours: set = adjacency_list[v1]
@@ -206,9 +216,17 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
 
         # Find all triangles with v1 at index i
         for i in range(3):
-            search_range = tris_sorted_per_vertex[i][:, i]
-            found_index_min = np.searchsorted(a=search_range, v=v1, side='left')
-            found_index_max = np.searchsorted(a=search_range, v=v1, side='right')
+            # search_range = tris_sorted_per_vertex[i][:, i]
+            search_range = tris_sorted_per_vertex_single[i]
+            # TODO optimize this so it the found index starts later, since the vertex index increases
+
+            found_index_min = bisect.bisect_left(search_range, v1, lo=found_indices_min[i])
+            found_indices_min[i] = found_index_min
+            found_index_max = bisect.bisect_right(search_range, v1, lo=found_index_min)
+
+            # found_index_min = np.searchsorted(a=search_range, v=v1, side='left')
+            # found_index_max = np.searchsorted(a=search_range, v=v1, side='right')
+
             if found_index_min == found_index_max:  # No triangles found.
                 continue
             indices_in_sorted: np.ndarray = np.arange(start=found_index_min, stop=found_index_max)
