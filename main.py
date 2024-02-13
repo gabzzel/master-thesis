@@ -13,13 +13,14 @@ if __name__ == "__main__":
     voxel_size = 0.05
     pcd = load_point_cloud(point_cloud_path, down_sample_method=None, down_sample_param=0.01, verbose=True)
     estimate_normals(pcd, max_nn=30, radius=0.4, orient=None, normalize=True)
-    mesh = surface_reconstruction.SPSR(pcd, octree_max_depth=8)
+    mesh = surface_reconstruction.Delaunay(pcd, as_tris=False)
+    # mesh = surface_reconstruction.SPSR(pcd, octree_max_depth=8)
 
     # Clean the mesh and return the aspect ratios (if calculated, which is done when aspect ratio threshold are > 0)
-    _, aspect_ratios_clean = utils.clean_mesh(mesh)
-    evaluation.evaluate_mesh(mesh, aspect_ratios=aspect_ratios_clean)
+    #_, aspect_ratios_clean = utils.clean_mesh(mesh)
+    #evaluation.evaluate_mesh(mesh, aspect_ratios=aspect_ratios_clean)
     # evaluation.evaluate_point_cloud_mesh(pcd, mesh)
-    # open3d.visualization.draw_geometries([pcd, mesh], mesh_show_back_face=True)
+    open3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
 
     # pcd2_tree = open3d.geometry.KDTreeFlann(pcd2)
     # [k, idx, _] = pcd_tree.search_knn_vector_3d(pcd2.points[idx_b], 50)

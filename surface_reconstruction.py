@@ -1,8 +1,14 @@
 import time
+
+import open3d.utility
 from open3d.utility import DoubleVector
 from open3d.geometry import TriangleMesh, PointCloud
+
+import utils
 from utils import format_number
 import numpy as np
+
+import scipy.spatial
 
 
 def BPA(point_cloud, radii, verbose=True):
@@ -72,3 +78,44 @@ def AlphaShapes(point_cloud, alpha=0.02, verbose=True):
         print(f"Created mesh: Alpha Shapes ({ntf} tris, α={alpha}) [{elapsed_time}s]")
 
     return mesh
+
+
+def Delaunay(point_cloud: PointCloud, as_tris:bool = True):
+    start_time = time.time()
+    points = np.asarray(point_cloud.points)
+
+    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.Delaunay.html
+    # For all options, see: http://www.qhull.org/html/qh-optq.htm#QJn
+    # Use Qhull in the background, with default:
+    # Qbb = scale the last coordinate to [0,m] for Delaunay
+    # Qc = keep coplanar points with nearest facet
+    # Qz =  add a point-at-infinity for Delaunay triangulations
+    # Q12 = allow wide facets and wide dupridge
+    surface = scipy.spatial.Delaunay(points=points, furthest_site=False, incremental=False, qhull_options="Qc Qz")
+    vertices = open3d.utility.Vector3dVector(point_cloud.points)
+    simplices = np.array(surface.simplices)
+
+    if as_tris:
+        triangles: np.ndarray = tetrahedra_to_triangles_numpy(simplices)
+        triangles: open3d.utility.Vector3iVector = open3d.utility.Vector3iVector(triangles)
+        mesh = TriangleMesh(vertices, triangles)
+        count = utils.format_number(len(triangles))
+    else:
+        tetras = open3d.utility.Vector4iVector(simplices)
+        mesh = open3d.geometry.TetraMesh(vertices, tetras)
+        count = utils.format_number(len(tetras))
+
+    end_time = time.time()
+    elapsed_time = round(end_time - start_time, 3)
+    form = 'tris' if as_tris else 'tetras'
+    print(f"Created mesh: Delaunay ({count} {form}) [{elapsed_time}s]")
+    return mesh
+
+
+def tetrahedra_to_triangles_numpy(tetrahedra: np.ndarray) -> np.ndarray:
+    triangle_indices = np.array([[0, 1, 2], [0, 2, 3], [0, 1, 3], [1, 2, 3]])
+
+    # Create triangles by indexing vertices
+    triangles: np.ndarray = tetrahedra[:, triangle_indices]
+    triangles = np.reshape(triangles, newshape=(triangles.shape[0] * triangles.shape[1], triangles.shape[2]))
+    return triangles

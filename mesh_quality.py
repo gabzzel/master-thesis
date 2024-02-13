@@ -1,10 +1,9 @@
-import cProfile
-import pstats
-import time
-import trimesh
-import numpy as np
 import bisect
-from functools import reduce
+import time
+
+import numpy as np
+import trimesh
+
 
 def discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1):
     """
@@ -63,7 +62,7 @@ def triangle_normal_deviations_naive(triangles, triangle_normals):
 
         found_neighbours = 0
 
-        for tri_index_2 in range(tri_index+1, len(triangles)):
+        for tri_index_2 in range(tri_index + 1, len(triangles)):
             # If we have already encountered this triangle 3 times before, we don't need to check it anymore.
             if occurrences[tri_index] >= 3:
                 break
@@ -272,5 +271,5 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
             deviations.append(np.degrees(np.arccos(dot)))
 
     end_time = time.time()
-    print(f"Normal deviations calculation took {round(end_time-start_time,3)}s")
+    print(f"Normal deviations calculation took {round(end_time - start_time, 3)}s")
     return deviations
