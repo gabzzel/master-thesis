@@ -12,13 +12,15 @@ if __name__ == "__main__":
     point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\dummy\\stanford-dragon\\dragon_recon\\dragon_vrip.ply"
     voxel_size = 0.05
     prefer_triangle_mesh = True
-    pcd = load_point_cloud(point_cloud_path, down_sample_method=None, down_sample_param=0.01, verbose=True)
-    estimate_normals(pcd, max_nn=30, radius=0.4, orient=None, normalize=True)
+    verbose = True
+    pcd = load_point_cloud(point_cloud_path, down_sample_method=None, down_sample_param=0.01, verbose=verbose)
+    estimate_normals(pcd, max_nn=30, radius=0.4, orient=None, normalize=True, verbose=verbose)
     mesh = surface_reconstruction.Delaunay(pcd, as_tris=prefer_triangle_mesh)
     # mesh = surface_reconstruction.SPSR(pcd, octree_max_depth=8)
 
     # Clean the mesh and return the aspect ratios (if calculated, which is done when aspect ratio threshold are > 0)
-    _, aspect_ratios_clean = utils.clean_mesh(mesh)
+    utils.clean_mesh_simple(mesh=mesh, verbose=verbose)  # Do a simple cleaning, never a bad thing.
+    _, aspect_ratios_clean = utils.clean_mesh_aspect_ratios(mesh)
     #if prefer_triangle_mesh:
         #evaluation.evaluate_mesh(mesh, aspect_ratios=aspect_ratios_clean)
     # evaluation.evaluate_point_cloud_mesh(pcd, mesh)

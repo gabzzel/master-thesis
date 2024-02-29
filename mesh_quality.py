@@ -29,24 +29,6 @@ def discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sa
     return curvature
 
 
-def aspect_ratios(vertices: np.ndarray, triangles: np.ndarray):
-    # Compute edge lengths for each triangle
-    edge_lengths = np.zeros((len(triangles), 3))
-    for i in range(3):
-        v0 = vertices[triangles[:, i]]
-        v1 = vertices[triangles[:, (i + 1) % 3]]
-        edge_lengths[:, i] = np.linalg.norm(v0 - v1, axis=1)
-
-    # Calculate aspect ratio for each triangle
-    min_edge_lengths = np.min(edge_lengths, axis=1)
-    max_edge_lengths = np.max(edge_lengths, axis=1)
-    min_edge_lengths[min_edge_lengths == 0] = np.finfo(float).eps  # Handle cases where min edge length is zero
-
-    # Return 0 where the min edge length is 0. Return max / min where min != 0
-    result = np.where(min_edge_lengths <= np.finfo(float).eps, 0.0, max_edge_lengths / min_edge_lengths)
-    return result
-
-
 def triangle_normal_deviations_naive(triangles, triangle_normals):
     deviations = []
     occurrences = np.zeros(shape=(len(triangles)))

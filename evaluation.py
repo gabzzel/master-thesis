@@ -64,7 +64,7 @@ def evaluate_mesh(mesh: open3d.geometry.TriangleMesh, aspect_ratios=None):
 
     # Aspect Ratio statistics
     if aspect_ratios is None:
-        aspect_ratios = mesh_quality.aspect_ratios(vertices, triangles)
+        aspect_ratios = utils.aspect_ratios(vertices, triangles)
     utils.get_stats(aspect_ratios, name="Aspect Ratios", print_results=True)
 
     # cv is the index of the connected component of each vertex
