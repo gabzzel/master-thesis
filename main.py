@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     # Clean the mesh and return the aspect ratios (if calculated, which is done when aspect ratio threshold are > 0)
     utils.clean_mesh_simple(mesh=mesh, verbose=verbose)  # Do a simple cleaning, never a bad thing.
-    _, aspect_ratios_clean = utils.clean_mesh_aspect_ratios(mesh)
+    _, aspect_ratios_clean = utils.clean_mesh_metric(mesh=mesh, metric="aspect_ratio")
     #if prefer_triangle_mesh:
         #evaluation.evaluate_mesh(mesh, aspect_ratios=aspect_ratios_clean)
     # evaluation.evaluate_point_cloud_mesh(pcd, mesh)

@@ -96,6 +96,18 @@ def clean_mesh_metric(mesh: Union[open3d.geometry.TriangleMesh, open3d.geometry.
                       quantile: float = 0.95,
                       absolute: float = 1000,
                       verbose: bool = True) -> Optional[Tuple[np.ndarray, np.ndarray]]:
+    """
+    Clean a mesh using threshold on a certain metric.
+
+    :param mesh: The mesh to clean.
+    :param metric: Which metric to clean the mesh up with. Can be either "aspect_ratio" / "ar" or "edge_length" / "el"
+    :param quantile: The quantile to calculate the threshold on. The lower value of this and the absolute value is \
+     used. Set to 0 to disable.
+    :param absolute: The absolute threshold. The lower value of this and the quantile value is used. Set to 0 to disable.
+    :param verbose: Whether to print the progress and result.
+    :return: A tuple of numpy arrays containing the metric calculated for all vertices, edges or triangles at index 0 \
+     and the cleaned subset/subarray at index 1. Returns None if any error occurs.
+    """
 
     is_triangle_mesh = check_mesh_type(mesh=mesh)
     if not is_triangle_mesh:
