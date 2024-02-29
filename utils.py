@@ -1,4 +1,5 @@
 import math
+from typing import Union
 
 import numpy as np
 import open3d
@@ -51,7 +52,7 @@ def get_mesh_edge_lengths(vertices, triangles):
     return edge_lengths
 
 
-def clean_mesh(mesh: TriangleMesh,
+def clean_mesh(mesh: Union[open3d.geometry.TriangleMesh, open3d.geometry.TetraMesh],
                aspect_ratio_quantile_threshold: float = 0.95,
                aspect_ratio_abs_threshold: float = 1000,
                verbose: bool = True):
@@ -60,58 +61,72 @@ def clean_mesh(mesh: TriangleMesh,
     - Remove unreferenced vertices \n
     - Remove duplicated triangles \n
     - Remove degenerate triangles (i.e. triangles that reference the same vertex multiple times) \n
-    - Optionally remove all triangles with a large aspect ratio. \n
+    - Optionally remove all triangles with a large aspect ratio.
 
     :param verbose: Whether to print the progress.
     :param mesh: The mesh to clean up.
-    :param aspect_ratio_quantile_threshold: Every triangle with an aspect ratio in the 'quantile' above
-    this threshold will be removed. Set to 0 to ignore.
-    :param aspect_ratio_abs_threshold: Every triangle with an aspect ratio above this absolute value will
-    be removed. Set to 0 to ignore.
+    :param aspect_ratio_quantile_threshold: Every triangle with an aspect ratio in the 'quantile' above this threshold will be removed. Set to 0 to ignore.
+    :param aspect_ratio_abs_threshold: Every triangle with an aspect ratio above this absolute value will be removed. Set to 0 to ignore.
     """
+
+    is_triangle_mesh = isinstance(mesh, open3d.geometry.TriangleMesh)
+    is_tetra_mesh = isinstance(mesh, open3d.geometry.TetraMesh)
+
+    if not is_triangle_mesh and not is_tetra_mesh:
+        raise TypeError(
+            f"mesh must be of type {type(open3d.geometry.TriangleMesh)} or {type(open3d.geometry.TetraMesh)}")
 
     if verbose:
         print(f"Cleaning mesh... (Aspect Ratio Thresholds: Quantile={aspect_ratio_quantile_threshold}," +
               f"Absolute={aspect_ratio_abs_threshold})")
 
     start_time = time.time()
+
     nvo = format_number(len(mesh.vertices), 2)  # Number of Vertices in Original
-    nto = format_number(len(mesh.triangles), 2)
+    nto = format_number(len(mesh.triangles), 2) if is_triangle_mesh else format_number(len(mesh.tetras))
 
     # Do some obvious cleanups
+    mesh.remove_duplicated_vertices()
     mesh.remove_unreferenced_vertices()
-    mesh.remove_duplicated_triangles()
-    mesh.remove_degenerate_triangles()
+
+    if is_triangle_mesh:
+        mesh.remove_duplicated_triangles()
+        mesh.remove_degenerate_triangles()
+    else:
+        mesh.remove_duplicated_tetras()
+        mesh.remove_degenerate_tetras()
 
     # Remove all aspect ratios that exceed the threshold(s)
     aspect_ratio_quantile_threshold = min(1.0, max(aspect_ratio_quantile_threshold, 0.0))
-    ar = None  # Aspect ratios.
+    all_aspect_ratios = None  # Aspect ratios.
     aspect_ratios_remaining = None
-    if aspect_ratio_quantile_threshold > 0 or aspect_ratio_abs_threshold > 0:
+
+    # Removing triangles by aspect ratio is only applicable on triangle meshes
+    if is_triangle_mesh and (aspect_ratio_quantile_threshold > 0 or aspect_ratio_abs_threshold > 0):
         vertices = np.asarray(mesh.vertices)
         triangles = np.asarray(mesh.triangles)
-        ar = mesh_quality.aspect_ratios(vertices, triangles)
+        all_aspect_ratios = mesh_quality.aspect_ratios(vertices, triangles)
 
         if aspect_ratio_quantile_threshold > 0 and aspect_ratio_abs_threshold > 0:
-            threshold = min(np.quantile(ar, aspect_ratio_quantile_threshold), aspect_ratio_abs_threshold)
+            threshold = min(np.quantile(all_aspect_ratios, aspect_ratio_quantile_threshold), aspect_ratio_abs_threshold)
         elif aspect_ratio_quantile_threshold > 0:
-            threshold = np.quantile(ar, aspect_ratio_quantile_threshold)
+            threshold = np.quantile(all_aspect_ratios, aspect_ratio_quantile_threshold)
         else:
             threshold = aspect_ratio_abs_threshold
         print(f"Actual aspect ratio threshold: {threshold}")
-        triangles_to_remove = ar >= threshold
-        mesh.remove_triangles_by_mask(triangles_to_remove)
-        aspect_ratios_remaining = ar[ar < threshold]
+        mesh.remove_triangles_by_mask(all_aspect_ratios >= threshold)
+        aspect_ratios_remaining = all_aspect_ratios[all_aspect_ratios < threshold]
         mesh.remove_unreferenced_vertices()
 
     nvc = format_number(len(mesh.vertices), 2)
-    ntc = format_number(len(mesh.triangles), 2)
+    ntc = format_number(len(mesh.triangles), 2) if is_triangle_mesh else format_number(len(mesh.tetras))
     end_time = time.time()
     if verbose:
         elapsed = round(end_time - start_time, 3)
-        print(f"Cleaned mesh ({nvo} -> {nvc} verts, {nto} -> {ntc} tris) [{elapsed}s]")
+        form = "tris" if is_triangle_mesh else "tetras"
+        print(f"Cleaned mesh ({nvo} -> {nvc} verts, {nto} -> {ntc} {form}) [{elapsed}s]")
 
-    return ar, aspect_ratios_remaining
+    return all_aspect_ratios, aspect_ratios_remaining
 
 
 def get_mesh_triangle_normal_deviations(triangles: np.ndarray, triangle_normals: np.ndarray):

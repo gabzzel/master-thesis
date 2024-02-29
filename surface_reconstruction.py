@@ -1,19 +1,18 @@
 import time
+from typing import Union
 
-import open3d.utility
-from open3d.utility import DoubleVector
-from open3d.geometry import TriangleMesh, PointCloud
+import open3d
 
 import utils
 from utils import format_number
 import numpy as np
-
 import scipy.spatial
 
 
-def BPA(point_cloud, radii, verbose=True):
+def BPA(point_cloud: open3d.geometry.PointCloud, radii: Union[np.ndarray, list], verbose=True):
     start_time = time.time()
-    mesh = TriangleMesh.create_from_point_cloud_ball_pivoting(point_cloud, DoubleVector(radii))
+    radii_open3d = open3d.utility.DoubleVector(radii)
+    mesh = open3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(pcd=point_cloud, radii=radii_open3d)
     end_time = time.time()
     if verbose:
         ntf = format_number(len(mesh.triangles))  # Number Triangles Formatted
@@ -23,29 +22,33 @@ def BPA(point_cloud, radii, verbose=True):
     return mesh
 
 
-def SPSR(point_cloud: PointCloud, octree_max_depth=8, density_quantile_threshold=0.1, verbose=True) -> TriangleMesh:
+def SPSR(point_cloud: open3d.geometry.PointCloud, octree_max_depth=8, density_quantile_threshold=0.1,
+         verbose=True) -> open3d.geometry.TriangleMesh:
     """
     Create a triangulated mesh using Screened Poisson Surface Reconstruction.
     This function is a spiced up wrapper for the Open3D implementation.
 
+    :param verbose: Whether to print progress, elapsed time and other information.
     :param point_cloud: The Open3D PointCloud object out of which the mesh will be constructed.
     :param octree_max_depth: The maximum depth of the constructed octree which is used by the SPSR algorithm.
     A higher value indicates higher detail and a finer grained mesh, at the cost of computing time.
     :param density_quantile_threshold: Points with a density (i.e. support) below the quantile will be removed,
     cleaning up the mesh. Set to 0 to ignore.
 
-    :return: Returns a TriangleMesh created using SPSR.
+    :return: Returns a TriangleMesh created using Screened Poisson Surface Reconstruction.
     """
 
     start_time = time.time()
 
-    # Densities is by how many vertices the other vertex is supported
-    (mesh, densities) = TriangleMesh.create_from_point_cloud_poisson(point_cloud,
-                                                                     depth=octree_max_depth,
-                                                                     width=0,
-                                                                     scale=1.1,
-                                                                     linear_fit=False,
-                                                                     n_threads=-1)
+    # Densities are by how many vertices the other vertex is supported
+
+    mesh = open3d.geometry.TriangleMesh()
+    (mesh, densities) = mesh.create_from_point_cloud_poisson(pcd=point_cloud,
+                                                             depth=octree_max_depth,
+                                                             width=0,
+                                                             scale=1.1,
+                                                             linear_fit=False,
+                                                             n_threads=-1)
 
     end_time = time.time()
     if verbose:
@@ -70,7 +73,7 @@ def SPSR(point_cloud: PointCloud, octree_max_depth=8, density_quantile_threshold
 
 def AlphaShapes(point_cloud, alpha=0.02, verbose=True):
     start_time = time.time()
-    mesh = TriangleMesh.create_from_point_cloud_alpha_shape(point_cloud, alpha)
+    mesh = open3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(point_cloud, alpha)
     end_time = time.time()
     if verbose:
         ntf = format_number(len(mesh.triangles))  # Number of triangles formatted
@@ -80,30 +83,29 @@ def AlphaShapes(point_cloud, alpha=0.02, verbose=True):
     return mesh
 
 
-def Delaunay(point_cloud: PointCloud, as_tris:bool = True):
-    start_time = time.time()
-    points = np.asarray(point_cloud.points)
+def Delaunay(point_cloud: open3d.geometry.PointCloud, as_tris: bool = True) \
+        -> Union[open3d.geometry.TriangleMesh, open3d.geometry.TetraMesh]:
+    """
+    Computes the Delaunay triangulation for surface reconstruction.
 
-    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.Delaunay.html
-    # For all options, see: http://www.qhull.org/html/qh-optq.htm#QJn
-    # Use Qhull in the background, with default:
-    # Qbb = scale the last coordinate to [0,m] for Delaunay
-    # Qc = keep coplanar points with nearest facet
-    # Qz =  add a point-at-infinity for Delaunay triangulations
-    # Q12 = allow wide facets and wide dupridge
-    surface = scipy.spatial.Delaunay(points=points, furthest_site=False, incremental=False, qhull_options="Qc Qz")
-    vertices = open3d.utility.Vector3dVector(point_cloud.points)
-    simplices = np.array(surface.simplices)
+    :param point_cloud: The Open3D point cloud to triangulate.
+    :param as_tris: Whether to return a triangulated mesh or a TetraMesh made of tetrahedrons.
+    :returns: Either a TriangleMesh or TetraMesh constructed from the point cloud points.
+    """
+
+    start_time = time.time()
+    # Make a copy just to be sure
+    delaunay = scipy.spatial.Delaunay(np.asarray(point_cloud.points).copy())
 
     if as_tris:
-        triangles: np.ndarray = tetrahedra_to_triangles_numpy(simplices)
-        triangles: open3d.utility.Vector3iVector = open3d.utility.Vector3iVector(triangles)
-        mesh = TriangleMesh(vertices, triangles)
-        count = utils.format_number(len(triangles))
+        tris = np.vstack((delaunay.simplices[:, (0, 1, 2)], delaunay.simplices[:, (2, 3, 0)]))
+        mesh = open3d.geometry.TriangleMesh(vertices=open3d.utility.Vector3dVector(delaunay.points),
+                                            triangles=open3d.utility.Vector3iVector(tris))
+        count = utils.format_number(len(tris))
     else:
-        tetras = open3d.utility.Vector4iVector(simplices)
-        mesh = open3d.geometry.TetraMesh(vertices, tetras)
-        count = utils.format_number(len(tetras))
+        count = utils.format_number(len(delaunay.simplices))
+        mesh = open3d.geometry.TetraMesh(vertices=open3d.utility.Vector3dVector(delaunay.points),
+                                         tetras=open3d.utility.Vector4iVector(delaunay.simplices))
 
     end_time = time.time()
     elapsed_time = round(end_time - start_time, 3)
@@ -113,9 +115,12 @@ def Delaunay(point_cloud: PointCloud, as_tris:bool = True):
 
 
 def tetrahedra_to_triangles_numpy(tetrahedra: np.ndarray) -> np.ndarray:
-    triangle_indices = np.array([[0, 1, 2], [0, 2, 3], [0, 1, 3], [1, 2, 3]])
-
+    # triangle_indices = np.array([[0, 1, 2], [0, 2, 3], [0, 1, 3], [1, 2, 3]])
     # Create triangles by indexing vertices
-    triangles: np.ndarray = tetrahedra[:, triangle_indices]
-    triangles = np.reshape(triangles, newshape=(triangles.shape[0] * triangles.shape[1], triangles.shape[2]))
+    tri1 = tetrahedra[:, (0, 1, 2)]
+    tri2 = tetrahedra[:, (0, 2, 3)]
+    tri3 = tetrahedra[:, (0, 1, 3)]
+    tri4 = tetrahedra[:, (1, 2, 3)]
+
+    triangles = np.vstack((tri1, tri2, tri3, tri4))
     return triangles
