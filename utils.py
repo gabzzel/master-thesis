@@ -5,7 +5,6 @@ import numpy as np
 import open3d
 from open3d.cpu.pybind.core import Tensor
 from open3d.cpu.pybind.t.geometry import RaycastingScene
-from open3d.geometry import TriangleMesh
 from point_cloud_utils import k_nearest_neighbors
 
 import mesh_quality
@@ -39,8 +38,16 @@ def get_stats(a: np.array, name: str, print_results=True, round_digits=3, return
         return _max, _min, avg, med, std
 
 
-def get_mesh_edge_lengths(vertices, triangles):
-    # Compute edge lengths and remove duplicates!
+def get_edge_lengths_flat(vertices: np.ndarray, triangles: np.ndarray):
+    """
+    Compute the edge lengths given a set of vertices / coordinates and a set of triangles with vertex indices.
+    Returns a flat representation of all edge lengths, with the edge lengths being sorted and guaranteed unique.
+
+    :param vertices: The vertices of the triangle mesh for which to calculate the edge lengths.
+    :param triangles: The triangles of the triangle mesh containing the indices of the vertices.
+    :return: A 1D numpy array containing all the edge lengths of the triangle mesh.
+    """
+
     edges = np.sort(triangles[:, [0, 1]])  # Sort the vertices by index, take only the first and second vertex
     edges = np.unique(edges, axis=0)  # Only keep the unique ones
     edges = np.vstack((edges, np.sort(triangles[:, [1, 2]])))
@@ -48,6 +55,24 @@ def get_mesh_edge_lengths(vertices, triangles):
     edges = np.vstack((edges, np.sort(triangles[:, [2, 0]])))
     edges = np.unique(edges, axis=0)
     edge_lengths = np.linalg.norm(vertices[edges[:, 0]] - vertices[edges[:, 1]], axis=1)
+    return edge_lengths
+
+
+def get_edge_lengths_per_triangle(vertices: np.ndarray, triangles: np.ndarray):
+    """
+    Compute the edge lengths given a set of vertices / coordinates and a set of triangles with vertex indices,
+    Returns a 2D numpy array containing the three edge lengths per triangle.
+    :param vertices: A 1D numpt array containing the vertices of the triangle mesh for which to compute the edge \
+    lengths.
+    :param triangles: A 2D numpy array containing the triangles of the triangle mesh for which to compute the edge \
+    lengths.
+    :return: A 2D numpy array containing the edge lengths for each triangle.
+    """
+    edge_lengths = np.zeros((len(triangles), 3))
+    for i in range(3):
+        v0 = vertices[triangles[:, i]]
+        v1 = vertices[triangles[:, (i + 1) % 3]]
+        edge_lengths[:, i] = np.linalg.norm(v0 - v1, axis=1)
     return edge_lengths
 
 
@@ -130,28 +155,36 @@ def clean_mesh_metric(mesh: Union[open3d.geometry.TriangleMesh, open3d.geometry.
     start_time = time.time()
     nvo, nto = get_mesh_verts_and_tris(mesh=mesh)
     quantile = min(1.0, max(quantile, 0.0))
+
     metric_all = None
     metric_cleaned = None
+    vertices = np.asarray(mesh.vertices)
+    triangles = np.asarray(mesh.triangles)
 
-    if quantile > 0 or absolute > 0:
-        vertices = np.asarray(mesh.vertices)
-        triangles = np.asarray(mesh.triangles)
-        edge_lengths = utils.get_mesh_edge_lengths(vertices=vertices, triangles=triangles)
-        if metric == "aspect_ratio" or metric == "ar":
-            metric_all = utils.aspect_ratios(edge_lengths=edge_lengths)
-        elif metric == "edge_length" or metric == "el":
-            metric_all = edge_lengths
+    edge_lengths = utils.get_edge_lengths_per_triangle(vertices=vertices, triangles=triangles)
 
-        if quantile > 0 and absolute > 0:
-            threshold = min(np.quantile(metric_all, quantile), absolute)
-        elif quantile > 0:
-            threshold = np.quantile(metric_all, quantile)
-        else:
-            threshold = absolute
-        print(f"Actual threshold: {threshold}")
+    if metric == "aspect_ratio" or metric == "ar":
+        metric_all = utils.aspect_ratios_edge_lengths(edge_lengths=edge_lengths)
+    elif metric == "edge_length" or metric == "el":
+        metric_all = edge_lengths
+
+    if quantile > 0 and absolute > 0:
+        threshold = min(np.quantile(metric_all.flatten(), quantile), absolute)
+    elif quantile > 0:
+        threshold = np.quantile(metric_all.flatten(), quantile)
+    else:
+        threshold = absolute
+
+    print(f"Actual threshold: {threshold}")
+
+    if metric == "aspect_ratio" or metric == "ar":
         mesh.remove_triangles_by_mask(metric_all > threshold)
         metric_cleaned = metric_all[metric_all <= threshold]
-        mesh.remove_unreferenced_vertices()
+    elif metric == "edge_length" or metric == "el":
+        mesh.remove_triangles_by_mask(np.any(a=metric_all > threshold, axis=1))
+        metric_cleaned = metric_all[np.any(a=metric_all <= threshold, axis=1)]
+
+    mesh.remove_unreferenced_vertices()
 
     if verbose:
         print_cleaning_result(mesh=mesh, start_time=start_time, vertices_before=nvo, simplices_before=nto)
@@ -185,7 +218,7 @@ def get_mesh_triangle_normal_deviations(triangles: np.ndarray, triangle_normals:
     return np.degrees(np.arccos(dots))
 
 
-def get_points_to_mesh_distances(points: np.ndarray, mesh: TriangleMesh):
+def get_points_to_mesh_distances(points: np.ndarray, mesh: open3d.geometry.TriangleMesh):
     """
     Compute the distances from a set of points to the closest points on the surface of a mesh.
 
@@ -210,7 +243,7 @@ def get_distances_closest_point(x, y):
     return dists_x_to_y
 
 
-def aspect_ratios(edge_lengths: np.ndarray) -> np.ndarray:
+def aspect_ratios_edge_lengths(edge_lengths: np.ndarray) -> np.ndarray:
     # Calculate aspect ratio for each triangle
     min_edge_lengths = np.min(edge_lengths, axis=1)
     max_edge_lengths = np.max(edge_lengths, axis=1)
@@ -222,14 +255,8 @@ def aspect_ratios(edge_lengths: np.ndarray) -> np.ndarray:
 
 
 def aspect_ratios(vertices: np.ndarray, triangles: np.ndarray) -> np.ndarray:
-    # Compute edge lengths for each triangle
-    edge_lengths = np.zeros((len(triangles), 3))
-    for i in range(3):
-        v0 = vertices[triangles[:, i]]
-        v1 = vertices[triangles[:, (i + 1) % 3]]
-        edge_lengths[:, i] = np.linalg.norm(v0 - v1, axis=1)
-
-    return aspect_ratios(edge_lengths=edge_lengths)
+    edge_lengths = get_edge_lengths_per_triangle(vertices=vertices, triangles=triangles)
+    return aspect_ratios_edge_lengths(edge_lengths=edge_lengths)
 
 
 def check_mesh_type(mesh: Union[open3d.geometry.TriangleMesh, open3d.geometry.TetraMesh]) -> bool:

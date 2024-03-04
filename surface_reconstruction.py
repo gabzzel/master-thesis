@@ -95,10 +95,32 @@ def Delaunay(point_cloud: open3d.geometry.PointCloud, as_tris: bool = True) \
 
     start_time = time.time()
     # Make a copy just to be sure
-    delaunay = scipy.spatial.Delaunay(np.asarray(point_cloud.points).copy())
+
+    # QJ = "joggled input to avoid precision errors" http://www.qhull.org/html/qh-optq.htm#QJn
+    # Qbb = "scale the last coordinate to [0,m] for Delaunay" http://www.qhull.org/html/qh-optq.htm#Qbb
+    # Qc = "keep coplanar points with nearest facet" http://www.qhull.org/html/qh-optq.htm#Qc
+    # Qz = "add a point-at-infinity for Delaunay triangulations" http://www.qhull.org/html/qh-optq.htm#Qz
+    # Q12 = "allow wide facets and wide dupridge" http://www.qhull.org/html/qh-optq.htm#Q12
+    qhull_options = "Qt Qbb Qc Qz Q12"
+
+    # From the Scipy docs: (https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.Delaunay.html)
+    # Option “Qt” is always enabled. Default: "Qbb Qc Qz Qx Q12" for ndim > 4 and “Qbb Qc Qz Q12” otherwise.
+    # Incremental mode omits “Qz”.
+    delaunay = scipy.spatial.Delaunay(np.asarray(point_cloud.points).copy(), qhull_options=qhull_options)
 
     if as_tris:
-        tris = np.vstack((delaunay.simplices[:, (0, 1, 2)], delaunay.simplices[:, (2, 3, 0)]))
+        tetrahedra = delaunay.simplices
+        tris = np.vstack((tetrahedra[:, [0, 1, 2]],
+                          tetrahedra[:, [0, 1, 3]],
+                          tetrahedra[:, [0, 2, 3]],
+                          tetrahedra[:, [1, 2, 3]]))
+
+        # Sort and remove duplicates
+        tris.sort(axis=1)
+        tris = np.unique(tris, axis=0)
+        isin = np.isin(tris, delaunay.convex_hull.flatten())
+        is_convex_hull_facet = np.any(isin, axis=1)
+        tris = tris[~is_convex_hull_facet]
         mesh = open3d.geometry.TriangleMesh(vertices=open3d.utility.Vector3dVector(delaunay.points),
                                             triangles=open3d.utility.Vector3iVector(tris))
         count = utils.format_number(len(tris))

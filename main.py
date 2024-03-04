@@ -11,18 +11,24 @@ if __name__ == "__main__":
     # point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\etvr\\enfsi-2023_reduced_cloud.pcd"
     point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\dummy\\stanford-dragon\\dragon_recon\\dragon_vrip.ply"
     voxel_size = 0.05
-    prefer_triangle_mesh = True
     verbose = True
     pcd = load_point_cloud(point_cloud_path, down_sample_method=None, down_sample_param=0.01, verbose=verbose)
     estimate_normals(pcd, max_nn=30, radius=0.4, orient=None, normalize=True, verbose=verbose)
-    mesh = surface_reconstruction.Delaunay(pcd, as_tris=prefer_triangle_mesh)
-    # mesh = surface_reconstruction.SPSR(pcd, octree_max_depth=8)
+    mesh = surface_reconstruction.Delaunay(pcd, as_tris=True)
 
-    # Clean the mesh and return the aspect ratios (if calculated, which is done when aspect ratio threshold are > 0)
-    utils.clean_mesh_simple(mesh=mesh, verbose=verbose)  # Do a simple cleaning, never a bad thing.
-    _, aspect_ratios_clean = utils.clean_mesh_metric(mesh=mesh, metric="aspect_ratio")
-    #if prefer_triangle_mesh:
-        #evaluation.evaluate_mesh(mesh, aspect_ratios=aspect_ratios_clean)
+    utils.clean_mesh_simple(mesh=mesh, verbose=verbose)
+
+    edge_lengths, edge_lengths_clean = utils.clean_mesh_metric(mesh,
+                                                               metric="edge_length",
+                                                               quantile=0.9,
+                                                               verbose=verbose)
+
+    all_aspect_ratios, aspect_ratios_clean = utils.clean_mesh_metric(mesh=mesh,
+                                                                     metric="aspect_ratio",
+                                                                     quantile=0.9,
+                                                                     verbose=verbose)
+
+    evaluation.evaluate_mesh(mesh, aspect_ratios=aspect_ratios_clean, nd=False, dc=False)
     # evaluation.evaluate_point_cloud_mesh(pcd, mesh)
     open3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
 

@@ -44,7 +44,20 @@ def evaluate_point_cloud_mesh(point_cloud: open3d.geometry.PointCloud,
     plt.hist(distances_pts_to_mesh, histtype='step', log=True, bins=100)
 
 
-def evaluate_mesh(mesh: open3d.geometry.TriangleMesh, aspect_ratios=None):
+def evaluate_mesh(mesh: open3d.geometry.TriangleMesh, aspect_ratios=None, el=True, ar=True, co=True, nd=True, dc=True):
+    """
+    Evaluate a mesh on its quality and print the results.
+
+    :param mesh: The mesh to evaluate.
+    :param aspect_ratios: Precomputed aspect ratios, if available. None otherwise.
+    :param el: Whether to evaluate the edge lengths of the mesh.
+    :param ar: Whether to evaluate the aspect ratios of the mesh.
+    :param co: Whether to evaluate the connectivity of the mesh.
+    :param nd: Whether to evaluate the triangle normal deviations of the mesh.
+    :param dc: Whether to evaluate the discrete curvature of the mesh.
+    :return: None
+    """
+
     if not mesh.has_triangle_normals():
         mesh.compute_triangle_normals()
     if not mesh.has_adjacency_list():
@@ -59,36 +72,64 @@ def evaluate_mesh(mesh: open3d.geometry.TriangleMesh, aspect_ratios=None):
     triangle_normals = np.asarray(mesh.triangle_normals)
 
     # Edge length statistics
-    edge_lengths = utils.get_mesh_edge_lengths(vertices, triangles)
-    utils.get_stats(edge_lengths, name="Edge Lengths", print_results=True)
+    if el:
+        edge_lengths = utils.get_edge_lengths_flat(vertices, triangles)
+        utils.get_stats(edge_lengths, name="Edge Lengths", print_results=True)
 
-    # Aspect Ratio statistics
-    if aspect_ratios is None:
-        aspect_ratios = utils.aspect_ratios(vertices, triangles)
-    utils.get_stats(aspect_ratios, name="Aspect Ratios", print_results=True)
+    if ar:
+        # Aspect Ratio statistics
+        if aspect_ratios is None:
+            aspect_ratios = utils.aspect_ratios(vertices, triangles)
+        utils.get_stats(aspect_ratios, name="Aspect Ratios", print_results=True)
 
-    # cv is the index of the connected component of each vertex
-    # nv is the number of vertices per component
-    # cf is the index of the connected component of each face
-    # nf is the number of faces per connected component
-    cv, nv, cf, nf = point_cloud_utils.connected_components(vertices, triangles)
-    num_conn_comp = len(nf)  # Number of connected components (according to triangles)
-    largest_component_ratio = round(np.max(nf) / np.sum(nf) * 100.0, 3)
-    print(f"Connectivity: Connected Components={num_conn_comp}, largest component ratio={largest_component_ratio}")
+    if co:
+        evaluate_connectivity(triangles, vertices)
 
-    # Curvatures (Discrete)
-    curvatures = mesh_quality.discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1)
-    utils.get_stats(curvatures, "Discrete Curvature", print_results=True)
+    if dc:
+        evaluate_discrete_curvatures(triangle_normals, triangles, vertex_normals, vertices)
 
-    # Normal Deviations
+    if nd:
+        evaluate_normal_deviations(mesh.adjacency_list, triangle_normals, triangles)
+
+    # print(f"Principal Curvatures: Magnitudes Min={k1}, Max={k2}. Directions {d1} and {d2}")
+    # plt.hist(aspect_ratios, histtype='step', log=True, bins=100, label="Aspect Ratios")
+    # plt.show()
+
+
+def evaluate_normal_deviations(adjacency_list, triangle_normals, triangles):
     pr = cProfile.Profile()
     pr.enable()
-    deviations = mesh_quality.triangle_normal_deviations_adjacency(mesh.adjacency_list.copy(), triangles, triangle_normals)
+    deviations = mesh_quality.triangle_normal_deviations_adjacency(adjacency_list.copy(),
+                                                                   triangles,
+                                                                   triangle_normals)
     pr.disable()
     stats = pstats.Stats(pr)
     stats.sort_stats(pstats.SortKey.CUMULATIVE)
     stats.print_stats()
     utils.get_stats(deviations, name="Normal Deviations", print_results=True)
-    # print(f"Principal Curvatures: Magnitudes Min={k1}, Max={k2}. Directions {d1} and {d2}")
-    # plt.hist(aspect_ratios, histtype='step', log=True, bins=100, label="Aspect Ratios")
-    # plt.show()
+
+
+def evaluate_connectivity(triangles, vertices):
+    # cv is the index of the connected component of each vertex
+    # nv is the number of vertices per component
+    # cf is the index of the connected component of each face
+    # nf is the number of faces per connected component
+    cv, nv, cf, nf = point_cloud_utils.connected_components(vertices, triangles)
+    # If nf is a 0-dimensional array or has length 1, there is only a single component
+    if nf.ndim == 0 or len(nf) == 1:
+        num_conn_comp = 1
+        largest_component_ratio = 1.0
+    else:
+        num_conn_comp = len(nf)  # Number of connected components (according to triangles)
+        largest_component_ratio = round(np.max(nf) / np.sum(nf), 3)
+    print(f"Connectivity: Connected Components={num_conn_comp}, largest component ratio={largest_component_ratio}")
+
+
+def evaluate_discrete_curvatures(triangle_normals, triangles, vertex_normals, vertices):
+    curvatures = mesh_quality.discrete_curvature(vertices,
+                                                 vertex_normals,
+                                                 triangles,
+                                                 triangle_normals,
+                                                 sample_ratio=0.01,
+                                                 radius=0.1)
+    utils.get_stats(curvatures, "Discrete Curvature", print_results=True)
