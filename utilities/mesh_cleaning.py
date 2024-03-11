@@ -115,7 +115,7 @@ def clean_mesh_metric(mesh: Union[open3d.geometry.TriangleMesh, open3d.geometry.
         print("Both quantile and absolute value are 0. Returning None.")
         return None
 
-    if metric is not MeshCleaningMethod.EDGE_LENGTHS or metric is not MeshCleaningMethod.ASPECT_RATIOS:
+    if not (metric is MeshCleaningMethod.EDGE_LENGTHS) and not (metric is MeshCleaningMethod.ASPECT_RATIOS):
         print(f"Invalid specified metric {metric}. Must be one either {MeshCleaningMethod.ASPECT_RATIOS}. "
               f"or {MeshCleaningMethod.EDGE_LENGTHS}. Defaulting to aspect ratios.")
         return None

@@ -36,15 +36,20 @@ def execute(config_file: Optional[str]):
 
 
 def execute_run(run_config: RunConfiguration, verbose: bool = True, draw: bool = False):
+    print("\n ============= Step 1 : Loading & Preprocessing =============")
     pcd = load_point_cloud(config=run_config, verbose=verbose)
+
+    print("\n ============= Step 2 : Surface Reconstruction =============")
     mesh = surface_reconstruction.run(pcd=pcd, config=run_config, verbose=verbose)
 
+    print("\n ============= Step 3 : Cleaning =============")
     aspect_ratios = mesh_cleaning.run_mesh_cleaning(mesh=mesh, config=run_config, verbose=verbose)
 
     # If we have aspect ratios return from the mesh cleaning, we want the remaining after-cleaning aspect ratios
     if aspect_ratios is not None:
         aspect_ratios = aspect_ratios[1]
 
+    print("\n ============= Step 4 : Evaluation =============")
     evaluation.evaluate_mesh(mesh=mesh, config=run_config, precomputed_aspect_ratios=aspect_ratios, verbose=verbose)
 
     if draw:

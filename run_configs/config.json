@@ -6,19 +6,19 @@
   [
     {
       "down_sample_method":"voxel",
-      "down_sample_param":0.1,
+      "down_sample_param":1.0,
       "normal_estimation_neighbours":30,
       "normal_estimation_radius":0.1,
       "skip_normalizing_normals":false,
       "orient_normals": 0,
       "surface_reconstruction_algorithm":"delaunay",
-      "alpha":0.8657,
+      "alpha":0.02,
       "ball_pivoting_radii":[0.1, 0.05, 0.02, 0.01],
       "poisson_density_quantile":0.1,
       "poisson_octree_max_depth":8,
       "mesh_cleaning_methods":["simple", "edge_length", "aspect_ratio"],
-      "edge_length_clean_portion":0.54954,
-      "aspect_ratio_clean_portion":0.548594,
+      "edge_length_clean_portion":0.95,
+      "aspect_ratio_clean_portion":0.95,
       "mesh_quality_metrics":"all",
       "mesh_to_cloud_metrics":"all",
       "store_mesh":true

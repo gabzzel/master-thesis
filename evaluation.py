@@ -81,16 +81,21 @@ def evaluate_mesh(mesh: open3d.geometry.TriangleMesh,
     # plt.show()
 
 
-def evaluate_normal_deviations(adjacency_list, triangle_normals, triangles):
-    pr = cProfile.Profile()
-    pr.enable()
+def evaluate_normal_deviations(adjacency_list, triangle_normals, triangles, profile: bool = False):
+    if profile:
+        pr = cProfile.Profile()
+        pr.enable()
+
     deviations = mesh_quality.triangle_normal_deviations_adjacency(adjacency_list.copy(),
                                                                    triangles,
                                                                    triangle_normals)
-    pr.disable()
-    stats = pstats.Stats(pr)
-    stats.sort_stats(pstats.SortKey.CUMULATIVE)
-    stats.print_stats()
+
+    if profile:
+        pr.disable()
+        stats = pstats.Stats(pr)
+        stats.sort_stats(pstats.SortKey.CUMULATIVE)
+        stats.print_stats()
+
     utils.get_stats(deviations, name="Normal Deviations", print_results=True)
 
 
