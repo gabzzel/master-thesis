@@ -1,5 +1,7 @@
 import argparse
 import time
+from typing import Optional
+import pathlib
 
 import open3d
 
@@ -9,23 +11,31 @@ import surface_reconstruction
 from utilities.run_configuration import RunConfiguration
 
 
-def execute():
-    args: argparse.Namespace = io.parse_args()
+def execute(config_file: Optional[str]):
+    verbose = True
+    draw = False
 
-    if args is None:
-        print(f"Parsing arguments failed. Cancelling")
-        time.sleep(5)
+    if config_file is None:
+        args: argparse.Namespace = io.parse_args()
+        if args is None:
+            print(f"Parsing arguments failed. Cancelling")
+            time.sleep(5)
+            return
+        run_configs = io.get_run_configurations_from_args(args)
+
+    elif pathlib.Path(config_file).is_file():
+        run_configs, verbose, draw = io.get_run_configurations_from_json(pathlib.Path(config_file))
+
+    else:
+        print(f"Invalid config file path: {config_file}.")
         return
-
-    run_configs = io.get_run_configurations_from_args(args)
 
     for i in range(len(run_configs)):
         print(f"Starting run {i + 1}/{len(run_configs)}")
-        execute_run(run_configs[i], args)
+        execute_run(run_configs[i], verbose=verbose, draw=draw)
 
 
-def execute_run(run_config: RunConfiguration, args: argparse.Namespace):
-    verbose = args.verbose
+def execute_run(run_config: RunConfiguration, verbose: bool = True, draw: bool = False):
     pcd = load_point_cloud(config=run_config, verbose=verbose)
     mesh = surface_reconstruction.run(pcd=pcd, config=run_config, verbose=verbose)
 
@@ -37,7 +47,7 @@ def execute_run(run_config: RunConfiguration, args: argparse.Namespace):
 
     evaluation.evaluate_mesh(mesh=mesh, config=run_config, precomputed_aspect_ratios=aspect_ratios, verbose=verbose)
 
-    if args.draw:
+    if draw:
         open3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
 
 
@@ -57,7 +67,8 @@ def load_point_cloud(config: RunConfiguration, verbose: bool = True) -> open3d.g
 
 
 if __name__ == "__main__":
-    execute()
+    config_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\run_configs\\config.json"
+    execute(config_path)
 
     # point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\etvr\\enfsi-2023_reduced_cloud.pcd"
 

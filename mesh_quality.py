@@ -16,16 +16,25 @@ def get_mesh_quality_metric(text: str) -> Optional[MeshEvaluationMetric]:
     t = text.lower().strip()
     t = t.replace(" ", "_")
 
-    if t == "edge_lengths" or t == "edge_length" or t == "el":
+    if "edge" in t or t == "el":
         return MeshEvaluationMetric.EDGE_LENGTHS
-    elif t == "triangle_aspect_ratios" or t == "aspect_ratio" or t == "aspect_ratios" or t == "ar":
+    elif "aspect" in t or t == "ar":
         return MeshEvaluationMetric.TRIANGLE_ASPECT_RATIOS
-    elif t == "triangle_normal_deviations" or t == "normal_deviations" or t == "normal_deviation" or t == "nd":
+    elif "normal" in t or t == "normal_deviations" or t == "normal_deviation" or t == "nd":
         return MeshEvaluationMetric.TRIANGLE_NORMAL_DEVIATIONS
     elif t == "discrete_curvature" or t == "curvature" or t == "dc":
         return MeshEvaluationMetric.DISCRETE_CURVATURE
     elif t == "connectivity" or t == "conn" or t == "co" or t == "c":
         return MeshEvaluationMetric.CONNECTIVITY
+
+    elif t == "hausdorff_distance" or t == "hausdorff" or t == "h":
+        return MeshEvaluationMetric.HAUSDORFF_DISTANCE
+    elif t == "chamfer_distance" or t == "chamfer" or t == "ch":
+        return MeshEvaluationMetric.CHAMFER_DISTANCE
+    elif t == "mesh_to_cloud_distance" or t == "m2cd" or t == "mesh_to_cloud":
+        return MeshEvaluationMetric.MESH_TO_CLOUD_DISTANCE
+    elif t == "all":
+        return MeshEvaluationMetric.ALL
 
     return None
 

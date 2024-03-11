@@ -1,15 +1,17 @@
 import argparse
+import json
 from pathlib import Path
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Union, Set
 
+import mesh_quality
 import surface_reconstruction
-
-from utilities.run_configuration import RunConfiguration
 from utilities import mesh_cleaning, pcd_utils
+from utilities.enumerations import DownSampleMethod as DSM
+from utilities.enumerations import MeshCleaningMethod as MCM
+from utilities.enumerations import MeshEvaluationMetric as MEM
 from utilities.enumerations import SurfaceReconstructionMethod as SRM
 from utilities.enumerations import SurfaceReconstructionParameters as SRP
-from utilities.enumerations import DownSampleMethod as DSM
-from utilities.enumerations import CleaningType
+from utilities.run_configuration import RunConfiguration
 
 
 def parse_args() -> Optional[argparse.Namespace]:
@@ -164,8 +166,8 @@ def get_surface_reconstruction_configs(args: argparse.Namespace) -> List[Tuple]:
 
 
 def get_run_configurations_from_args(args: argparse.Namespace) -> List[RunConfiguration]:
-    if args.mesh_clean_methods is None or CleaningType.NONE in args.mesh_clean_methods:
-        mesh_cleaning_methods = {CleaningType.NONE}
+    if not args.mesh_clean_methods:
+        mesh_cleaning_methods = None
     else:
         mesh_cleaning_methods = set([mesh_cleaning.get_cleaning_type(m) for m in args.mesh_clean_methods])
 
@@ -173,10 +175,18 @@ def get_run_configurations_from_args(args: argparse.Namespace) -> List[RunConfig
     aspect_ratio_clean_portion = min(0.0, max(args.aspect_ratio_clean_portion, 1.0))
 
     # Not a set, since we can have the same sampling method multiple times.
-    if args.down_sample_methods is None or None in args.down_sample_methods or DSM.NONE in args.down_sample_methods:
-        point_cloud_samplings: List[DSM] = [DSM.NONE]
+    if not args.down_sample_methods:
+        point_cloud_samplings = None
     else:
-        point_cloud_samplings: List[DSM] = [pcd_utils.get_down_sample_method(m) for m in args.down_sample_methods]
+        point_cloud_samplings = [pcd_utils.get_down_sample_method(m) for m in args.down_sample_methods]
+
+    # Parse the mesh quality metrics
+    if not args.mesh_quality_metrics:
+        mesh_quality_metrics = None
+    elif args.mesh_quality_metrics is 'all' or 'all' in [i.lower().strip() for i in args.mesh_quality_metrics]:
+        mesh_quality_metrics = [i for i in mesh_quality.MeshEvaluationMetric]
+    else:
+        mesh_quality_metrics = set([mesh_quality.get_mesh_quality_metric(i) for i in args.mesh_quality_metrics])
 
     configs: List[RunConfiguration] = []
 
@@ -201,7 +211,148 @@ def get_run_configurations_from_args(args: argparse.Namespace) -> List[RunConfig
                                       orient_normals=args.orient_normals,
                                       skip_normalizing_normals=args.skip_normalizing_normals,
                                       normal_estimation_radius=args.normal_estimation_radius,
-                                      normal_estimation_neighbours=args.normal_estimation_neighbours)
+                                      normal_estimation_neighbours=args.normal_estimation_neighbours,
+                                      mesh_evaluation_metrics=mesh_quality_metrics)
             configs.append(config)
 
     return configs
+
+
+def get_run_configurations_from_json(file_name: Path) -> Tuple[List[RunConfiguration], bool, bool]:
+    verbose = True
+    draw = False
+
+    configs = []
+
+    with open(file=file_name, mode='r') as f:
+        text = f.read()
+        json_data_raw = json.loads(text)
+
+        if not ("runs" in json_data_raw) or not ("point_cloud_path" in json_data_raw):
+            print(f"No runs found in {file_name} OR no file path found.")
+            return [], verbose, draw
+
+        if "verbose" in json_data_raw:
+            verbose = bool(json_data_raw["verbose"])
+        if "draw" in json_data_raw:
+            draw = bool(json_data_raw["draw"])
+
+        pcd_path = Path(json_data_raw['point_cloud_path'])
+
+        for i in range(len(json_data_raw["runs"])):
+            run_config_raw = json_data_raw["runs"][i]
+            try:
+                config = run_config_from_json(run_config_raw, pcd_path=pcd_path)
+                configs.append(config)
+            except json.JSONDecodeError as e:
+                print(f"Could not parse run {i} json config file {file_name}: {e}")
+            except Exception as e:
+                print(f"{e}")
+
+    return configs, verbose, draw
+
+
+def run_config_from_json(data, pcd_path: Union[Path, str]) -> RunConfiguration:
+    if "down_sample_method" in data:
+        down_sample_methods = pcd_utils.get_down_sample_method(data["down_sample_method"])
+    else:
+        print(f"No down_sample_method in config. Using default {None}")
+        down_sample_methods = None
+
+    down_sample_params = data["down_sample_param"] if "down_sample_param" in data else 0
+    nen = int(data["normal_estimation_neighbours"]) if "normal_estimation_neighbours" in data else 0
+    ner = float(data["normal_estimation_radius"]) if "normal_estimation_radius" in data else 0.0
+    snn = bool(data["skip_normalizing_normals"]) if "skip_normalizing_normals" in data else False
+    orient_normals = int(data["orient_normals"]) if "orient_normals" in data else 0
+
+    sra = {SRM.DELAUNAY_TRIANGULATION}
+    if "surface_reconstruction_algorithm" in data:
+        sra = surface_reconstruction.get_surface_reconstruction_method(data["surface_reconstruction_algorithm"])
+    else:
+        print(f"No surface reconstruction algorithm found in config. Using default {SRM.DELAUNAY_TRIANGULATION}")
+
+    alpha = get_metric_to_list(data, name="alpha", default_single=0.5)
+    bpa_radii = get_metric_to_list(data, name="ball_pivoting_radii", default_single=0.5)
+
+    poisson_density_quantile = float(data["poisson_density_quantile"]) if "poisson_density_quantile" in data else 0.1
+    poisson_octree_max_depth = int(data["poisson_octree_max_depth"]) if "poisson_octree_max_depth" in data else 8
+
+    srp = {
+        SRP.ALPHA: alpha,
+        SRP.BPA_RADII: bpa_radii,
+        SRP.POISSON_DENSITY_QUANTILE_THRESHOLD: poisson_density_quantile,
+        SRP.POISSON_OCTREE_MAX_DEPTH: poisson_octree_max_depth
+    }
+
+    mcm = None
+    if "mesh_cleaning_methods" in data:
+        if isinstance(data["mesh_cleaning_methods"], list):
+            mcm = set([mesh_cleaning.get_cleaning_type(i.lower().strip()) for i in data["mesh_cleaning_methods"]])
+        elif isinstance(data["mesh_cleaning_methods"], str):
+            mcm = {mesh_cleaning.get_cleaning_type(data["mesh_cleaning_methods"])}
+    if mcm and MCM.ALL in mcm:
+        mcm = set([i for i in MCM])
+
+    eclp = float(data["edge_length_clean_portion"]) if "edge_length_clean_portion" in data else 0.9
+    arcp = float(data["aspect_ratio_clean_portion"]) if "aspect_ratio_clean_portion" in data else 0.9
+
+    mem = extract_quality_metric(data, metric_name="mesh_quality_metrics", everything={MEM.DISCRETE_CURVATURE,
+                                                                                       MEM.TRIANGLE_NORMAL_DEVIATIONS,
+                                                                                       MEM.EDGE_LENGTHS,
+                                                                                       MEM.TRIANGLE_ASPECT_RATIOS,
+                                                                                       MEM.CONNECTIVITY})
+    m2cm = extract_quality_metric(data, metric_name="mesh_to_cloud_metrics", everything={MEM.CHAMFER_DISTANCE,
+                                                                                         MEM.HAUSDORFF_DISTANCE,
+                                                                                         MEM.MESH_TO_CLOUD_DISTANCE})
+    if mem is not None and m2cm is not None:
+        mem = mem.union(m2cm)
+    elif mem is None and m2cm is not None:
+        mem = m2cm
+
+    store_mesh = bool(data["store_mesh"]) if "store_mesh" in data else False
+
+    return RunConfiguration(pcd_path=pcd_path,
+                            down_sample_method=down_sample_methods,
+                            down_sample_params=down_sample_params,
+                            surface_reconstruction_method=sra,
+                            surface_reconstruction_params=srp,
+                            mesh_cleaning_methods=mcm,
+                            edge_length_cleaning_portion=eclp,
+                            aspect_ratio_cleaning_portion=arcp,
+                            normal_estimation_neighbours=nen,
+                            normal_estimation_radius=ner,
+                            skip_normalizing_normals=snn,
+                            orient_normals=orient_normals,
+                            mesh_evaluation_metrics=mem,
+                            store_mesh=store_mesh)
+
+
+def get_metric_to_list(data, name: str, default_single: Union[int, float], verbose: bool = True):
+    t = type(default_single)
+    if name in data:
+        d = data[name]
+        if isinstance(d, list):
+            return [t(i) for i in data["ball_pivoting_radii"]]
+        elif isinstance(d, t):
+            return [d]
+
+    if verbose:
+        print(f"Metric {name} not found. Defaulting to {default_single}.")
+
+    return [default_single]
+
+
+def extract_quality_metric(data, metric_name: str, everything: Set[MEM]) -> Optional[Set[MEM]]:
+    mem = None
+    if metric_name in data:
+        m = data[metric_name]
+
+        if isinstance(m, list):
+            mem = set([mesh_quality.get_mesh_quality_metric(i.lower().strip()) for i in m])
+        elif isinstance(m, str):
+            mem = {mesh_quality.get_mesh_quality_metric(m)}
+    if mem and MEM.ALL in mem:
+        mem = everything
+    elif mem and None in mem:  # Reduce to None if it's only a set containing None
+        mem = None
+    return mem

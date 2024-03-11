@@ -40,6 +40,9 @@ def run(pcd: open3d.geometry.PointCloud,
         raise ValueError(f"Unknown algorithm {config.surface_reconstruction_method}. "
                          f"Must be one of {list(SRM)}")
 
+    if verbose:
+        print(f"Starting surface reconstruction using {config.surface_reconstruction_method}")
+
     if config.surface_reconstruction_method == SRM.BALL_PIVOTING_ALGORITHM:
         radii = config.surface_reconstruction_params[SRP.BPA_RADII]
         return ball_pivoting_algorithm(point_cloud=pcd, radii=radii, verbose=verbose)
@@ -58,10 +61,12 @@ def run(pcd: open3d.geometry.PointCloud,
 
     elif config.surface_reconstruction_method == SRM.DELAUNAY_TRIANGULATION:
         return delaunay_triangulation(point_cloud=pcd, as_tris=True)
-    else:
+
+    elif verbose:
         print(f"Unknown algorithm {config.surface_reconstruction_method}"
               f" or invalid parameters {config.surface_reconstruction_params}.")
-        return None
+
+    return None
 
 
 def alpha_shapes(point_cloud, alpha=0.02, verbose=True):

@@ -4,42 +4,44 @@ import numpy as np
 import open3d
 
 from utilities import mesh_utils, run_configuration
-from utilities.enumerations import CleaningType
+from utilities.enumerations import MeshCleaningMethod
 
 
-def get_cleaning_type(cleaning_type_text: str) -> CleaningType:
+def get_cleaning_type(cleaning_type_text: str) -> Optional[MeshCleaningMethod]:
     t = cleaning_type_text.lower().strip()
     t = t.replace(" ", "_")
 
     if t == "s" or t == "simple":
-        return CleaningType.SIMPLE
-    elif t == "edge_lengths" or t == "el":
-        return CleaningType.EDGE_LENGTHS
-    elif t == "aspect_ratios" or t == "ar":
-        return CleaningType.ASPECT_RATIOS
+        return MeshCleaningMethod.SIMPLE
+    elif "edge" in t or t == "el":
+        return MeshCleaningMethod.EDGE_LENGTHS
+    elif "aspect" in t or t == "ar":
+        return MeshCleaningMethod.ASPECT_RATIOS
+    elif t == "all":
+        return MeshCleaningMethod.ALL
 
-    return CleaningType.NONE
+    return None
 
 
 def run_mesh_cleaning(mesh: open3d.geometry.TriangleMesh,
                       config: run_configuration.RunConfiguration,
                       verbose: bool = True) -> Optional[Tuple[np.ndarray, np.ndarray]]:
-    if CleaningType.NONE in config.mesh_cleaning_methods:
+    if not config.mesh_cleaning_methods:
         return None
 
-    if CleaningType.SIMPLE in config.mesh_cleaning_methods:
+    if MeshCleaningMethod.SIMPLE in config.mesh_cleaning_methods:
         clean_mesh_simple(mesh=mesh, verbose=verbose)
 
-    if CleaningType.EDGE_LENGTHS in config.mesh_cleaning_methods:
+    if MeshCleaningMethod.EDGE_LENGTHS in config.mesh_cleaning_methods:
         clean_mesh_metric(mesh=mesh,
-                          metric=CleaningType.EDGE_LENGTHS,
+                          metric=MeshCleaningMethod.EDGE_LENGTHS,
                           quantile=config.edge_length_cleaning_portion,
                           verbose=True)
 
     ar = ar_clean = None
-    if CleaningType.ASPECT_RATIOS in config.mesh_cleaning_methods:
+    if MeshCleaningMethod.ASPECT_RATIOS in config.mesh_cleaning_methods:
         ar, ar_clean = clean_mesh_metric(mesh=mesh,
-                                         metric=CleaningType.ASPECT_RATIOS,
+                                         metric=MeshCleaningMethod.ASPECT_RATIOS,
                                          quantile=config.aspect_ratio_cleaning_portion,
                                          verbose=verbose)
 
@@ -87,7 +89,7 @@ def clean_mesh_simple(mesh: Union[open3d.geometry.TriangleMesh, open3d.geometry.
 
 
 def clean_mesh_metric(mesh: Union[open3d.geometry.TriangleMesh, open3d.geometry.TetraMesh],
-                      metric: CleaningType = CleaningType.ASPECT_RATIOS,
+                      metric: MeshCleaningMethod = MeshCleaningMethod.ASPECT_RATIOS,
                       quantile: float = 0.95,
                       absolute: float = 1000,
                       verbose: bool = True) -> Optional[Tuple[np.ndarray, np.ndarray]]:
@@ -113,9 +115,9 @@ def clean_mesh_metric(mesh: Union[open3d.geometry.TriangleMesh, open3d.geometry.
         print("Both quantile and absolute value are 0. Returning None.")
         return None
 
-    if metric is not CleaningType.EDGE_LENGTHS or metric is not CleaningType.ASPECT_RATIOS:
-        print(f"Invalid specified metric {metric}. Must be one either {CleaningType.ASPECT_RATIOS}. "
-              f"or {CleaningType.EDGE_LENGTHS}. Defaulting to aspect ratios.")
+    if metric is not MeshCleaningMethod.EDGE_LENGTHS or metric is not MeshCleaningMethod.ASPECT_RATIOS:
+        print(f"Invalid specified metric {metric}. Must be one either {MeshCleaningMethod.ASPECT_RATIOS}. "
+              f"or {MeshCleaningMethod.EDGE_LENGTHS}. Defaulting to aspect ratios.")
         return None
 
     if verbose:
@@ -132,9 +134,9 @@ def clean_mesh_metric(mesh: Union[open3d.geometry.TriangleMesh, open3d.geometry.
 
     edge_lengths = mesh_utils.get_edge_lengths_per_triangle(vertices=vertices, triangles=triangles)
 
-    if metric == CleaningType.ASPECT_RATIOS:
+    if metric == MeshCleaningMethod.ASPECT_RATIOS:
         metric_all = mesh_utils.aspect_ratios_edge_lengths(edge_lengths=edge_lengths)
-    elif metric == CleaningType.EDGE_LENGTHS:
+    elif metric == MeshCleaningMethod.EDGE_LENGTHS:
         metric_all = edge_lengths
 
     if quantile > 0 and absolute > 0:
@@ -146,10 +148,10 @@ def clean_mesh_metric(mesh: Union[open3d.geometry.TriangleMesh, open3d.geometry.
 
     print(f"Actual threshold: {threshold}")
 
-    if metric == CleaningType.ASPECT_RATIOS:
+    if metric == MeshCleaningMethod.ASPECT_RATIOS:
         mesh.remove_triangles_by_mask(metric_all > threshold)
         metric_cleaned = metric_all[metric_all <= threshold]
-    elif metric == CleaningType.EDGE_LENGTHS:
+    elif metric == MeshCleaningMethod.EDGE_LENGTHS:
         mesh.remove_triangles_by_mask(np.any(a=metric_all > threshold, axis=1))
         metric_cleaned = metric_all[np.any(a=metric_all <= threshold, axis=1)]
 

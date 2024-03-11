@@ -1,21 +1,27 @@
-import open3d
 import time
+from pathlib import Path
+from typing import Optional, Union
 
-from utilities.enumerations import DownSampleMethod
+import open3d
+
 from utilities import utils
+from utilities.enumerations import DownSampleMethod
 
 
-def get_down_sample_method(down_sample_method_string: str) -> DownSampleMethod:
+def get_down_sample_method(down_sample_method_string: str) -> Optional[DownSampleMethod]:
     t = down_sample_method_string.lower().strip()
     t = t.replace(" ", "_")
     if t == "voxel" or t == "v":
         return DownSampleMethod.VOXEL
     elif t == "random" or t == "rand" or t == "r":
         return DownSampleMethod.RANDOM
-    return DownSampleMethod.NONE
+    return None
 
 
-def load_point_cloud(path, down_sample_method=None, down_sample_param=None, verbose=True) -> open3d.geometry.PointCloud:
+def load_point_cloud(path: Union[Path, str],
+                     down_sample_method: DownSampleMethod = None,
+                     down_sample_param: Optional[Union[float, int]] = None,
+                     verbose=True) -> open3d.geometry.PointCloud:
     """
     Load a point cloud into Open3D format.
 
@@ -43,23 +49,18 @@ def load_point_cloud(path, down_sample_method=None, down_sample_param=None, verb
         elapsed_time = str(round(end_time - start_time, 2))
         print(f"Loaded point cloud with {num_pts} points [{elapsed_time}s]")
 
-    if down_sample_method is None or down_sample_method == DownSampleMethod.NONE:
+    if down_sample_method is None or not (down_sample_method in DownSampleMethod):
         if verbose:
-            print(f"Downsampling skipped: got desired down sampling method {down_sample_method}")
-        return pcd
-
-    if not isinstance(down_sample_method, str) or down_sample_method not in ['voxel', 'random']:
-        if verbose:
-            print(f"Invalid downsampling method {down_sample_method}. Cancelling downsampling.")
+            print(f"Skipping downsampling: got None or invalid downsampling method {down_sample_method}")
         return pcd
 
     num_points_original = len(pcd.points)
     npof = utils.format_number(num_points_original)  # Number Points Original Formatted
     start_time = time.time()
 
-    if down_sample_method == 'voxel':
+    if down_sample_method == DownSampleMethod.VOXEL:
         pcd = pcd.voxel_down_sample(voxel_size=down_sample_param)
-    elif down_sample_method == 'random':
+    elif down_sample_method == DownSampleMethod.RANDOM:
         down_sample_param = max(0, min(1, down_sample_param))
         pcd = pcd.random_down_sample(sampling_ratio=down_sample_param)
 
@@ -103,10 +104,9 @@ def estimate_normals(point_cloud: open3d.geometry.PointCloud,
     radius_valid = radius is not None and isinstance(radius, float) and radius > 0.0
 
     if not max_nn_valid and not radius_valid:
-        print(f"WARNING: Both max_nn ({max_nn}) and radius ({radius}) values are invalid. Using default max_nn=30.")
-        print("If this is not desired behaviour, please check the entered values and re-run.")
-        max_nn = 30
-        max_nn_valid = True
+        if verbose:
+            print(f"Skipping normal estimation. Both max_nn {max_nn} and radius {radius} values are 0, None or invalid.")
+        return
 
     if max_nn_valid and radius_valid:
         params_str = f"Max NN={max_nn}, radius={radius}"
@@ -118,7 +118,8 @@ def estimate_normals(point_cloud: open3d.geometry.PointCloud,
         params_str = f"Max NN={max_nn}"
         point_cloud.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamRadius(radius))
     else:
-        print("Point cloud normal estimation failed, parameters invalid.")
+        if verbose:
+            print("Point cloud normal estimation failed, parameters invalid.")
         return
 
     if normalize:

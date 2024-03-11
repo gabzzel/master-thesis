@@ -1,4 +1,5 @@
 import enum
+from typing import Optional
 
 
 class SurfaceReconstructionMethod(enum.Enum):
@@ -16,6 +17,7 @@ class SurfaceReconstructionParameters(enum.Enum):
 
 
 class MeshEvaluationMetric(enum.Enum):
+    ALL = "all",
     DISCRETE_CURVATURE = "discrete_curvature",
     TRIANGLE_NORMAL_DEVIATIONS = "triangle_normal_deviations",
     EDGE_LENGTHS = "edge_lengths",
@@ -28,13 +30,14 @@ class MeshEvaluationMetric(enum.Enum):
 
 
 class DownSampleMethod(enum.Enum):
-    NONE = None,
     VOXEL = "voxel",
     RANDOM = "random"
 
 
-class CleaningType(enum.Enum):
-    NONE = None,
+class MeshCleaningMethod(enum.Enum):
+    ALL = "all",
     EDGE_LENGTHS = "edge_lengths",
     ASPECT_RATIOS = "aspect_ratios",
     SIMPLE = "simple"
+
+
