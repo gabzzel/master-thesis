@@ -1,8 +1,37 @@
 import bisect
 import time
+from typing import Optional, Union
 
 import numpy as np
+import open3d
 import trimesh
+from matplotlib import pyplot as plt
+import point_cloud_utils as pcu
+
+from utilities import mesh_utils, utils
+from utilities.enumerations import MeshEvaluationMetric
+
+
+def get_mesh_quality_metric(text: str) -> Optional[MeshEvaluationMetric]:
+    t = text.lower().strip()
+    t = t.replace(" ", "_")
+
+    if t == "edge_lengths" or t == "edge_length" or t == "el":
+        return MeshEvaluationMetric.EDGE_LENGTHS
+    elif t == "triangle_aspect_ratios" or t == "aspect_ratio" or t == "aspect_ratios" or t == "ar":
+        return MeshEvaluationMetric.TRIANGLE_ASPECT_RATIOS
+    elif t == "triangle_normal_deviations" or t == "normal_deviations" or t == "normal_deviation" or t == "nd":
+        return MeshEvaluationMetric.TRIANGLE_NORMAL_DEVIATIONS
+    elif t == "discrete_curvature" or t == "curvature" or t == "dc":
+        return MeshEvaluationMetric.DISCRETE_CURVATURE
+    elif t == "connectivity" or t == "conn" or t == "co" or t == "c":
+        return MeshEvaluationMetric.CONNECTIVITY
+
+    return None
+
+
+def edge_lengths(vertices: np.ndarray, triangles: np.ndarray) -> np.ndarray:
+    return mesh_utils.get_edge_lengths_flat(vertices=vertices, triangles=triangles)
 
 
 def discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sample_ratio=0.01, radius=0.1):
@@ -255,3 +284,41 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
     end_time = time.time()
     print(f"Normal deviations calculation took {round(end_time - start_time, 3)}s")
     return deviations
+
+
+def evaluate_connectivity(triangles, vertices, verbose: bool = True):
+    # cv is the index of the connected component of each vertex
+    # nv is the number of vertices per component
+    # cf is the index of the connected component of each face
+    # nf is the number of faces per connected component
+    cv, nv, cf, nf = pcu.connected_components(vertices, triangles)
+    # If nf is a 0-dimensional array or has length 1, there is only a single component
+    if nf.ndim == 0 or len(nf) == 1:
+        num_conn_comp = 1
+        largest_component_ratio = 1.0
+    else:
+        num_conn_comp = len(nf)  # Number of connected components (according to triangles)
+        largest_component_ratio = round(np.max(nf) / np.sum(nf), 3)
+
+    if verbose:
+        print(f"Connectivity: Connected Components={num_conn_comp}, largest component ratio={largest_component_ratio}")
+
+
+def evaluate_point_cloud_mesh(point_cloud: open3d.geometry.PointCloud,
+                              mesh: Union[open3d.geometry.TriangleMesh, open3d.geometry.TetraMesh]):
+    pcd_points = np.asarray(point_cloud.points)
+    mesh_points = np.asarray(mesh.vertices)
+
+    # Compute Hausdorff and Chamfer distances
+    hausdorff = round(pcu.hausdorff_distance(pcd_points, mesh_points), 4)
+    chamfer = round(pcu.chamfer_distance(pcd_points, mesh_points), 4)
+    print(f"Hausdorff={hausdorff}, Chamfer={chamfer}")
+
+    distances_pts_to_mesh = mesh_utils.get_points_to_mesh_distances(pcd_points, mesh)
+    distance_results = utils.get_stats(distances_pts_to_mesh, "Point-to-mesh distances", return_results=True)
+
+    distances_normalized = distances_pts_to_mesh / distance_results[0]  # Index 0 is the max distance.
+    colors = np.full(shape=(len(distances_normalized), 3), fill_value=0.0)
+    colors[:, 0] = distances_normalized
+    point_cloud.colors = open3d.utility.Vector3dVector(colors)
+    plt.hist(distances_pts_to_mesh, histtype='step', log=True, bins=100)

@@ -1,13 +1,25 @@
 import open3d
-from open3d.geometry import KDTreeSearchParamHybrid, KDTreeSearchParamKNN, KDTreeSearchParamRadius
 import time
-from utils import format_number
+
+from utilities.enumerations import DownSampleMethod
+from utilities import utils
+
+
+def get_down_sample_method(down_sample_method_string: str) -> DownSampleMethod:
+    t = down_sample_method_string.lower().strip()
+    t = t.replace(" ", "_")
+    if t == "voxel" or t == "v":
+        return DownSampleMethod.VOXEL
+    elif t == "random" or t == "rand" or t == "r":
+        return DownSampleMethod.RANDOM
+    return DownSampleMethod.NONE
 
 
 def load_point_cloud(path, down_sample_method=None, down_sample_param=None, verbose=True) -> open3d.geometry.PointCloud:
     """
     Load a point cloud into Open3D format.
 
+    :param verbose: Whether to print progress and status to the console.
     :param path: The path to the file from which to load the point cloud.
     :param down_sample_method: Either None, 'voxel' or 'random'.
     :param down_sample_param: Depending on the down sample method:
@@ -20,23 +32,29 @@ def load_point_cloud(path, down_sample_method=None, down_sample_param=None, verb
         print("Loading point cloud...")
 
     start_time = time.time()
-    pcd = open3d.io.read_point_cloud(path, print_progress=True)
+    pcd = open3d.io.read_point_cloud(filename=str(path),
+                                     remove_nan_points=True,
+                                     remove_infinite_points=True,
+                                     print_progress=True)
     end_time = time.time()
 
     if verbose:
-        num_pts = format_number(len(pcd.points))
+        num_pts = utils.format_number(len(pcd.points))
         elapsed_time = str(round(end_time - start_time, 2))
         print(f"Loaded point cloud with {num_pts} points [{elapsed_time}s]")
 
-    if down_sample_method is None:
+    if down_sample_method is None or down_sample_method == DownSampleMethod.NONE:
+        if verbose:
+            print(f"Downsampling skipped: got desired down sampling method {down_sample_method}")
         return pcd
 
     if not isinstance(down_sample_method, str) or down_sample_method not in ['voxel', 'random']:
-        print(f"Invalid downsampling method {down_sample_method}. Cancelling downsampling.")
+        if verbose:
+            print(f"Invalid downsampling method {down_sample_method}. Cancelling downsampling.")
         return pcd
 
     num_points_original = len(pcd.points)
-    npof = format_number(num_points_original)  # Number Points Original Formatted
+    npof = utils.format_number(num_points_original)  # Number Points Original Formatted
     start_time = time.time()
 
     if down_sample_method == 'voxel':
@@ -49,9 +67,10 @@ def load_point_cloud(path, down_sample_method=None, down_sample_param=None, verb
 
     if verbose:
         elapsed = str(round(end_time - start_time, 2))  # The number of seconds elapsed during downsampling operation
-        num_pts = format_number(len(pcd.points))
+        num_pts = utils.format_number(len(pcd.points))
         ratio = str(round(float(len(pcd.points)) / float(num_points_original) * 100))
-        print(f"Downsampled {npof} pts -> {num_pts} pts ({ratio}%) ({down_sample_method} @ {down_sample_param}) [{elapsed}s]")
+        print(f"Downsampled {npof} pts -> {num_pts} pts ({ratio}%) "
+              f"({down_sample_method} @ {down_sample_param}) [{elapsed}s]")
 
     return pcd
 
@@ -78,7 +97,6 @@ def estimate_normals(point_cloud: open3d.geometry.PointCloud,
     if verbose:
         print("Estimating normals...")
 
-    params_str = "Invalid Parameters"
     max_nn_valid = max_nn is not None and isinstance(max_nn, int) and max_nn > 0
 
     # From Open3D docs: "neighbors search radius parameter to use HybridSearch. [Recommended ~1.4x voxel size]"
@@ -92,13 +110,13 @@ def estimate_normals(point_cloud: open3d.geometry.PointCloud,
 
     if max_nn_valid and radius_valid:
         params_str = f"Max NN={max_nn}, radius={radius}"
-        point_cloud.estimate_normals(search_param=KDTreeSearchParamHybrid(radius=radius, max_nn=max_nn))
+        point_cloud.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=radius, max_nn=max_nn))
     elif max_nn_valid:
         params_str = f"Max NN={max_nn}"
-        point_cloud.estimate_normals(search_param=KDTreeSearchParamKNN(max_nn))
+        point_cloud.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamKNN(max_nn))
     elif radius_valid:
         params_str = f"Max NN={max_nn}"
-        point_cloud.estimate_normals(search_param=KDTreeSearchParamRadius(radius))
+        point_cloud.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamRadius(radius))
     else:
         print("Point cloud normal estimation failed, parameters invalid.")
         return

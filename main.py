@@ -1,36 +1,65 @@
-import numpy as np
+import argparse
+import time
+
 import open3d
 
 import evaluation
+from utilities import io, mesh_cleaning, pcd_utils
 import surface_reconstruction
-import utils
-from basic_point_cloud_ops import load_point_cloud, estimate_normals
+from utilities.run_configuration import RunConfiguration
+
+
+def execute():
+    args: argparse.Namespace = io.parse_args()
+
+    if args is None:
+        print(f"Parsing arguments failed. Cancelling")
+        time.sleep(5)
+        return
+
+    run_configs = io.get_run_configurations_from_args(args)
+
+    for i in range(len(run_configs)):
+        print(f"Starting run {i + 1}/{len(run_configs)}")
+        execute_run(run_configs[i], args)
+
+
+def execute_run(run_config: RunConfiguration, args: argparse.Namespace):
+    verbose = args.verbose
+    pcd = load_point_cloud(config=run_config, verbose=verbose)
+    mesh = surface_reconstruction.run(pcd=pcd, config=run_config, verbose=verbose)
+
+    aspect_ratios = mesh_cleaning.run_mesh_cleaning(mesh=mesh, config=run_config, verbose=verbose)
+
+    # If we have aspect ratios return from the mesh cleaning, we want the remaining after-cleaning aspect ratios
+    if aspect_ratios is not None:
+        aspect_ratios = aspect_ratios[1]
+
+    evaluation.evaluate_mesh(mesh=mesh, config=run_config, precomputed_aspect_ratios=aspect_ratios, verbose=verbose)
+
+    if args.draw:
+        open3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
+
+
+def load_point_cloud(config: RunConfiguration, verbose: bool = True) -> open3d.geometry.PointCloud:
+    pcd = pcd_utils.load_point_cloud(config.point_cloud_path,
+                                     down_sample_method=config.down_sample_method,
+                                     down_sample_param=config.down_sample_params,
+                                     verbose=verbose)
+
+    pcd_utils.estimate_normals(pcd,
+                               max_nn=config.normal_estimation_neighbours,
+                               radius=config.normal_estimation_radius,
+                               orient=config.orient_normals,
+                               normalize=not config.skip_normalizing_normals,
+                               verbose=verbose)
+    return pcd
+
 
 if __name__ == "__main__":
+    execute()
 
     # point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\etvr\\enfsi-2023_reduced_cloud.pcd"
-    point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\dummy\\stanford-dragon\\dragon_recon\\dragon_vrip.ply"
-    voxel_size = 0.05
-    verbose = True
-    pcd = load_point_cloud(point_cloud_path, down_sample_method=None, down_sample_param=0.01, verbose=verbose)
-    estimate_normals(pcd, max_nn=30, radius=0.4, orient=None, normalize=True, verbose=verbose)
-    mesh = surface_reconstruction.Delaunay(pcd, as_tris=True)
-
-    utils.clean_mesh_simple(mesh=mesh, verbose=verbose)
-
-    edge_lengths, edge_lengths_clean = utils.clean_mesh_metric(mesh,
-                                                               metric="edge_length",
-                                                               quantile=0.9,
-                                                               verbose=verbose)
-
-    all_aspect_ratios, aspect_ratios_clean = utils.clean_mesh_metric(mesh=mesh,
-                                                                     metric="aspect_ratio",
-                                                                     quantile=0.9,
-                                                                     verbose=verbose)
-
-    evaluation.evaluate_mesh(mesh, aspect_ratios=aspect_ratios_clean, nd=False, dc=False)
-    # evaluation.evaluate_point_cloud_mesh(pcd, mesh)
-    open3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
 
     # pcd2_tree = open3d.geometry.KDTreeFlann(pcd2)
     # [k, idx, _] = pcd_tree.search_knn_vector_3d(pcd2.points[idx_b], 50)
