@@ -1,9 +1,0 @@
-Loading_and_Preprocessing_Time;1.1491222381591797
-Surface_Reconstruction_Time;3.5663442611694336
-Cleaning_Time;0.9822018146514893
-Evaluation_Time;0.0
-connectivity_vertices_per_component;[56002;   70;    8]
-connectivity_triangles_per_component;[668091;   100;     7]
-number_of_vertices_original;3609600
-number_of_vertice_after_downsampling;56331
-number_of_vertices_after_cleaning;56080
