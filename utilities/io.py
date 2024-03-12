@@ -271,7 +271,7 @@ def run_config_from_json(data, pcd_path: Union[Path, str]) -> RunConfiguration:
     else:
         print(f"No surface reconstruction algorithm found in config. Using default {SRM.DELAUNAY_TRIANGULATION}")
 
-    alpha = get_metric_to_list(data, name="alpha", default_single=0.5)
+    alpha = float(data["alpha"]) if "alpha" in data else 0.5
     bpa_radii = get_metric_to_list(data, name="ball_pivoting_radii", default_single=0.5)
 
     poisson_density_quantile = float(data["poisson_density_quantile"]) if "poisson_density_quantile" in data else 0.1

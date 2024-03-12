@@ -70,6 +70,12 @@ def execute_run(run_config: RunConfiguration, results_path: pathlib.Path, verbos
 
     results.save_to_file(results_path)
 
+    if run_config.store_mesh:
+        original_path = run_config.point_cloud_path
+        mesh_name = original_path.stem + "_mesh.ply"
+        mesh_path = os.path.join(results_path, mesh_name)
+        open3d.io.write_triangle_mesh(filename=mesh_path, mesh=mesh)
+
     if draw:
         open3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
 

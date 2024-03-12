@@ -76,7 +76,7 @@ def run(pcd: open3d.geometry.PointCloud,
     return mesh
 
 
-def alpha_shapes(point_cloud, alpha=0.02, verbose=True):
+def alpha_shapes(point_cloud, alpha: float = 0.02, verbose=True):
     start_time = time.time()
     mesh = open3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(point_cloud, alpha)
     end_time = time.time()

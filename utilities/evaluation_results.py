@@ -62,7 +62,6 @@ class EvaluationResults:
             file.write(f"Cleaning_Time{delimiter}{self.cleaning_time}\n")
             file.write(f"Evaluation_Time{delimiter}{self.evaluation_time}\n")
 
-            print(f"connectivity_vertices_per_component (type = {type(self.connectivity_vertices_per_component)})")
             if isinstance(self.connectivity_vertices_per_component, int) or \
                isinstance(self.connectivity_vertices_per_component, np.int32):
                 cvpc_string = str(self.connectivity_vertices_per_component)
