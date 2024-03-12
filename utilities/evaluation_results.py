@@ -65,16 +65,18 @@ class EvaluationResults:
             if isinstance(self.connectivity_vertices_per_component, int) or \
                isinstance(self.connectivity_vertices_per_component, np.int32):
                 cvpc_string = str(self.connectivity_vertices_per_component)
-            else:
+                file.write(f"connectivity_vertices_per_component{delimiter}{cvpc_string}\n")
+            elif self.connectivity_vertices_per_component:
                 cvpc_string = np.array2string(self.connectivity_vertices_per_component, separator=delimiter)
-            file.write(f"connectivity_vertices_per_component{delimiter}{cvpc_string}\n")
+                file.write(f"connectivity_vertices_per_component{delimiter}{cvpc_string}\n")
 
             if isinstance(self.connectivity_triangles_per_component, int) or \
                isinstance(self.connectivity_triangles_per_component, np.int32):
                 ctpc_string = str(self.connectivity_triangles_per_component)
-            else:
+                file.write(f"connectivity_triangles_per_component{delimiter}{ctpc_string}\n")
+            elif self.connectivity_triangles_per_component:
                 ctpc_string = np.array2string(self.connectivity_triangles_per_component, separator=delimiter)
-            file.write(f"connectivity_triangles_per_component{delimiter}{ctpc_string}\n")
+                file.write(f"connectivity_triangles_per_component{delimiter}{ctpc_string}\n")
 
             file.write(f"number_of_vertices_original{delimiter}{self.number_of_vertices_original}\n")
             file.write(f"number_of_vertice_after_downsampling{delimiter}{self.number_of_vertice_after_downsampling}\n")

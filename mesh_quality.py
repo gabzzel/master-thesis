@@ -1,9 +1,12 @@
 import bisect
 import time
 from typing import Optional, Union
+import multiprocessing
+import math
 
 import numpy as np
 import open3d
+from open3d.geometry import PointCloud, TriangleMesh, TetraMesh
 import trimesh
 from matplotlib import pyplot as plt
 import point_cloud_utils as pcu
@@ -68,7 +71,12 @@ def discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sa
     return curvature
 
 
-def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, triangle_normals):
+def triangle_normal_deviations_adjacency(adjacency_list,
+                                         triangles: np.ndarray,
+                                         triangle_normals,
+                                         chunk_size: int = 100_000,
+                                         num_workers: int = 4):
+
     start_time = time.time()
     indices = np.arange(len(triangles))
     triangles_incl_indices = np.hstack((triangles, indices[:, np.newaxis]))
@@ -99,10 +107,43 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
         single = triangles_sorted_by_vertex[:, i]
         tris_sorted_per_vertex_single.append(single.tolist())
 
+    if num_workers is None or num_workers <= 0:
+        num_workers = multiprocessing.cpu_count()
+
+    args = (triangles, adjacency_list, indices, tris_sorted_per_vertex,
+            tris_sorted_per_vertex_single, triangle_normals)
+
+    num_chunks = len(adjacency_list) // num_workers
+
+    if len(adjacency_list) % chunk_size:
+        num_chunks += 1
+
+    chunks = [(i * chunk_size, min((i + 1) * chunk_size, len(adjacency_list)), args) for i in range(num_chunks)]
+
+    with multiprocessing.Pool(processes=num_workers) as pool:
+        results = pool.map(process_chunk_normal_deviations, chunks)
+
+    results = np.concatenate(results)
+
+    end_time = time.time()
+    print(f"Normal deviations calculation took {round(end_time - start_time, 3)}s")
+    return results
+
+
+def process_chunk_normal_deviations(chunk: tuple):
+    start_index, stop_index, args = chunk
+    chunk_result = triangle_normal_deviations_batch(start_index, stop_index, args)
+    return chunk_result
+
+
+def triangle_normal_deviations_batch(start_index: int, stop_index: int, args: tuple):
+
+    triangles, adjacency_list, indices, tris_sorted_per_vertex, tris_sorted_per_vertex_single, triangle_normals = args
+
     deviations = []
     triangle_count = len(triangles)
     found_indices_min = [0, 0, 0]
-    for v1 in range(len(adjacency_list)):
+    for v1 in range(start_index, stop_index):
         vertex_neighbours: set = adjacency_list[v1]
         if len(vertex_neighbours) == 0:
             continue
@@ -111,20 +152,17 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
 
         # Find all triangles with v1 at index i
         for i in range(3):
-            search_range = tris_sorted_per_vertex_single[i]
-            found_index_min = bisect.bisect_left(search_range, v1, lo=found_indices_min[i], hi=triangle_count)
+            found_index_min = bisect.bisect_left(tris_sorted_per_vertex_single[i], v1, lo=found_indices_min[i], hi=triangle_count)
             found_indices_min[i] = found_index_min
-            found_index_max = bisect.bisect_right(search_range, v1, lo=found_index_min, hi=triangle_count)
+            found_index_max = bisect.bisect_right(tris_sorted_per_vertex_single[i], v1, lo=found_index_min, hi=triangle_count)
 
             if found_index_min == found_index_max:  # No triangles found.
                 continue
 
-            indices_in_sorted: np.ndarray = indices[found_index_min:found_index_max]
-
             if T is None:
-                T = set(tris_sorted_per_vertex[i][indices_in_sorted][:, 3])
+                T = set(tris_sorted_per_vertex[i][indices[found_index_min:found_index_max]][:, 3])
             else:
-                T = T.union(tris_sorted_per_vertex[i][indices_in_sorted][:, 3])
+                T = T.union(tris_sorted_per_vertex[i][indices[found_index_min:found_index_max]][:, 3])
 
         # Find all triangles that have both v1 and its neighbour v2
         for v2 in vertex_neighbours:
@@ -163,8 +201,6 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
 
             deviations.append(np.degrees(np.arccos(dot)))
 
-    end_time = time.time()
-    print(f"Normal deviations calculation took {round(end_time - start_time, 3)}s")
     return deviations
 
 
@@ -189,8 +225,7 @@ def evaluate_connectivity(triangles, vertices, results: EvaluationResults, verbo
         print(f"Connectivity: Connected Components={num_conn_comp}, largest component ratio={largest_component_ratio}")
 
 
-def evaluate_point_cloud_mesh(point_cloud: open3d.geometry.PointCloud,
-                              mesh: Union[open3d.geometry.TriangleMesh, open3d.geometry.TetraMesh]):
+def evaluate_point_cloud_mesh(point_cloud: PointCloud, mesh: Union[TriangleMesh, TetraMesh]):
     pcd_points = np.asarray(point_cloud.points)
     mesh_points = np.asarray(mesh.vertices)
 
