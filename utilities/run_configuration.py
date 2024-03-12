@@ -23,7 +23,8 @@ class RunConfiguration:
                  skip_normalizing_normals: bool = False,
                  orient_normals: int = 10,
                  mesh_evaluation_metrics: Optional[Set[MEM]] = None,
-                 store_mesh: bool = False):
+                 store_mesh: bool = False,
+                 store_preprocessed_pointcloud: bool = False):
         # Point Cloud Settings (incl. down sampling)
         self.point_cloud_path: Path = pcd_path
         self.down_sample_method: DSM = down_sample_method
@@ -48,4 +49,4 @@ class RunConfiguration:
         self.mesh_evaluation_metrics: Optional[Set[MEM]] = mesh_evaluation_metrics
 
         self.store_mesh: bool = store_mesh
-
+        self.store_preprocessed_pointcloud: bool = store_preprocessed_pointcloud

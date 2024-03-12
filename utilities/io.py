@@ -311,6 +311,8 @@ def run_config_from_json(data, pcd_path: Union[Path, str]) -> RunConfiguration:
 
     store_mesh = bool(data["store_mesh"]) if "store_mesh" in data else False
 
+    store_preprocessed_pointcloud = bool(data["store_preprocessed_pointcloud"]) if "store_preprocessed_pointcloud" in data else False
+
     return RunConfiguration(pcd_path=pcd_path,
                             down_sample_method=down_sample_methods,
                             down_sample_params=down_sample_params,
@@ -324,7 +326,8 @@ def run_config_from_json(data, pcd_path: Union[Path, str]) -> RunConfiguration:
                             skip_normalizing_normals=snn,
                             orient_normals=orient_normals,
                             mesh_evaluation_metrics=mem,
-                            store_mesh=store_mesh)
+                            store_mesh=store_mesh,
+                            store_preprocessed_pointcloud=store_preprocessed_pointcloud)
 
 
 def get_metric_to_list(data, name: str, default_single: Union[int, float], verbose: bool = True):
