@@ -2,6 +2,7 @@ import argparse
 import time
 from typing import Optional
 import pathlib
+import os
 
 import open3d
 
@@ -9,6 +10,7 @@ import evaluation
 from utilities import io, mesh_cleaning, pcd_utils
 import surface_reconstruction
 from utilities.run_configuration import RunConfiguration
+from utilities.evaluation_results import EvaluationResults
 
 
 def execute(config_file: Optional[str]):
@@ -30,34 +32,53 @@ def execute(config_file: Optional[str]):
         print(f"Invalid config file path: {config_file}.")
         return
 
+    results_path = pathlib.Path(config_file).parent
+
     for i in range(len(run_configs)):
         print(f"Starting run {i + 1}/{len(run_configs)}")
-        execute_run(run_configs[i], verbose=verbose, draw=draw)
+        run_result_path = results_path.joinpath(f"result{i}")
+        if not run_result_path.exists():
+            os.makedirs(run_result_path)
+
+        execute_run(run_configs[i], results_path=run_result_path, verbose=verbose, draw=draw)
 
 
-def execute_run(run_config: RunConfiguration, verbose: bool = True, draw: bool = False):
+def execute_run(run_config: RunConfiguration, results_path: pathlib.Path, verbose: bool = True, draw: bool = False):
+    results = EvaluationResults(name="results")
+
     print("\n ============= Step 1 : Loading & Preprocessing =============")
-    pcd = load_point_cloud(config=run_config, verbose=verbose)
+    pcd = load_point_cloud(run_config, results, verbose=verbose)
+
+    # if run_config.store_mesh:
+    #     open3d.io.write_point_cloud()
 
     print("\n ============= Step 2 : Surface Reconstruction =============")
-    mesh = surface_reconstruction.run(pcd=pcd, config=run_config, verbose=verbose)
+    mesh = surface_reconstruction.run(pcd=pcd, results=results, config=run_config, verbose=verbose)
 
     print("\n ============= Step 3 : Cleaning =============")
-    aspect_ratios = mesh_cleaning.run_mesh_cleaning(mesh=mesh, config=run_config, verbose=verbose)
+    aspect_ratios = mesh_cleaning.run_mesh_cleaning(mesh, run_config, results, verbose=verbose)
 
     # If we have aspect ratios return from the mesh cleaning, we want the remaining after-cleaning aspect ratios
     if aspect_ratios is not None:
         aspect_ratios = aspect_ratios[1]
 
     print("\n ============= Step 4 : Evaluation =============")
-    evaluation.evaluate_mesh(mesh=mesh, config=run_config, precomputed_aspect_ratios=aspect_ratios, verbose=verbose)
+    evaluation.evaluate_mesh(mesh, run_config, results, precomputed_aspect_ratios=aspect_ratios, verbose=verbose)
+
+    results.save_to_file(results_path)
 
     if draw:
         open3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
 
 
-def load_point_cloud(config: RunConfiguration, verbose: bool = True) -> open3d.geometry.PointCloud:
+def load_point_cloud(config: RunConfiguration,
+                     results: EvaluationResults,
+                     verbose: bool = True) \
+        -> open3d.geometry.PointCloud:
+
+    start_time = time.time()
     pcd = pcd_utils.load_point_cloud(config.point_cloud_path,
+                                     results=results,
                                      down_sample_method=config.down_sample_method,
                                      down_sample_param=config.down_sample_params,
                                      verbose=verbose)
@@ -68,6 +89,8 @@ def load_point_cloud(config: RunConfiguration, verbose: bool = True) -> open3d.g
                                orient=config.orient_normals,
                                normalize=not config.skip_normalizing_normals,
                                verbose=verbose)
+
+    results.loading_and_preprocessing_time = time.time() - start_time
     return pcd
 
 

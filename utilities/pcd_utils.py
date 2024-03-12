@@ -6,6 +6,7 @@ import open3d
 
 from utilities import utils
 from utilities.enumerations import DownSampleMethod
+from utilities.evaluation_results import EvaluationResults
 
 
 def get_down_sample_method(down_sample_method_string: str) -> Optional[DownSampleMethod]:
@@ -19,6 +20,7 @@ def get_down_sample_method(down_sample_method_string: str) -> Optional[DownSampl
 
 
 def load_point_cloud(path: Union[Path, str],
+                     results: EvaluationResults,
                      down_sample_method: DownSampleMethod = None,
                      down_sample_param: Optional[Union[float, int]] = None,
                      verbose=True) -> open3d.geometry.PointCloud:
@@ -65,14 +67,16 @@ def load_point_cloud(path: Union[Path, str],
         pcd = pcd.random_down_sample(sampling_ratio=down_sample_param)
 
     end_time = time.time()
+    npad = len(pcd.points)
 
     if verbose:
         elapsed = str(round(end_time - start_time, 2))  # The number of seconds elapsed during downsampling operation
-        num_pts = utils.format_number(len(pcd.points))
         ratio = str(round(float(len(pcd.points)) / float(num_points_original) * 100))
-        print(f"Downsampled {npof} pts -> {num_pts} pts ({ratio}%) "
+        print(f"Downsampled {npof} pts -> {utils.format_number(npad)} pts ({ratio}%) "
               f"({down_sample_method} @ {down_sample_param}) [{elapsed}s]")
 
+    results.number_of_vertices_original = num_points_original
+    results.number_of_vertice_after_downsampling = npad
     return pcd
 
 

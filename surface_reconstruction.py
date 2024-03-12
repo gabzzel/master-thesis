@@ -8,6 +8,7 @@ import scipy.spatial
 from utilities import utils
 from utilities.enumerations import SurfaceReconstructionMethod as SRM, SurfaceReconstructionParameters as SRP
 from utilities.run_configuration import RunConfiguration
+from utilities.evaluation_results import EvaluationResults
 
 
 def get_surface_reconstruction_method(to_evaluate: Union[str, SRM]) -> SRM:
@@ -35,7 +36,10 @@ def get_surface_reconstruction_method(to_evaluate: Union[str, SRM]) -> SRM:
 
 def run(pcd: open3d.geometry.PointCloud,
         config: RunConfiguration,
+        results: EvaluationResults,
         verbose: bool = True) -> Optional[open3d.geometry.TriangleMesh]:
+
+    start_time = time.time()
     if config.surface_reconstruction_method not in SRM:
         raise ValueError(f"Unknown algorithm {config.surface_reconstruction_method}. "
                          f"Must be one of {list(SRM)}")
@@ -43,30 +47,33 @@ def run(pcd: open3d.geometry.PointCloud,
     if verbose:
         print(f"Starting surface reconstruction using {config.surface_reconstruction_method}")
 
+    mesh = None
+
     if config.surface_reconstruction_method == SRM.BALL_PIVOTING_ALGORITHM:
         radii = config.surface_reconstruction_params[SRP.BPA_RADII]
-        return ball_pivoting_algorithm(point_cloud=pcd, radii=radii, verbose=verbose)
+        mesh = ball_pivoting_algorithm(point_cloud=pcd, radii=radii, verbose=verbose)
 
     elif config.surface_reconstruction_method == SRM.ALPHA_SHAPES:
         alpha = config.surface_reconstruction_params[SRP.ALPHA]
-        return alpha_shapes(point_cloud=pcd, alpha=alpha, verbose=verbose)
+        mesh = alpha_shapes(point_cloud=pcd, alpha=alpha, verbose=verbose)
 
     elif config.surface_reconstruction_method == SRM.SCREENED_POISSON_SURFACE_RECONSTRUCTION:
         octree_max_depth = config.surface_reconstruction_params[SRP.POISSON_OCTREE_MAX_DEPTH]
         poisson_density_quantile = config.surface_reconstruction_params[SRP.POISSON_DENSITY_QUANTILE_THRESHOLD]
-        return screened_poisson_surface_reconstruction(point_cloud=pcd,
+        mesh = screened_poisson_surface_reconstruction(point_cloud=pcd,
                                                        octree_max_depth=octree_max_depth,
                                                        density_quantile_threshold=poisson_density_quantile,
                                                        verbose=verbose)
 
     elif config.surface_reconstruction_method == SRM.DELAUNAY_TRIANGULATION:
-        return delaunay_triangulation(point_cloud=pcd, as_tris=True)
+        mesh = delaunay_triangulation(point_cloud=pcd, as_tris=True)
 
     elif verbose:
         print(f"Unknown algorithm {config.surface_reconstruction_method}"
               f" or invalid parameters {config.surface_reconstruction_params}.")
 
-    return None
+    results.surface_reconstruction_time = time.time() - start_time
+    return mesh
 
 
 def alpha_shapes(point_cloud, alpha=0.02, verbose=True):

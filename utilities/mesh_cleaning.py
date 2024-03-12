@@ -5,6 +5,7 @@ import open3d
 
 from utilities import mesh_utils, run_configuration
 from utilities.enumerations import MeshCleaningMethod
+from utilities.evaluation_results import EvaluationResults
 
 
 def get_cleaning_type(cleaning_type_text: str) -> Optional[MeshCleaningMethod]:
@@ -25,7 +26,10 @@ def get_cleaning_type(cleaning_type_text: str) -> Optional[MeshCleaningMethod]:
 
 def run_mesh_cleaning(mesh: open3d.geometry.TriangleMesh,
                       config: run_configuration.RunConfiguration,
+                      results: EvaluationResults,
                       verbose: bool = True) -> Optional[Tuple[np.ndarray, np.ndarray]]:
+
+    start_time = time.time()
     if not config.mesh_cleaning_methods:
         return None
 
@@ -45,6 +49,8 @@ def run_mesh_cleaning(mesh: open3d.geometry.TriangleMesh,
                                          quantile=config.aspect_ratio_cleaning_portion,
                                          verbose=verbose)
 
+    results.number_of_vertices_after_cleaning = len(mesh.vertices)
+    results.cleaning_time = time.time() - start_time
     return ar, ar_clean
 
 
@@ -100,7 +106,7 @@ def clean_mesh_metric(mesh: Union[open3d.geometry.TriangleMesh, open3d.geometry.
     :param metric: Which metric to clean the mesh up with. Can be either "aspect_ratio" / "ar" or "edge_length" / "el"
     :param quantile: The quantile to calculate the threshold on. The lower value of this and the absolute value is \
      used. Set to 0 to disable.
-    :param absolute: The absolute threshold. The lower value of this and the quantile value is used. Set to 0 to disable.
+    :param absolute: The absolute threshold. The lower value of this and the quantile value is used. Set 0 to disable.
     :param verbose: Whether to print the progress and result.
     :return: A tuple of numpy arrays containing the metric calculated for all vertices, edges or triangles at index 0 \
      and the cleaned subset/subarray at index 1. Returns None if any error occurs.

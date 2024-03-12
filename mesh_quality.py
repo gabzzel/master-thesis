@@ -10,6 +10,7 @@ import point_cloud_utils as pcu
 
 from utilities import mesh_utils, utils
 from utilities.enumerations import MeshEvaluationMetric
+from utilities.evaluation_results import EvaluationResults
 
 
 def get_mesh_quality_metric(text: str) -> Optional[MeshEvaluationMetric]:
@@ -142,7 +143,7 @@ def triangle_normal_deviations_sorted(triangles, triangle_normals):
         if occurrences[tri_index] >= 3:
             continue
 
-        triangle_1 = triangles[tri_index]
+        # triangle_1 = triangles[tri_index]
         normal_1 = triangle_normals[tri_index]
 
         found_neighbours = 0
@@ -295,7 +296,7 @@ def triangle_normal_deviations_adjacency(adjacency_list, triangles: np.ndarray, 
     return deviations
 
 
-def evaluate_connectivity(triangles, vertices, verbose: bool = True):
+def evaluate_connectivity(triangles, vertices, results: EvaluationResults, verbose: bool = True):
     # cv is the index of the connected component of each vertex
     # nv is the number of vertices per component
     # cf is the index of the connected component of each face
@@ -308,6 +309,9 @@ def evaluate_connectivity(triangles, vertices, verbose: bool = True):
     else:
         num_conn_comp = len(nf)  # Number of connected components (according to triangles)
         largest_component_ratio = round(np.max(nf) / np.sum(nf), 3)
+
+    results.connectivity_vertices_per_component = nv if isinstance(nv, list) or isinstance(nv, np.ndarray) else [nv]
+    results.connectivity_triangles_per_component = nf if isinstance(nf, list) or isinstance(nf, np.ndarray) else [nf]
 
     if verbose:
         print(f"Connectivity: Connected Components={num_conn_comp}, largest component ratio={largest_component_ratio}")

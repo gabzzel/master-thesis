@@ -12,6 +12,7 @@ import mesh_quality
 from mesh_quality import evaluate_connectivity
 from utilities.enumerations import MeshEvaluationMetric as MQM
 from utilities.run_configuration import RunConfiguration
+from utilities.evaluation_results import EvaluationResults
 
 
 def evaluate_point_clouds(point_cloud_a: open3d.geometry.PointCloud, point_cloud_b: open3d.geometry.PointCloud):
@@ -28,6 +29,7 @@ def evaluate_point_clouds(point_cloud_a: open3d.geometry.PointCloud, point_cloud
 
 def evaluate_mesh(mesh: open3d.geometry.TriangleMesh,
                   config: RunConfiguration,
+                  results: EvaluationResults,
                   precomputed_aspect_ratios=None,
                   verbose: bool = True):
     """
@@ -58,30 +60,40 @@ def evaluate_mesh(mesh: open3d.geometry.TriangleMesh,
     triangles = np.asarray(mesh.triangles)
     triangle_normals = np.asarray(mesh.triangle_normals)
 
+    start_time = time.time()
+
     if MQM.EDGE_LENGTHS in config.mesh_evaluation_metrics:
         edge_lengths = mesh_utils.get_edge_lengths_flat(vertices, triangles)
+        results.edge_lengths = edge_lengths
         utils.get_stats(edge_lengths, name="Edge Lengths", print_results=True)
 
     if MQM.TRIANGLE_ASPECT_RATIOS in config.mesh_evaluation_metrics:
         if precomputed_aspect_ratios is None:
             precomputed_aspect_ratios = mesh_utils.aspect_ratios(vertices, triangles)
+        results.aspect_ratios = precomputed_aspect_ratios
         utils.get_stats(precomputed_aspect_ratios, name="Aspect Ratios", print_results=True)
 
     if MQM.CONNECTIVITY in config.mesh_evaluation_metrics:
-        evaluate_connectivity(triangles, vertices)
+        evaluate_connectivity(triangles, vertices, results=results)
 
     if MQM.DISCRETE_CURVATURE in config.mesh_evaluation_metrics:
-        evaluate_discrete_curvatures(triangle_normals, triangles, vertex_normals, vertices)
+        evaluate_discrete_curvatures(triangle_normals, triangles, vertex_normals, vertices, results=results)
 
     if MQM.TRIANGLE_NORMAL_DEVIATIONS in config.mesh_evaluation_metrics:
-        evaluate_normal_deviations(mesh.adjacency_list, triangle_normals, triangles)
+        evaluate_normal_deviations(mesh.adjacency_list, triangle_normals, triangles, results)
+
+    results.evaluation_time = time.time() - start_time
 
     # print(f"Principal Curvatures: Magnitudes Min={k1}, Max={k2}. Directions {d1} and {d2}")
     # plt.hist(aspect_ratios, histtype='step', log=True, bins=100, label="Aspect Ratios")
     # plt.show()
 
 
-def evaluate_normal_deviations(adjacency_list, triangle_normals, triangles, profile: bool = False):
+def evaluate_normal_deviations(adjacency_list,
+                               triangle_normals,
+                               triangles,
+                               results: EvaluationResults,
+                               profile: bool = False):
     if profile:
         pr = cProfile.Profile()
         pr.enable()
@@ -89,6 +101,8 @@ def evaluate_normal_deviations(adjacency_list, triangle_normals, triangles, prof
     deviations = mesh_quality.triangle_normal_deviations_adjacency(adjacency_list.copy(),
                                                                    triangles,
                                                                    triangle_normals)
+
+    results.normal_deviations = deviations
 
     if profile:
         pr.disable()
@@ -99,11 +113,12 @@ def evaluate_normal_deviations(adjacency_list, triangle_normals, triangles, prof
     utils.get_stats(deviations, name="Normal Deviations", print_results=True)
 
 
-def evaluate_discrete_curvatures(triangle_normals, triangles, vertex_normals, vertices):
+def evaluate_discrete_curvatures(triangle_normals, triangles, vertex_normals, vertices, results: EvaluationResults):
     curvatures = mesh_quality.discrete_curvature(vertices,
                                                  vertex_normals,
                                                  triangles,
                                                  triangle_normals,
                                                  sample_ratio=0.01,
                                                  radius=0.1)
+    results.discrete_curvatures = curvatures
     utils.get_stats(curvatures, "Discrete Curvature", print_results=True)
