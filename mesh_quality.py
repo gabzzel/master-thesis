@@ -2,7 +2,6 @@ import bisect
 import time
 from typing import Optional, Union
 import multiprocessing
-import math
 
 import numpy as np
 import open3d
@@ -14,6 +13,20 @@ import point_cloud_utils as pcu
 from utilities import mesh_utils, utils
 from utilities.enumerations import MeshEvaluationMetric
 from utilities.evaluation_results import EvaluationResults
+from utilities.enumerations import TriangleNormalDeviationMethod
+
+
+def get_normal_deviation_method(text: str) -> Optional[TriangleNormalDeviationMethod]:
+    t = text.lower().strip()
+
+    if t == "n" or t == "naive":
+        return TriangleNormalDeviationMethod.NAIVE
+    elif t == "s" or t == "sorted":
+        return TriangleNormalDeviationMethod.SORTED
+    elif t == "a" or t == "adj" or t == "adjacency":
+        return TriangleNormalDeviationMethod.ADJANCENCY
+
+    return None
 
 
 def get_mesh_quality_metric(text: str) -> Optional[MeshEvaluationMetric]:
@@ -71,11 +84,7 @@ def discrete_curvature(vertices, vertex_normals, triangles, triangle_normals, sa
     return curvature
 
 
-def triangle_normal_deviations_adjacency(adjacency_list,
-                                         triangles: np.ndarray,
-                                         triangle_normals,
-                                         chunk_size: int = 100_000,
-                                         num_workers: int = 4):
+def triangle_normal_deviations_adjacency(adjacency_list, triangles, triangle_normals, chunk_size, num_workers):
 
     start_time = time.time()
     indices = np.arange(len(triangles))
@@ -110,6 +119,16 @@ def triangle_normal_deviations_adjacency(adjacency_list,
     if num_workers is None or num_workers <= 0:
         num_workers = multiprocessing.cpu_count()
 
+    if num_workers == 1:
+        return triangle_normal_deviations_adjacency_batch(0,
+                                                          len(adjacency_list),
+                                                          triangles,
+                                                          adjacency_list,
+                                                          indices,
+                                                          tris_sorted_per_vertex,
+                                                          tris_sorted_per_vertex_single,
+                                                          triangle_normals)
+
     args = (triangles, adjacency_list, indices, tris_sorted_per_vertex,
             tris_sorted_per_vertex_single, triangle_normals)
 
@@ -118,27 +137,33 @@ def triangle_normal_deviations_adjacency(adjacency_list,
     if len(adjacency_list) % chunk_size:
         num_chunks += 1
 
-    chunks = [(i * chunk_size, min((i + 1) * chunk_size, len(adjacency_list)), args) for i in range(num_chunks)]
+    chunks = [(i * chunk_size, min((i + 1) * chunk_size, len(adjacency_list))) for i in range(num_chunks)]
 
-    with multiprocessing.Pool(processes=num_workers) as pool:
-        results = pool.map(process_chunk_normal_deviations, chunks)
+    pool = multiprocessing.Pool(processes=num_workers)
+    async_results = []
 
-    results = np.concatenate(results)
+    # Apply async function to each batch
+    for start, stop in chunks:
+        args = (start, stop, triangles, adjacency_list, indices, tris_sorted_per_vertex, tris_sorted_per_vertex_single, triangle_normals)
+        async_result = pool.apply_async(triangle_normal_deviations_adjacency_batch, args=args)
+        async_results.append(async_result)
+
+    # Get the results from async results
+    results = [async_result.get() for async_result in async_results]
 
     end_time = time.time()
     print(f"Normal deviations calculation took {round(end_time - start_time, 3)}s")
-    return results
+    return np.concatenate(results)
 
 
-def process_chunk_normal_deviations(chunk: tuple):
-    start_index, stop_index, args = chunk
-    chunk_result = triangle_normal_deviations_batch(start_index, stop_index, args)
-    return chunk_result
-
-
-def triangle_normal_deviations_batch(start_index: int, stop_index: int, args: tuple):
-
-    triangles, adjacency_list, indices, tris_sorted_per_vertex, tris_sorted_per_vertex_single, triangle_normals = args
+def triangle_normal_deviations_adjacency_batch(start_index: int,
+                                               stop_index: int,
+                                               triangles,
+                                               adjacency_list,
+                                               indices,
+                                               tris_sorted_per_vertex,
+                                               tris_sorted_per_vertex_single,
+                                               triangle_normals):
 
     deviations = []
     triangle_count = len(triangles)
@@ -202,6 +227,83 @@ def triangle_normal_deviations_batch(start_index: int, stop_index: int, args: tu
             deviations.append(np.degrees(np.arccos(dot)))
 
     return deviations
+
+
+def triangle_normal_deviations_naive(triangles, triangle_normals, chunk_size=100000, num_workers=4):
+
+    # tris_shared = multiprocessing.Array('d', triangles.ravel())
+    # tri_normals_shared = multiprocessing.Array('d', triangle_normals.ravel())
+
+    if num_workers is None or num_workers <= 0:
+        num_workers = multiprocessing.cpu_count()
+
+    num_chunks = len(triangles) // chunk_size
+
+    if len(triangles) % chunk_size:
+        num_chunks += 1
+
+    chunks = [(i * chunk_size, min((i + 1) * chunk_size, len(triangles))) for i in range(num_chunks)]
+    pool = multiprocessing.Pool(processes=num_workers)
+    async_results = []
+
+    # Apply async function to each batch
+    for start, stop in chunks:
+        args = (start, stop, triangles, triangle_normals)
+        async_result = pool.apply_async(triangle_normal_deviations_naive_batch, args=args)
+        async_results.append(async_result)
+
+    # Get the results from async results
+    results = [async_result.get() for async_result in async_results]
+
+    return np.concatenate(results)
+
+
+def triangle_normal_deviations_naive_batch(start_index, stop_index, triangles, triangle_normals):
+    # start_index, stop_index, triangles, triangle_normals = args
+
+    triangle_count = len(triangles) // 3
+    deviations = []
+    occurrences = np.zeros(shape=(triangle_count, ))
+
+    for tri_index in range(start_index, stop_index):
+        # Since triangles can only have 3 neighbours max, we can skip any triangle we have seen 3 or more times.
+        if occurrences[tri_index] >= 3:
+            continue
+
+        tri_index_corrected = tri_index * 3
+        triangle_1 = triangles[tri_index_corrected:tri_index_corrected + 3]
+        normal_1 = triangle_normals[tri_index_corrected:tri_index_corrected + 3]
+
+        found_neighbours = 0
+
+        for tri_index_2 in range(triangle_count):
+            # If we have already encountered this triangle 3 times before, we don't need to check it anymore.
+            if occurrences[tri_index] >= 3:
+                break
+
+            tri_index_2_corrected = tri_index_2 * 3
+            triangle_2 = triangles[tri_index_2_corrected:tri_index_2_corrected + 3]
+
+            # If the number of intersecting vertex indices is not 2, we can just ignore this.
+            if len(np.intersect1d(triangle_1, triangle_2)) != 2:
+                continue
+
+            # Calculate the deviation
+            normal_2 = triangle_normals[tri_index_2_corrected:tri_index_2_corrected + 3]
+            clipped_dot = np.clip(np.dot(normal_1, normal_2), -1.0, 1.0)
+            deviations.append(np.degrees(np.arccos(clipped_dot)))
+
+            # Make sure we count this occurrence!
+            occurrences[triangle_2] += 1
+            found_neighbours += 1
+
+            # If we have found 3 neighbours for this triangle...
+            # We can break out of the loop and skip this triangle forever
+            if found_neighbours == 3:
+                occurrences[tri_index] = 3
+                break
+
+    return np.array(deviations)
 
 
 def evaluate_connectivity(triangles, vertices, results: EvaluationResults, verbose: bool = True):

@@ -6,6 +6,7 @@ from utilities.enumerations import MeshCleaningMethod as MCM
 from utilities.enumerations import MeshEvaluationMetric as MEM
 from utilities.enumerations import SurfaceReconstructionMethod as SRM
 from utilities.enumerations import SurfaceReconstructionParameters as SRP
+from utilities.enumerations import TriangleNormalDeviationMethod as TNDM
 
 
 class RunConfiguration:
@@ -33,5 +34,10 @@ class RunConfiguration:
         # Mesh Evaluation
         self.mesh_evaluation_metrics: Optional[Set[MEM]] = None
 
+        # Misc settings
         self.store_mesh: bool = False
         self.store_preprocessed_pointcloud: bool = False
+        self.processes: int = 1
+        self.chunk_size: int = 1000
+
+        self.triangle_normal_deviation_method: TNDM = TNDM.NAIVE

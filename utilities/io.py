@@ -13,6 +13,7 @@ from utilities.enumerations import MeshCleaningMethod as MCM
 from utilities.enumerations import MeshEvaluationMetric as MEM
 from utilities.enumerations import SurfaceReconstructionMethod as SRM
 from utilities.enumerations import SurfaceReconstructionParameters as SRP
+from utilities.enumerations import TriangleNormalDeviationMethod as TNDM
 from utilities.run_configuration import RunConfiguration
 
 
@@ -318,6 +319,15 @@ def run_config_from_json(data, pcd_path: Union[Path, str]) -> RunConfiguration:
     config.mesh_evaluation_metrics = mem
     config.store_mesh = get_setting(data, "store_mesh", False, type(bool))
     config.store_preprocessed_pointcloud = get_setting(data, "store_preprocessed_pointcloud", False, type(bool))
+
+    if "triangle_normal_deviation_method" in data:
+        tndm_raw = data["triangle_normal_deviation_method"]
+        config.triangle_normal_deviation_method = mesh_quality.get_normal_deviation_method(tndm_raw)
+    else:
+        config.triangle_normal_deviation_method = TNDM.NAIVE
+    config.processes = get_setting(data, "processes", 1, type(int))
+    config.chunk_size = get_setting(data, "chunk_size", 1000, type(int))
+
     return config
 
 

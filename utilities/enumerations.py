@@ -1,5 +1,4 @@
 import enum
-from typing import Optional
 
 
 class SurfaceReconstructionMethod(enum.Enum):
@@ -41,3 +40,7 @@ class MeshCleaningMethod(enum.Enum):
     SIMPLE = "simple"
 
 
+class TriangleNormalDeviationMethod(enum.Enum):
+    NAIVE = "naive",
+    SORTED = "sorted",
+    ADJANCENCY = "adjancency"

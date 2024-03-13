@@ -13,6 +13,7 @@ from mesh_quality import evaluate_connectivity
 from utilities.enumerations import MeshEvaluationMetric as MQM
 from utilities.run_configuration import RunConfiguration
 from utilities.evaluation_results import EvaluationResults
+from utilities.enumerations import TriangleNormalDeviationMethod
 
 
 def evaluate_point_clouds(point_cloud_a: open3d.geometry.PointCloud, point_cloud_b: open3d.geometry.PointCloud):
@@ -80,7 +81,7 @@ def evaluate_mesh(mesh: open3d.geometry.TriangleMesh,
         evaluate_discrete_curvatures(triangle_normals, triangles, vertex_normals, vertices, results=results)
 
     if MQM.TRIANGLE_NORMAL_DEVIATIONS in config.mesh_evaluation_metrics:
-        evaluate_normal_deviations(mesh.adjacency_list, triangle_normals, triangles, results)
+        evaluate_normal_deviations(config, mesh.adjacency_list, triangle_normals, triangles, results=results)
 
     results.evaluation_time = time.time() - start_time
 
@@ -89,7 +90,8 @@ def evaluate_mesh(mesh: open3d.geometry.TriangleMesh,
     # plt.show()
 
 
-def evaluate_normal_deviations(adjacency_list,
+def evaluate_normal_deviations(config: RunConfiguration,
+                               adjacency_list,
                                triangle_normals,
                                triangles,
                                results: EvaluationResults,
@@ -98,9 +100,23 @@ def evaluate_normal_deviations(adjacency_list,
         pr = cProfile.Profile()
         pr.enable()
 
-    deviations = mesh_quality.triangle_normal_deviations_adjacency(adjacency_list.copy(),
-                                                                   triangles,
-                                                                   triangle_normals)
+    if config.triangle_normal_deviation_method == TriangleNormalDeviationMethod.ADJANCENCY:
+        deviations = mesh_quality.triangle_normal_deviations_adjacency(adjacency_list.copy(),
+                                                                       triangles,
+                                                                       triangle_normals,
+                                                                       num_workers=config.processes,
+                                                                       chunk_size=config.chunk_size)
+
+    elif config.triangle_normal_deviation_method == TriangleNormalDeviationMethod.NAIVE:
+        deviations = mesh_quality.triangle_normal_deviations_naive(triangles,
+                                                                   triangle_normals,
+                                                                   num_workers=config.processes,
+                                                                   chunk_size=config.chunk_size)
+
+    else:
+        print(f"Triangle normal deviation method {config.triangle_normal_deviation_method} unknown.")
+        results.normal_deviations = []
+        return
 
     results.normal_deviations = deviations
 
