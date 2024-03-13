@@ -1,4 +1,4 @@
 /data/
 /__pycache__/
 .idea/*
-/run_configs/
+/run_configs/result*

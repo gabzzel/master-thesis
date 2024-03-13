@@ -1,0 +1,28 @@
+{
+  "point_cloud_path":"C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\etvr\\enfsi-2023_reduced_cloud.pcd",
+  "verbose": true,
+  "draw": true,
+  "runs":
+  [
+    {
+      "down_sample_method":"voxel",
+      "down_sample_param":0.01,
+      "normal_estimation_neighbours":30,
+      "normal_estimation_radius":0.1,
+      "skip_normalizing_normals":false,
+      "orient_normals": 0,
+      "surface_reconstruction_algorithm":"alpha_shapes",
+      "alpha":0.1,
+      "ball_pivoting_radii":[0.1, 0.05, 0.02, 0.01],
+      "poisson_density_quantile":0.1,
+      "poisson_octree_max_depth":8,
+      "mesh_cleaning_methods":["simple", "edge_length", "aspect_ratio"],
+      "edge_length_clean_portion":0.99,
+      "aspect_ratio_clean_portion":0.99,
+      "mesh_quality_metrics":"all",
+      "mesh_to_cloud_metrics":"all",
+      "store_preprocessed_pointcloud":false,
+      "store_mesh":false
+    }   
+  ]
+}

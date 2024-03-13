@@ -3,6 +3,8 @@ import json
 from pathlib import Path
 from typing import Optional, List, Tuple, Union, Set
 
+import numpy as np
+
 import mesh_quality
 import surface_reconstruction
 from utilities import mesh_cleaning, pcd_utils
@@ -71,7 +73,7 @@ def parse_args() -> Optional[argparse.Namespace]:
     parser.add_argument('-poisson_density_quantile', '-pdq',
                         type=float, action='store', default=0.1,
                         help="The lower quantile/portion of the points sorted by density / support is removed."
-                             "Used to clean a mesh after reconstruction using Screened Poisson Surface Reconstruction.")
+                             "Used to clean mesh after reconstruction using Screened Poisson Surface Reconstruction.")
 
     parser.add_argument('-poisson_octree_max_depth', '-pomd',
                         type=int, action='append', default=8,
@@ -253,31 +255,34 @@ def get_run_configurations_from_json(file_name: Path) -> Tuple[List[RunConfigura
 
 
 def run_config_from_json(data, pcd_path: Union[Path, str]) -> RunConfiguration:
+    config = RunConfiguration()
+    config.point_cloud_path = Path(pcd_path) if isinstance(pcd_path, str) else pcd_path
+
     if "down_sample_method" in data:
-        down_sample_methods = pcd_utils.get_down_sample_method(data["down_sample_method"])
+        config.down_sample_method = pcd_utils.get_down_sample_method(data["down_sample_method"])
     else:
         print(f"No down_sample_method in config. Using default {None}")
-        down_sample_methods = None
+        config.down_sample_method = None
 
-    down_sample_params = data["down_sample_param"] if "down_sample_param" in data else 0
-    nen = int(data["normal_estimation_neighbours"]) if "normal_estimation_neighbours" in data else 0
-    ner = float(data["normal_estimation_radius"]) if "normal_estimation_radius" in data else 0.0
-    snn = bool(data["skip_normalizing_normals"]) if "skip_normalizing_normals" in data else False
-    orient_normals = int(data["orient_normals"]) if "orient_normals" in data else 0
+    config.down_sample_params = get_setting(data, "down_sample_param", 0, type(float))
+    config.normal_estimation_neighbours = get_setting(data, "normal_estimation_neighbours", 0, type(int))
+    config.normal_estimation_radius = get_setting(data, "normal_estimation_radius", 0.0, type(float))
+    config.skip_normalizing_normals = get_setting(data, "skip_normalizing_normals", False, type(bool))
+    config.orient_normals = get_setting(data, "orient_normals", 0, type(int))
 
-    sra = {SRM.DELAUNAY_TRIANGULATION}
+    config.surface_reconstruction_method = SRM.DELAUNAY_TRIANGULATION
     if "surface_reconstruction_algorithm" in data:
-        sra = surface_reconstruction.get_surface_reconstruction_method(data["surface_reconstruction_algorithm"])
+        sra_input = data["surface_reconstruction_algorithm"]
+        config.surface_reconstruction_method = surface_reconstruction.get_surface_reconstruction_method(sra_input)
     else:
         print(f"No surface reconstruction algorithm found in config. Using default {SRM.DELAUNAY_TRIANGULATION}")
 
-    alpha = float(data["alpha"]) if "alpha" in data else 0.5
+    # Surface reconstruction parameters
+    alpha = get_metric_to_list(data, name="alpha", default_single=0.5)
     bpa_radii = get_metric_to_list(data, name="ball_pivoting_radii", default_single=0.5)
-
-    poisson_density_quantile = float(data["poisson_density_quantile"]) if "poisson_density_quantile" in data else 0.1
-    poisson_octree_max_depth = int(data["poisson_octree_max_depth"]) if "poisson_octree_max_depth" in data else 8
-
-    srp = {
+    poisson_density_quantile = get_setting(data, "poisson_density_quantile", 0.1, type(float))
+    poisson_octree_max_depth = get_setting(data, "poisson_octree_max_depth", 8, type(int))
+    config.surface_reconstruction_params = {
         SRP.ALPHA: alpha,
         SRP.BPA_RADII: bpa_radii,
         SRP.POISSON_DENSITY_QUANTILE_THRESHOLD: poisson_density_quantile,
@@ -292,9 +297,10 @@ def run_config_from_json(data, pcd_path: Union[Path, str]) -> RunConfiguration:
             mcm = {mesh_cleaning.get_cleaning_type(data["mesh_cleaning_methods"])}
     if mcm and MCM.ALL in mcm:
         mcm = set([i for i in MCM])
+    config.mesh_cleaning_methods = mcm
 
-    eclp = float(data["edge_length_clean_portion"]) if "edge_length_clean_portion" in data else 0.9
-    arcp = float(data["aspect_ratio_clean_portion"]) if "aspect_ratio_clean_portion" in data else 0.9
+    config.edge_length_cleaning_portion = get_setting(data, "edge_length_clean_portion", 0.9, type(float))
+    config.aspect_ratio_cleaning_portion = get_setting(data, "aspect_ratio_clean_portion", 0.9, type(float))
 
     mem = extract_quality_metric(data, metric_name="mesh_quality_metrics", everything={MEM.DISCRETE_CURVATURE,
                                                                                        MEM.TRIANGLE_NORMAL_DEVIATIONS,
@@ -309,32 +315,17 @@ def run_config_from_json(data, pcd_path: Union[Path, str]) -> RunConfiguration:
     elif mem is None and m2cm is not None:
         mem = m2cm
 
-    store_mesh = bool(data["store_mesh"]) if "store_mesh" in data else False
-
-    store_preprocessed_pointcloud = bool(data["store_preprocessed_pointcloud"]) if "store_preprocessed_pointcloud" in data else False
-
-    return RunConfiguration(pcd_path=pcd_path,
-                            down_sample_method=down_sample_methods,
-                            down_sample_params=down_sample_params,
-                            surface_reconstruction_method=sra,
-                            surface_reconstruction_params=srp,
-                            mesh_cleaning_methods=mcm,
-                            edge_length_cleaning_portion=eclp,
-                            aspect_ratio_cleaning_portion=arcp,
-                            normal_estimation_neighbours=nen,
-                            normal_estimation_radius=ner,
-                            skip_normalizing_normals=snn,
-                            orient_normals=orient_normals,
-                            mesh_evaluation_metrics=mem,
-                            store_mesh=store_mesh,
-                            store_preprocessed_pointcloud=store_preprocessed_pointcloud)
+    config.mesh_evaluation_metrics = mem
+    config.store_mesh = get_setting(data, "store_mesh", False, type(bool))
+    config.store_preprocessed_pointcloud = get_setting(data, "store_preprocessed_pointcloud", False, type(bool))
+    return config
 
 
 def get_metric_to_list(data, name: str, default_single: Union[int, float], verbose: bool = True):
     t = type(default_single)
     if name in data:
         d = data[name]
-        if isinstance(d, list):
+        if isinstance(d, list) or isinstance(d, tuple):
             return [t(i) for i in data["ball_pivoting_radii"]]
         elif isinstance(d, t):
             return [d]
@@ -345,12 +336,19 @@ def get_metric_to_list(data, name: str, default_single: Union[int, float], verbo
     return [default_single]
 
 
+def get_setting(data: dict, name: str, default, cast_type: Optional[type]):
+    if not data or not (name in data):
+        return default
+
+    return data[name] if cast_type is not None else cast_type(data[name])
+
+
 def extract_quality_metric(data, metric_name: str, everything: Set[MEM]) -> Optional[Set[MEM]]:
     mem = None
     if metric_name in data:
         m = data[metric_name]
 
-        if isinstance(m, list):
+        if isinstance(m, list) or isinstance(m, tuple) or isinstance(m, np.ndarray):
             mem = set([mesh_quality.get_mesh_quality_metric(i.lower().strip()) for i in m])
         elif isinstance(m, str):
             mem = {mesh_quality.get_mesh_quality_metric(m)}

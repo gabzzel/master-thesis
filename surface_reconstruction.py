@@ -55,6 +55,8 @@ def run(pcd: open3d.geometry.PointCloud,
 
     elif config.surface_reconstruction_method == SRM.ALPHA_SHAPES:
         alpha = config.surface_reconstruction_params[SRP.ALPHA]
+        if isinstance(alpha, list) or isinstance(alpha, tuple):
+            alpha = alpha[0]
         mesh = alpha_shapes(point_cloud=pcd, alpha=alpha, verbose=verbose)
 
     elif config.surface_reconstruction_method == SRM.SCREENED_POISSON_SURFACE_RECONSTRUCTION:
