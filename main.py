@@ -1,4 +1,5 @@
 import argparse
+import sys
 import time
 from typing import Optional, Tuple
 import pathlib
@@ -109,8 +110,20 @@ def load_point_cloud(config: RunConfiguration,
 
 
 if __name__ == "__main__":
-    config_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\run_configs\\config.json"
-    execute(config_path)
+    main_script_path = pathlib.Path(sys.argv[0])
+
+    if not main_script_path.exists():
+        config_path = None
+        print("Cannot find config.")
+
+    if main_script_path.is_dir():
+        config_path = main_script_path.joinpath("run_configs", "config.json")
+        execute(str(config_path))
+
+    elif main_script_path.is_file():
+        config_path = main_script_path.parent.joinpath("run_configs", "config.json")
+        execute(str(config_path))
+
 
     # point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\etvr\\enfsi-2023_reduced_cloud.pcd"
 
