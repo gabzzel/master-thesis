@@ -251,7 +251,7 @@ def get_run_configurations_from_json(file_name: Path) -> Tuple[List[RunConfigura
                 base_config = None
                 if i > 0 and copy:
                     base_config = configs[i - 1]  # If we want to copy the previous config
-                config = run_config_from_json(run_config_raw, pcd_path=pcd_path, base_config=base_config)
+                config = get_run_config_from_json(run_config_raw, pcd_path=pcd_path, base_config=base_config)
                 configs.append(config)
             except json.JSONDecodeError as e:
                 print(f"Could not parse run {i} json config file {file_name}: {e}")
@@ -261,10 +261,13 @@ def get_run_configurations_from_json(file_name: Path) -> Tuple[List[RunConfigura
     return configs, verbose, draw, copy
 
 
-def run_config_from_json(data, pcd_path: Union[Path, str], base_config: RunConfiguration = None) -> RunConfiguration:
+def get_run_config_from_json(data, pcd_path: Union[Path, str], base_config: RunConfiguration = None) \
+        -> RunConfiguration:
+
     config = RunConfiguration()
     if base_config is not None:
         config = base_config.copy()
+        print("Config copies settings from base config.")
 
     config.point_cloud_path = Path(pcd_path) if isinstance(pcd_path, str) else pcd_path
 

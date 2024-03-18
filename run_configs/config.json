@@ -7,8 +7,8 @@
   [
     {
       "down_sample_method":"voxel",
-      "down_sample_params":0.05,
-      "normal_estimation_neighbours":30,
+      "down_sample_params":0.04,
+      "normal_estimation_neighbours":20,
       "normal_estimation_radius":0.1,
       "skip_normalizing_normals":false,
       "orient_normals": 0,
@@ -26,6 +26,9 @@
       "triangle_normal_deviation_method":"adj",
       "processes":1,
       "chunk_size":50000
+    },
+    {
+      "alpha": 0.3
     }
   ]
 }

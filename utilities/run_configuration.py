@@ -17,8 +17,8 @@ class RunConfiguration:
     def __init__(self):
         # Point Cloud Settings (incl. down sampling)
         self.point_cloud_path: Path = None
-        self.down_sample_method: DSM = None
-        self.down_sample_params: float = 0.0
+        self.down_sample_method: Optional[DSM] = None
+        self.down_sample_params: float = None
 
         # Point cloud Normal Estimation Settings
         self.normal_estimation_neighbours: int = 0
@@ -49,6 +49,8 @@ class RunConfiguration:
 
         self.triangle_normal_deviation_method: TNDM = TNDM.NAIVE
 
+        self.overwritten_attributes: Set[str] = set()
+
     @property
     def surface_reconstruction_params(self) -> Dict[SRP, Any]:
         return {SRP.ALPHA: self.alpha,
@@ -75,10 +77,13 @@ class RunConfiguration:
                     handle_all_value: bool = False,
                     special_all_value: Optional[Any] = None,
                     special_all_values_getter: Optional[Union[Callable, enum.Enum, set, list, tuple]] = None,
-                    verbose: bool = True) -> None:
+                    verbose: bool = True,
+                    ignore_default_if_overwritten: bool = True) -> None:
         """
         Set a setting in this run configuration.
 
+        :param ignore_default_if_overwritten: If True and the setting name already exists in \
+            `self.overwritten_attributes`, the `default` value will be ignored.
         :param special_all_values_getter: The value that determines the final value for the setting if the special \
             "all" value (specified by `special_all_value`) is found in or as the raw setting value. \
             If not specified (i.e. None), the final setting value will be the same as the special "all" value. \
@@ -116,9 +121,14 @@ class RunConfiguration:
         raw_value = None
         if setting_name in data:
             raw_value = data[setting_name]
+            self.overwritten_attributes.add(setting_name)
+        # If we are aiming for 'safe' execution, we do not write a default if it's already overwritten
+        elif ignore_default_if_overwritten and setting_name in self.overwritten_attributes:
+            return
         else:
             raw_value = default
-            if verbose: print(f"Setting {setting_name} not found. Using default {default}.")
+            if verbose:
+                print(f"Setting {setting_name} not found. Using default {default}.")
 
         if not isinstance(raw_value, (float, int, bool, list, enum.Enum, str)) and not (raw_value is None):
             raise ValueError(f"Value {raw_value} or default {default} for setting {setting_name} has to be of type "
@@ -127,7 +137,7 @@ class RunConfiguration:
         cast_method_active = not (cast_method is None) and isinstance(cast_method, (Callable, type))
         raw_value_is_iterable = isinstance(raw_value, (list, tuple, set, np.ndarray))
 
-        ## Casting
+        # Casting
         # If the raw value is an accepted iterable, try to cast every value using the callable
         try:
             if cast_method_active and raw_value_is_iterable:
@@ -135,10 +145,7 @@ class RunConfiguration:
             elif cast_method_active and not raw_value_is_iterable:
                 raw_value = cast_method(raw_value)
         except Exception as e:
-            if verbose:
-                print(f"Casting {raw_value} using {cast_method} failed. Caught exception: {e}")
-            else:
-                raise e
+            raise e
 
         # If we need to handle a special "all" value, we try to 'detect' the special 'all' value.
         if handle_all_value:

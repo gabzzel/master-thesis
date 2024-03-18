@@ -35,7 +35,7 @@ def execute(config_file: Optional[str]):
     results_path = pathlib.Path(config_file).parent
 
     for i in range(len(run_configs)):
-        print(f"Starting run {i + 1}/{len(run_configs)}")
+        print(f"\n================== Starting Run {i + 1} (of {len(run_configs)}) ==================")
         run_result_path = results_path.joinpath(f"result{i}")
         if not run_result_path.exists():
             os.makedirs(run_result_path)
@@ -46,7 +46,7 @@ def execute(config_file: Optional[str]):
 def execute_run(run_config: RunConfiguration, results_path: pathlib.Path, verbose: bool = True, draw: bool = False):
     results = EvaluationResults(name="results")
 
-    print("\n ============= Step 1 : Loading & Preprocessing =============")
+    print("\n============= Step 1 : Loading & Preprocessing =============")
     raw_pcd, pcd = load_point_cloud(run_config, results, verbose=verbose)
 
     if run_config.store_preprocessed_pointcloud:
@@ -55,27 +55,32 @@ def execute_run(run_config: RunConfiguration, results_path: pathlib.Path, verbos
         pcd_path = os.path.join(results_path, preprocessed_pcd_file_name)
         open3d.io.write_point_cloud(filename=str(pcd_path), pointcloud=pcd, print_progress=verbose)
 
-    print("\n ============= Step 2 : Surface Reconstruction =============")
+    print("\n============= Step 2 : Surface Reconstruction =============")
     mesh = surface_reconstruction.run(pcd=pcd, results=results, config=run_config, verbose=verbose)
 
-    print("\n ============= Step 3 : Cleaning =============")
+    print("\n============= Step 3 : Cleaning =============")
     aspect_ratios = mesh_cleaning.run_mesh_cleaning(mesh, run_config, results, verbose=verbose)
 
     # If we have aspect ratios return from the mesh cleaning, we want the remaining after-cleaning aspect ratios
     if aspect_ratios is not None:
         aspect_ratios = aspect_ratios[1]
 
-    print("\n ============= Step 4 : Evaluation =============")
+    print("\n============= Step 4 : Evaluation =============")
     # Raw point cloud is used here, since we want to evaluate against the original, not the preprocessed.
     evaluation.evaluate(mesh, raw_pcd, run_config, results, precomputed_aspect_ratios=aspect_ratios, verbose=verbose)
 
+    print("\n============= Step 5 : Saving Results =============")
+    start_time = time.time()
     results.save_to_file(results_path)
+    print(f"Saved results to {results_path}. [{round(time.time() - start_time, 3)}s]")
 
     if run_config.store_mesh:
+        start_time = time.time()
         original_path = run_config.point_cloud_path
         mesh_name = original_path.stem + "_mesh.ply"
         mesh_path = os.path.join(results_path, mesh_name)
         open3d.io.write_triangle_mesh(filename=mesh_path, mesh=mesh)
+        print(f"Saved mesh to {mesh_path}. [{round(time.time() - start_time, 3)}s]")
 
     if draw:
         open3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
