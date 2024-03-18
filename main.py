@@ -26,7 +26,7 @@ def execute(config_file: Optional[str]):
         run_configs = io.get_run_configurations_from_args(args)
 
     elif pathlib.Path(config_file).is_file():
-        run_configs, verbose, draw = io.get_run_configurations_from_json(pathlib.Path(config_file))
+        run_configs, verbose, draw, copy = io.get_run_configurations_from_json(pathlib.Path(config_file))
 
     else:
         print(f"Invalid config file path: {config_file}.")

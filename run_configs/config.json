@@ -2,6 +2,7 @@
   "point_cloud_path":"C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\etvr\\enfsi-2023_reduced_cloud.pcd",
   "verbose": true,
   "draw": true,
+  "copy": true,
   "runs":
   [
     {

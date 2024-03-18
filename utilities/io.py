@@ -221,9 +221,10 @@ def get_run_configurations_from_args(args: argparse.Namespace) -> List[RunConfig
     return configs
 
 
-def get_run_configurations_from_json(file_name: Path) -> Tuple[List[RunConfiguration], bool, bool]:
+def get_run_configurations_from_json(file_name: Path) -> Tuple[List[RunConfiguration], bool, bool, bool]:
     verbose = True
     draw = False
+    copy = False  # Whether to copy all parameters of a previous run and overwrite what is specified
 
     configs = []
 
@@ -233,30 +234,33 @@ def get_run_configurations_from_json(file_name: Path) -> Tuple[List[RunConfigura
 
         if not ("runs" in json_data_raw) or not ("point_cloud_path" in json_data_raw):
             print(f"No runs found in {file_name} OR no file path found.")
-            return [], verbose, draw
+            return [], verbose, draw, copy
 
         if "verbose" in json_data_raw:
             verbose = bool(json_data_raw["verbose"])
         if "draw" in json_data_raw:
             draw = bool(json_data_raw["draw"])
+        if "copy" in json_data_raw:
+            copy = bool(json_data_raw["copy"])
 
         pcd_path = Path(json_data_raw['point_cloud_path'])
 
         for i in range(len(json_data_raw["runs"])):
             run_config_raw = json_data_raw["runs"][i]
             try:
-                config = run_config_from_json(run_config_raw, pcd_path=pcd_path)
+                base_config = configs[i - 1] if copy and i > 0 else None  # If we want to copy the previous config
+                config = run_config_from_json(run_config_raw, pcd_path=pcd_path, base_config=base_config)
                 configs.append(config)
             except json.JSONDecodeError as e:
                 print(f"Could not parse run {i} json config file {file_name}: {e}")
             except Exception as e:
                 print(f"{e}")
 
-    return configs, verbose, draw
+    return configs, verbose, draw, copy
 
 
-def run_config_from_json(data, pcd_path: Union[Path, str]) -> RunConfiguration:
-    config = RunConfiguration()
+def run_config_from_json(data, pcd_path: Union[Path, str], base_config: RunConfiguration = None) -> RunConfiguration:
+    config = base_config.copy() if base_config is not None else RunConfiguration()
     config.point_cloud_path = Path(pcd_path) if isinstance(pcd_path, str) else pcd_path
 
     if "down_sample_method" in data:

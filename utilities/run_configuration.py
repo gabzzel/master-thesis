@@ -41,3 +41,12 @@ class RunConfiguration:
         self.chunk_size: int = 1000
 
         self.triangle_normal_deviation_method: TNDM = TNDM.NAIVE
+
+    def __copy__(self):
+        c = RunConfiguration()
+        for var_name, value in self.__dict__:
+            setattr(c, var_name, value)
+        return c
+
+    def copy(self):
+        return self.__copy__()
