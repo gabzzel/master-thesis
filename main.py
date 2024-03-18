@@ -1,6 +1,6 @@
 import argparse
 import time
-from typing import Optional
+from typing import Optional, Tuple
 import pathlib
 import os
 
@@ -47,7 +47,7 @@ def execute_run(run_config: RunConfiguration, results_path: pathlib.Path, verbos
     results = EvaluationResults(name="results")
 
     print("\n ============= Step 1 : Loading & Preprocessing =============")
-    pcd = load_point_cloud(run_config, results, verbose=verbose)
+    raw_pcd, pcd = load_point_cloud(run_config, results, verbose=verbose)
 
     if run_config.store_preprocessed_pointcloud:
         original_path = run_config.point_cloud_path
@@ -66,7 +66,8 @@ def execute_run(run_config: RunConfiguration, results_path: pathlib.Path, verbos
         aspect_ratios = aspect_ratios[1]
 
     print("\n ============= Step 4 : Evaluation =============")
-    evaluation.evaluate(mesh, pcd, run_config, results, precomputed_aspect_ratios=aspect_ratios, verbose=verbose)
+    # Raw point cloud is used here, since we want to evaluate against the original, not the preprocessed.
+    evaluation.evaluate(mesh, raw_pcd, run_config, results, precomputed_aspect_ratios=aspect_ratios, verbose=verbose)
 
     results.save_to_file(results_path)
 
@@ -83,14 +84,13 @@ def execute_run(run_config: RunConfiguration, results_path: pathlib.Path, verbos
 def load_point_cloud(config: RunConfiguration,
                      results: EvaluationResults,
                      verbose: bool = True) \
-        -> open3d.geometry.PointCloud:
-
+        -> Tuple[open3d.geometry.PointCloud, open3d.geometry.PointCloud]:
     start_time = time.time()
-    pcd = pcd_utils.load_point_cloud(config.point_cloud_path,
-                                     results=results,
-                                     down_sample_method=config.down_sample_method,
-                                     down_sample_param=config.down_sample_params,
-                                     verbose=verbose)
+    raw_pcd, pcd = pcd_utils.load_point_cloud(config.point_cloud_path,
+                                              results=results,
+                                              down_sample_method=config.down_sample_method,
+                                              down_sample_param=config.down_sample_params,
+                                              verbose=verbose)
 
     pcd_utils.estimate_normals(pcd,
                                max_nn=config.normal_estimation_neighbours,
@@ -100,7 +100,7 @@ def load_point_cloud(config: RunConfiguration,
                                verbose=verbose)
 
     results.loading_and_preprocessing_time = time.time() - start_time
-    return pcd
+    return raw_pcd, pcd
 
 
 if __name__ == "__main__":

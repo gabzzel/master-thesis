@@ -1,6 +1,6 @@
 import time
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 
 import open3d
 
@@ -23,7 +23,7 @@ def load_point_cloud(path: Union[Path, str],
                      results: EvaluationResults,
                      down_sample_method: DownSampleMethod = None,
                      down_sample_param: Optional[Union[float, int]] = None,
-                     verbose=True) -> open3d.geometry.PointCloud:
+                     verbose=True) -> Tuple[open3d.geometry.PointCloud, open3d.geometry.PointCloud]:
     """
     Load a point cloud into Open3D format.
 
@@ -46,6 +46,8 @@ def load_point_cloud(path: Union[Path, str],
                                      print_progress=True)
     end_time = time.time()
 
+    raw_pcd = pcd
+
     if verbose:
         num_pts = utils.format_number(len(pcd.points))
         elapsed_time = str(round(end_time - start_time, 2))
@@ -54,17 +56,17 @@ def load_point_cloud(path: Union[Path, str],
     if down_sample_method is None or not (down_sample_method in DownSampleMethod):
         if verbose:
             print(f"Skipping downsampling: got None or invalid downsampling method {down_sample_method}")
-        return pcd
+        return raw_pcd, pcd
 
     num_points_original = len(pcd.points)
     npof = utils.format_number(num_points_original)  # Number Points Original Formatted
     start_time = time.time()
 
     if down_sample_method == DownSampleMethod.VOXEL:
-        pcd = pcd.voxel_down_sample(voxel_size=down_sample_param)
+        pcd = raw_pcd.voxel_down_sample(voxel_size=down_sample_param)
     elif down_sample_method == DownSampleMethod.RANDOM:
         down_sample_param = max(0, min(1, down_sample_param))
-        pcd = pcd.random_down_sample(sampling_ratio=down_sample_param)
+        pcd = raw_pcd.random_down_sample(sampling_ratio=down_sample_param)
 
     end_time = time.time()
     npad = len(pcd.points)
@@ -77,7 +79,7 @@ def load_point_cloud(path: Union[Path, str],
 
     results.number_of_vertices_original = num_points_original
     results.number_of_vertices_after_downsampling = npad
-    return pcd
+    return raw_pcd, pcd
 
 
 def estimate_normals(point_cloud: open3d.geometry.PointCloud,
