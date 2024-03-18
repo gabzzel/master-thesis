@@ -66,7 +66,7 @@ class EvaluationResults:
                isinstance(self.connectivity_vertices_per_component, np.int32):
                 cvpc_string = str(self.connectivity_vertices_per_component)
                 file.write(f"connectivity_vertices_per_component{delimiter}{cvpc_string}\n")
-            elif self.connectivity_vertices_per_component:
+            elif not (self.connectivity_vertices_per_component is None) and len(self.connectivity_vertices_per_component) > 0:
                 cvpc_string = np.array2string(self.connectivity_vertices_per_component, separator=delimiter)
                 file.write(f"connectivity_vertices_per_component{delimiter}{cvpc_string}\n")
 
@@ -74,7 +74,7 @@ class EvaluationResults:
                isinstance(self.connectivity_triangles_per_component, np.int32):
                 ctpc_string = str(self.connectivity_triangles_per_component)
                 file.write(f"connectivity_triangles_per_component{delimiter}{ctpc_string}\n")
-            elif self.connectivity_triangles_per_component:
+            elif not (self.connectivity_triangles_per_component is None) and len(self.connectivity_triangles_per_component) > 0:
                 ctpc_string = np.array2string(self.connectivity_triangles_per_component, separator=delimiter)
                 file.write(f"connectivity_triangles_per_component{delimiter}{ctpc_string}\n")
 
