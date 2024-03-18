@@ -1,6 +1,6 @@
 import bisect
 import time
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 import multiprocessing
 
 import numpy as np
@@ -327,20 +327,22 @@ def evaluate_connectivity(triangles, vertices, results: EvaluationResults, verbo
         print(f"Connectivity: Connected Components={num_conn_comp}, largest component ratio={largest_component_ratio}")
 
 
-def evaluate_point_cloud_mesh(point_cloud: PointCloud, mesh: Union[TriangleMesh, TetraMesh]):
+def evaluate_point_cloud_mesh(point_cloud: PointCloud, mesh: Union[TriangleMesh, TetraMesh]) \
+        -> Tuple[float, float, np.ndarray]:
     pcd_points = np.asarray(point_cloud.points)
     mesh_points = np.asarray(mesh.vertices)
 
     # Compute Hausdorff and Chamfer distances
-    hausdorff = round(pcu.hausdorff_distance(pcd_points, mesh_points), 4)
-    chamfer = round(pcu.chamfer_distance(pcd_points, mesh_points), 4)
-    print(f"Hausdorff={hausdorff}, Chamfer={chamfer}")
+    hausdorff = pcu.hausdorff_distance(pcd_points, mesh_points)
+    chamfer = pcu.chamfer_distance(pcd_points, mesh_points)
+    print(f"Hausdorff={round(hausdorff, 4)}, Chamfer={round(chamfer, 4)}")
 
     distances_pts_to_mesh = mesh_utils.get_points_to_mesh_distances(pcd_points, mesh)
-    distance_results = utils.get_stats(distances_pts_to_mesh, "Point-to-mesh distances", return_results=True)
+    utils.get_stats(distances_pts_to_mesh, "Point-to-mesh distances")
+    return hausdorff, chamfer, distances_pts_to_mesh
 
-    distances_normalized = distances_pts_to_mesh / distance_results[0]  # Index 0 is the max distance.
-    colors = np.full(shape=(len(distances_normalized), 3), fill_value=0.0)
-    colors[:, 0] = distances_normalized
-    point_cloud.colors = open3d.utility.Vector3dVector(colors)
-    plt.hist(distances_pts_to_mesh, histtype='step', log=True, bins=100)
+    #distances_normalized = distances_pts_to_mesh / distance_results[0]  # Index 0 is the max distance.
+    #colors = np.full(shape=(len(distances_normalized), 3), fill_value=0.0)
+    #colors[:, 0] = distances_normalized
+    #point_cloud.colors = open3d.utility.Vector3dVector(colors)
+    # plt.hist(distances_pts_to_mesh, histtype='step', log=True, bins=100)

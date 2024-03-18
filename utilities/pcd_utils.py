@@ -76,7 +76,7 @@ def load_point_cloud(path: Union[Path, str],
               f"({down_sample_method} @ {down_sample_param}) [{elapsed}s]")
 
     results.number_of_vertices_original = num_points_original
-    results.number_of_vertice_after_downsampling = npad
+    results.number_of_vertices_after_downsampling = npad
     return pcd
 
 

@@ -28,14 +28,16 @@ def evaluate_point_clouds(point_cloud_a: open3d.geometry.PointCloud, point_cloud
     print(f"Evaluated. Hausdorff={hausdorff}, Chamfer={chamfer} [{elapsed_time}s]")
 
 
-def evaluate_mesh(mesh: open3d.geometry.TriangleMesh,
-                  config: RunConfiguration,
-                  results: EvaluationResults,
-                  precomputed_aspect_ratios=None,
-                  verbose: bool = True):
+def evaluate(mesh: open3d.geometry.TriangleMesh,
+             original_point_cloud: open3d.geometry.PointCloud,
+             config: RunConfiguration,results: EvaluationResults,
+             precomputed_aspect_ratios=None,
+             verbose: bool = True):
     """
     Evaluate a mesh on its quality and print the results.
 
+    :param results: The EvaluationResults instance to store the results in.
+    :param original_point_cloud: The original point cloud from which the mesh is constructed.
     :param verbose: Whether to print progress and results.
     :param config: The configuration that determines what will be evaluated
     :param mesh: The mesh to evaluate.
@@ -82,6 +84,15 @@ def evaluate_mesh(mesh: open3d.geometry.TriangleMesh,
 
     if MQM.TRIANGLE_NORMAL_DEVIATIONS in config.mesh_evaluation_metrics:
         evaluate_normal_deviations(config, mesh.adjacency_list, triangle_normals, triangles, results=results)
+
+    hausdorff, chamfer, point_cloud_to_mesh_distances = mesh_quality.evaluate_point_cloud_mesh(original_point_cloud, mesh)
+
+    if MQM.HAUSDORFF_DISTANCE in config.mesh_evaluation_metrics:
+        results.hausdorff_distance = hausdorff
+    if MQM.CHAMFER_DISTANCE in config.mesh_evaluation_metrics:
+        results.chamfer_distance = chamfer
+    if MQM.MESH_TO_CLOUD_DISTANCE in config.mesh_evaluation_metrics:
+        results.point_cloud_to_mesh_distances = point_cloud_to_mesh_distances
 
     results.evaluation_time = time.time() - start_time
 

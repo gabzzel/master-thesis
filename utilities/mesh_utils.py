@@ -73,7 +73,7 @@ def get_mesh_triangle_normal_deviations(triangles: np.ndarray, triangle_normals:
     return np.degrees(np.arccos(dots))
 
 
-def get_points_to_mesh_distances(points: np.ndarray, mesh: open3d.geometry.TriangleMesh):
+def get_points_to_mesh_distances(points: np.ndarray, mesh: open3d.geometry.TriangleMesh) -> np.ndarray:
     """
     Compute the distances from a set of points to the closest points on the surface of a mesh.
 

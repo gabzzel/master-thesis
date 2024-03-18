@@ -22,8 +22,12 @@ class EvaluationResults:
         self.discrete_curvatures = []
         self.normal_deviations = []
 
+        self.hausdorff_distance : float = -1.0
+        self.chamfer_distance: float = -1.0
+        self.point_cloud_to_mesh_distances: Union[list, np.ndarray] = []
+
         self.number_of_vertices_original: int = 0
-        self.number_of_vertice_after_downsampling: int = 0
+        self.number_of_vertices_after_downsampling: int = 0
         self.number_of_vertices_after_cleaning: int = 0
 
     def save_to_file(self, folder_path: Path, compressed: bool = False, delimiter: str = ';'):
@@ -55,6 +59,10 @@ class EvaluationResults:
             nd_path = os.path.join(folder_path, f"normal_deviations{suffix}")
             np.savetxt(str(nd_path), self.normal_deviations, delimiter=delimiter, newline="\n")
 
+        if len(self.point_cloud_to_mesh_distances) > 0:
+            pctmd_path = os.path.join(folder_path, f"point_cloud_to_mesh_distances{suffix}")
+            np.savetxt(str(pctmd_path), self.point_cloud_to_mesh_distances, delimiter=delimiter, newline="\n")
+
         other_result_path = os.path.join(folder_path, "results.txt")
         with open(other_result_path, mode="w") as file:
             file.write(f"Loading_and_Preprocessing_Time{delimiter}{self.loading_and_preprocessing_time}\n")
@@ -78,6 +86,11 @@ class EvaluationResults:
                 ctpc_string = np.array2string(self.connectivity_triangles_per_component, separator=delimiter)
                 file.write(f"connectivity_triangles_per_component{delimiter}{ctpc_string}\n")
 
+            if self.hausdorff_distance >= 0.0:
+                file.write(f"hausdorff_distance{delimiter}{self.hausdorff_distance}\n")
+            if self.chamfer_distance >= 0.0:
+                file.write(f"chamfer_distance{delimiter}{self.chamfer_distance}\n")
+
             file.write(f"number_of_vertices_original{delimiter}{self.number_of_vertices_original}\n")
-            file.write(f"number_of_vertice_after_downsampling{delimiter}{self.number_of_vertice_after_downsampling}\n")
+            file.write(f"number_of_vertice_after_downsampling{delimiter}{self.number_of_vertices_after_downsampling}\n")
             file.write(f"number_of_vertices_after_cleaning{delimiter}{self.number_of_vertices_after_cleaning}\n")
