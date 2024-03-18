@@ -43,25 +43,27 @@ class EvaluationResults:
 
         suffix = ".txt" if not compressed else ".gz"
 
+        fmt = "%5.5f"
+
         if len(self.aspect_ratios) > 0:
             aspect_ratios_path = os.path.join(folder_path, f"aspect_ratios{suffix}")
-            np.savetxt(str(aspect_ratios_path), self.aspect_ratios, delimiter=delimiter, newline='\n')
+            np.savetxt(str(aspect_ratios_path), self.aspect_ratios, delimiter=delimiter, newline='\n', fmt=fmt)
 
         if len(self.edge_lengths) > 0:
             edge_lengths_path = os.path.join(folder_path, f"edge_lengths{suffix}")
-            np.savetxt(str(edge_lengths_path), self.edge_lengths, delimiter=delimiter, newline='\n')
+            np.savetxt(str(edge_lengths_path), self.edge_lengths, delimiter=delimiter, newline='\n', fmt=fmt)
 
         if len(self.discrete_curvatures) > 0:
             dc_path = os.path.join(folder_path, f"discrete_curvatures{suffix}")
-            np.savetxt(str(dc_path), self.discrete_curvatures, delimiter=delimiter, newline="\n")
+            np.savetxt(str(dc_path), self.discrete_curvatures, delimiter=delimiter, newline="\n", fmt=fmt)
 
         if len(self.discrete_curvatures) > 0:
             nd_path = os.path.join(folder_path, f"normal_deviations{suffix}")
-            np.savetxt(str(nd_path), self.normal_deviations, delimiter=delimiter, newline="\n")
+            np.savetxt(str(nd_path), self.normal_deviations, delimiter=delimiter, newline="\n", fmt=fmt)
 
         if len(self.point_cloud_to_mesh_distances) > 0:
             pctmd_path = os.path.join(folder_path, f"point_cloud_to_mesh_distances{suffix}")
-            np.savetxt(str(pctmd_path), self.point_cloud_to_mesh_distances, delimiter=delimiter, newline="\n")
+            np.savetxt(str(pctmd_path), self.point_cloud_to_mesh_distances, delimiter=delimiter, newline="\n", fmt=fmt)
 
         other_result_path = os.path.join(folder_path, "results.txt")
         with open(other_result_path, mode="w") as file:
