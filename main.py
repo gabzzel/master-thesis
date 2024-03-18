@@ -92,7 +92,13 @@ def load_point_cloud(config: RunConfiguration,
                      verbose: bool = True) \
         -> Tuple[open3d.geometry.PointCloud, open3d.geometry.PointCloud]:
     start_time = time.time()
-    raw_pcd, pcd = pcd_utils.load_point_cloud(config.point_cloud_path,
+
+    if config.point_cloud_path.is_absolute():
+        pcd_path = config.point_cloud_path
+    else:
+        pcd_path = pathlib.Path(sys.argv[0]).parent.joinpath("data", config.point_cloud_path)
+
+    raw_pcd, pcd = pcd_utils.load_point_cloud(pcd_path,
                                               results=results,
                                               down_sample_method=config.down_sample_method,
                                               down_sample_param=config.down_sample_params,
