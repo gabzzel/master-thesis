@@ -43,7 +43,7 @@ class EvaluationResults:
 
         suffix = ".txt" if not compressed else ".gz"
 
-        fmt = "%5.5f"
+        fmt = "%7.7f"
 
         if len(self.aspect_ratios) > 0:
             aspect_ratios_path = os.path.join(folder_path, f"aspect_ratios{suffix}")
