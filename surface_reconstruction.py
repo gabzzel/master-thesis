@@ -65,6 +65,7 @@ def run(pcd: open3d.geometry.PointCloud,
         mesh = screened_poisson_surface_reconstruction(point_cloud=pcd,
                                                        octree_max_depth=octree_max_depth,
                                                        density_quantile_threshold=poisson_density_quantile,
+                                                       processes=1,
                                                        verbose=verbose)
 
     elif config.surface_reconstruction_method == SRM.DELAUNAY_TRIANGULATION:
@@ -162,6 +163,7 @@ def delaunay_triangulation(point_cloud: open3d.geometry.PointCloud, as_tris: boo
 def screened_poisson_surface_reconstruction(point_cloud: open3d.geometry.PointCloud,
                                             octree_max_depth=8,
                                             density_quantile_threshold=0.1,
+                                            processes=1,
                                             verbose=True) -> open3d.geometry.TriangleMesh:
     """
     Create a triangulated mesh using Screened Poisson Surface Reconstruction.
@@ -187,7 +189,7 @@ def screened_poisson_surface_reconstruction(point_cloud: open3d.geometry.PointCl
                                                              width=0,
                                                              scale=1.1,
                                                              linear_fit=False,
-                                                             n_threads=-1)
+                                                             n_threads=processes)
 
     end_time = time.time()
     if verbose:
