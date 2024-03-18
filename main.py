@@ -66,7 +66,7 @@ def execute_run(run_config: RunConfiguration, results_path: pathlib.Path, verbos
         aspect_ratios = aspect_ratios[1]
 
     print("\n ============= Step 4 : Evaluation =============")
-    evaluation.evaluate_mesh(mesh, run_config, results, precomputed_aspect_ratios=aspect_ratios, verbose=verbose)
+    evaluation.evaluate(mesh, pcd, run_config, results, precomputed_aspect_ratios=aspect_ratios, verbose=verbose)
 
     results.save_to_file(results_path)
 
