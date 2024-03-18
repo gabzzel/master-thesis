@@ -248,90 +248,62 @@ def get_run_configurations_from_json(file_name: Path) -> Tuple[List[RunConfigura
         for i in range(len(json_data_raw["runs"])):
             run_config_raw = json_data_raw["runs"][i]
             try:
-                base_config = configs[i - 1] if copy and i > 0 else None  # If we want to copy the previous config
+                base_config = None
+                if i > 0 and copy:
+                    base_config = configs[i - 1]  # If we want to copy the previous config
                 config = run_config_from_json(run_config_raw, pcd_path=pcd_path, base_config=base_config)
                 configs.append(config)
             except json.JSONDecodeError as e:
                 print(f"Could not parse run {i} json config file {file_name}: {e}")
             except Exception as e:
-                print(f"{e}")
+                raise e
 
     return configs, verbose, draw, copy
 
 
 def run_config_from_json(data, pcd_path: Union[Path, str], base_config: RunConfiguration = None) -> RunConfiguration:
-    config = base_config.copy() if base_config is not None else RunConfiguration()
+    config = RunConfiguration()
+    if base_config is not None:
+        config = base_config.copy()
+
     config.point_cloud_path = Path(pcd_path) if isinstance(pcd_path, str) else pcd_path
 
-    if "down_sample_method" in data:
-        config.down_sample_method = pcd_utils.get_down_sample_method(data["down_sample_method"])
-    else:
-        print(f"No down_sample_method in config. Using default {None}")
-        config.down_sample_method = None
+    config.set_setting(data, "down_sample_method", default=None, cast_method=pcd_utils.get_down_sample_method)
+    config.set_setting(data, "down_sample_params", default=0, cast_method=float)
+    config.set_setting(data, "normal_estimation_neighbours", default=0, cast_method=int)
+    config.set_setting(data, "normal_estimation_radius", default=0.0, cast_method=float)
+    config.set_setting(data, "skip_normalizing_normals", default=False, cast_method=bool)
+    config.set_setting(data, "orient_normals", default=0, cast_method=int)
 
-    config.down_sample_params = get_setting(data, "down_sample_param", 0, type(float))
-    config.normal_estimation_neighbours = get_setting(data, "normal_estimation_neighbours", 0, type(int))
-    config.normal_estimation_radius = get_setting(data, "normal_estimation_radius", 0.0, type(float))
-    config.skip_normalizing_normals = get_setting(data, "skip_normalizing_normals", False, type(bool))
-    config.orient_normals = get_setting(data, "orient_normals", 0, type(int))
-
-    config.surface_reconstruction_method = SRM.DELAUNAY_TRIANGULATION
-    if "surface_reconstruction_algorithm" in data:
-        sra_input = data["surface_reconstruction_algorithm"]
-        config.surface_reconstruction_method = surface_reconstruction.get_surface_reconstruction_method(sra_input)
-    else:
-        print(f"No surface reconstruction algorithm found in config. Using default {SRM.DELAUNAY_TRIANGULATION}")
+    config.set_setting(data, "surface_reconstruction_method",
+                       default=SRM.DELAUNAY_TRIANGULATION,
+                       cast_method=surface_reconstruction.get_surface_reconstruction_method)
 
     # Surface reconstruction parameters
-    alpha = get_metric_to_list(data, name="alpha", default_single=0.5)
-    bpa_radii = get_metric_to_list(data, name="ball_pivoting_radii", default_single=0.5)
-    poisson_density_quantile = get_setting(data, "poisson_density_quantile", 0.1, type(float))
-    poisson_octree_max_depth = get_setting(data, "poisson_octree_max_depth", 8, type(int))
-    config.surface_reconstruction_params = {
-        SRP.ALPHA: alpha,
-        SRP.BPA_RADII: bpa_radii,
-        SRP.POISSON_DENSITY_QUANTILE_THRESHOLD: poisson_density_quantile,
-        SRP.POISSON_OCTREE_MAX_DEPTH: poisson_octree_max_depth
-    }
+    config.set_setting(data, "alpha", default=0.5, cast_method=float)
+    config.set_setting(data, "ball_pivoting_radii", default=[0.1, 0.2, 0.3], cast_method=float, force_unique=True)
+    config.set_setting(data, "poisson_density_quantile", default=0.1, cast_method=float)
+    config.set_setting(data, "poisson_octree_max_depth", default=8, cast_method=int)
 
-    mcm = None
-    if "mesh_cleaning_methods" in data:
-        if isinstance(data["mesh_cleaning_methods"], list):
-            mcm = set([mesh_cleaning.get_cleaning_type(i.lower().strip()) for i in data["mesh_cleaning_methods"]])
-        elif isinstance(data["mesh_cleaning_methods"], str):
-            mcm = {mesh_cleaning.get_cleaning_type(data["mesh_cleaning_methods"])}
-    if mcm and MCM.ALL in mcm:
-        mcm = set([i for i in MCM])
-    config.mesh_cleaning_methods = mcm
+    # Mesh cleaning
+    config.set_setting(data, "mesh_cleaning_methods", default=None, force_unique=True,
+                       cast_method=mesh_cleaning.get_cleaning_type, handle_all_value=True, special_all_value=MCM.ALL,
+                       special_all_values_getter=MCM)
+    config.set_setting(data, "edge_length_cleaning_portion", default=0.9, cast_method=float)
+    config.set_setting(data, "aspect_ratio_cleaning_portion", default=0.9, cast_method=float)
 
-    config.edge_length_cleaning_portion = get_setting(data, "edge_length_clean_portion", 0.9, type(float))
-    config.aspect_ratio_cleaning_portion = get_setting(data, "aspect_ratio_clean_portion", 0.9, type(float))
+    # Evaluation
+    config.set_setting(data, "mesh_quality_metrics", default=None, handle_all_value=True,
+                       special_all_value=MEM.ALL, special_all_values_getter=MEM,
+                       cast_method=mesh_quality.get_mesh_quality_metric)
+    config.set_setting(data, "triangle_normal_deviation_method", default=TNDM.ADJANCENCY,
+                       cast_method=mesh_quality.get_normal_deviation_method)
 
-    mem = extract_quality_metric(data, metric_name="mesh_quality_metrics", everything={MEM.DISCRETE_CURVATURE,
-                                                                                       MEM.TRIANGLE_NORMAL_DEVIATIONS,
-                                                                                       MEM.EDGE_LENGTHS,
-                                                                                       MEM.TRIANGLE_ASPECT_RATIOS,
-                                                                                       MEM.CONNECTIVITY})
-    m2cm = extract_quality_metric(data, metric_name="mesh_to_cloud_metrics", everything={MEM.CHAMFER_DISTANCE,
-                                                                                         MEM.HAUSDORFF_DISTANCE,
-                                                                                         MEM.MESH_TO_CLOUD_DISTANCE})
-    if mem is not None and m2cm is not None:
-        mem = mem.union(m2cm)
-    elif mem is None and m2cm is not None:
-        mem = m2cm
-
-    config.mesh_evaluation_metrics = mem
-    config.store_mesh = get_setting(data, "store_mesh", False, type(bool))
-    config.store_preprocessed_pointcloud = get_setting(data, "store_preprocessed_pointcloud", False, type(bool))
-
-    if "triangle_normal_deviation_method" in data:
-        tndm_raw = data["triangle_normal_deviation_method"]
-        config.triangle_normal_deviation_method = mesh_quality.get_normal_deviation_method(tndm_raw)
-    else:
-        config.triangle_normal_deviation_method = TNDM.NAIVE
-    config.processes = get_setting(data, "processes", 1, type(int))
-    config.chunk_size = get_setting(data, "chunk_size", 1000, type(int))
-
+    # Utility
+    config.set_setting(data, "store_mesh", default=False, cast_method=bool)
+    config.set_setting(data, "store_preprocessed_pointcloud", default=False, cast_method=bool)
+    config.set_setting(data, "processes", default=1, cast_method=int)
+    config.set_setting(data, "chunk_size", default=1000_000, cast_method=int)
     return config
 
 
@@ -340,7 +312,7 @@ def get_metric_to_list(data, name: str, default_single: Union[int, float], verbo
     if name in data:
         d = data[name]
         if isinstance(d, list) or isinstance(d, tuple):
-            return [t(i) for i in data["ball_pivoting_radii"]]
+            return [t(i) for i in data[name]]
         elif isinstance(d, t):
             return [d]
 

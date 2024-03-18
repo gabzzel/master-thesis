@@ -45,7 +45,7 @@ def evaluate(mesh: open3d.geometry.TriangleMesh,
     :return: None
     """
 
-    if config.mesh_evaluation_metrics is None:
+    if config.mesh_quality_metrics is None:
         if verbose:
             print(f"Evaluating mesh skipped. No mesh evaluation metrics specified in run configuration.")
         return
@@ -65,33 +65,33 @@ def evaluate(mesh: open3d.geometry.TriangleMesh,
 
     start_time = time.time()
 
-    if MQM.EDGE_LENGTHS in config.mesh_evaluation_metrics:
+    if MQM.EDGE_LENGTHS in config.mesh_quality_metrics:
         edge_lengths = mesh_utils.get_edge_lengths_flat(vertices, triangles)
         results.edge_lengths = edge_lengths
         utils.get_stats(edge_lengths, name="Edge Lengths", print_results=True)
 
-    if MQM.TRIANGLE_ASPECT_RATIOS in config.mesh_evaluation_metrics:
+    if MQM.TRIANGLE_ASPECT_RATIOS in config.mesh_quality_metrics:
         if precomputed_aspect_ratios is None:
             precomputed_aspect_ratios = mesh_utils.aspect_ratios(vertices, triangles)
         results.aspect_ratios = precomputed_aspect_ratios
         utils.get_stats(precomputed_aspect_ratios, name="Aspect Ratios", print_results=True)
 
-    if MQM.CONNECTIVITY in config.mesh_evaluation_metrics:
+    if MQM.CONNECTIVITY in config.mesh_quality_metrics:
         evaluate_connectivity(triangles, vertices, results=results)
 
-    if MQM.DISCRETE_CURVATURE in config.mesh_evaluation_metrics:
+    if MQM.DISCRETE_CURVATURE in config.mesh_quality_metrics:
         evaluate_discrete_curvatures(triangle_normals, triangles, vertex_normals, vertices, results=results)
 
-    if MQM.TRIANGLE_NORMAL_DEVIATIONS in config.mesh_evaluation_metrics:
+    if MQM.TRIANGLE_NORMAL_DEVIATIONS in config.mesh_quality_metrics:
         evaluate_normal_deviations(config, mesh.adjacency_list, triangle_normals, triangles, results=results)
 
     hausdorff, chamfer, point_cloud_to_mesh_distances = mesh_quality.evaluate_point_cloud_mesh(original_point_cloud, mesh)
 
-    if MQM.HAUSDORFF_DISTANCE in config.mesh_evaluation_metrics:
+    if MQM.HAUSDORFF_DISTANCE in config.mesh_quality_metrics:
         results.hausdorff_distance = hausdorff
-    if MQM.CHAMFER_DISTANCE in config.mesh_evaluation_metrics:
+    if MQM.CHAMFER_DISTANCE in config.mesh_quality_metrics:
         results.chamfer_distance = chamfer
-    if MQM.MESH_TO_CLOUD_DISTANCE in config.mesh_evaluation_metrics:
+    if MQM.MESH_TO_CLOUD_DISTANCE in config.mesh_quality_metrics:
         results.point_cloud_to_mesh_distances = point_cloud_to_mesh_distances
 
     results.evaluation_time = time.time() - start_time
