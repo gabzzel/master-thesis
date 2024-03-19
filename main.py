@@ -55,6 +55,8 @@ def execute_run(run_config: RunConfiguration, results_path: pathlib.Path, verbos
         preprocessed_pcd_file_name = original_path.stem + "_preprocessed" + original_path.suffix
         pcd_path = os.path.join(results_path, preprocessed_pcd_file_name)
         open3d.io.write_point_cloud(filename=str(pcd_path), pointcloud=pcd, print_progress=verbose)
+        run_config.preprocessed_pointcloud_path = pcd_path
+        print(f"Stored preprocessed point cloud at {pcd_path}")
 
     print("\n============= Step 2 : Surface Reconstruction =============")
     mesh = surface_reconstruction.run(pcd=pcd, results=results, config=run_config, verbose=verbose)

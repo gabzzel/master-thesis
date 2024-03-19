@@ -40,14 +40,14 @@ class RunConfiguration:
 
         # Mesh Evaluation
         self.mesh_quality_metrics: Optional[Set[MEM]] = None
+        self.triangle_normal_deviation_method: TNDM = TNDM.NAIVE
 
         # Misc settings
         self.store_mesh: bool = False
         self.store_preprocessed_pointcloud: bool = False
+        self.preprocessed_pointcloud_path: Optional[Union[str, Path]] = None
         self.processes: int = 1
         self.chunk_size: int = 1000
-
-        self.triangle_normal_deviation_method: TNDM = TNDM.NAIVE
 
         self.overwritten_attributes: Set[str] = set()
 

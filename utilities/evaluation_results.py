@@ -5,6 +5,17 @@ import os
 import numpy as np
 
 
+def write_value_to_file_safe(name: str, value, delimiter: str, file):
+    try:
+        if isinstance(value, (int, np.int32, np.int64)):
+            file.write(f"{name}{delimiter}{str(value)}\n")
+        elif not (value is None) and isinstance(value, (list, np.ndarray, set, tuple)) and len(value) > 0:
+            cvpc_string = np.array2string(value, separator=delimiter, threshold=50)
+            file.write(f"{name}{delimiter}{cvpc_string}\n")
+    except Exception as e:
+        print(f"Failed writing {name} (with value {value}) to file. Exception: {e}")
+
+
 class EvaluationResults:
     def __init__(self, name: str):
         self.name = name
@@ -22,7 +33,7 @@ class EvaluationResults:
         self.discrete_curvatures = []
         self.normal_deviations = []
 
-        self.hausdorff_distance : float = -1.0
+        self.hausdorff_distance: float = -1.0
         self.chamfer_distance: float = -1.0
         self.point_cloud_to_mesh_distances: Union[list, np.ndarray] = []
 
@@ -72,21 +83,13 @@ class EvaluationResults:
             file.write(f"Cleaning_Time{delimiter}{self.cleaning_time}\n")
             file.write(f"Evaluation_Time{delimiter}{self.evaluation_time}\n")
 
-            if isinstance(self.connectivity_vertices_per_component, int) or \
-               isinstance(self.connectivity_vertices_per_component, np.int32):
-                cvpc_string = str(self.connectivity_vertices_per_component)
-                file.write(f"connectivity_vertices_per_component{delimiter}{cvpc_string}\n")
-            elif not (self.connectivity_vertices_per_component is None) and len(self.connectivity_vertices_per_component) > 0:
-                cvpc_string = np.array2string(self.connectivity_vertices_per_component, separator=delimiter)
-                file.write(f"connectivity_vertices_per_component{delimiter}{cvpc_string}\n")
-
-            if isinstance(self.connectivity_triangles_per_component, int) or \
-               isinstance(self.connectivity_triangles_per_component, np.int32):
-                ctpc_string = str(self.connectivity_triangles_per_component)
-                file.write(f"connectivity_triangles_per_component{delimiter}{ctpc_string}\n")
-            elif not (self.connectivity_triangles_per_component is None) and len(self.connectivity_triangles_per_component) > 0:
-                ctpc_string = np.array2string(self.connectivity_triangles_per_component, separator=delimiter)
-                file.write(f"connectivity_triangles_per_component{delimiter}{ctpc_string}\n")
+            write_value_to_file_safe(name="connectivity_triangles_per_component",
+                                          value=self.connectivity_triangles_per_component,
+                                          delimiter=delimiter, file=file)
+            
+            write_value_to_file_safe(name="connectivity_triangles_per_component",
+                                          value=self.connectivity_triangles_per_component,
+                                          delimiter=delimiter, file=file)
 
             if self.hausdorff_distance >= 0.0:
                 file.write(f"hausdorff_distance{delimiter}{self.hausdorff_distance}\n")
