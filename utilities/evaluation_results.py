@@ -7,11 +7,11 @@ import numpy as np
 
 def write_value_to_file_safe(name: str, value, delimiter: str, file):
     try:
-        if isinstance(value, (int, np.int32, np.int64)):
-            file.write(f"{name}{delimiter}{str(value)}\n")
-        elif not (value is None) and isinstance(value, (list, np.ndarray, set, tuple)) and len(value) > 0:
-            cvpc_string = np.array2string(value, separator=delimiter, threshold=50)
+        if isinstance(value, (list, np.ndarray, set, tuple)) and len(value) > 0:
+            cvpc_string = np.array2string(value, separator=delimiter, threshold=10000, edgeitems=10)
             file.write(f"{name}{delimiter}{cvpc_string}\n")
+        else:
+            file.write(f"{name}{delimiter}{value}\n")
     except Exception as e:
         print(f"Failed writing {name} (with value {value}) to file. Exception: {e}")
 
@@ -87,8 +87,8 @@ class EvaluationResults:
                                           value=self.connectivity_triangles_per_component,
                                           delimiter=delimiter, file=file)
             
-            write_value_to_file_safe(name="connectivity_triangles_per_component",
-                                          value=self.connectivity_triangles_per_component,
+            write_value_to_file_safe(name="connectivity_vertices_per_component",
+                                          value=self.connectivity_vertices_per_component,
                                           delimiter=delimiter, file=file)
 
             if self.hausdorff_distance >= 0.0:
