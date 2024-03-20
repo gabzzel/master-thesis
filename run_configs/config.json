@@ -1,14 +1,14 @@
 {
   "point_cloud_path":"etvr\\enfsi-2023_reduced_cloud.pcd",
   "verbose": true,
-  "draw": true,
+  "draw": false,
   "copy": true,
   "runs":
   [
     {
       "down_sample_method":"voxel",
       "down_sample_params":0.01,
-      "normal_estimation_neighbours":20,
+      "normal_estimation_neighbours":30,
       "normal_estimation_radius":0.1,
       "skip_normalizing_normals":false,
       "orient_normals": 0,
@@ -22,7 +22,7 @@
       "aspect_ratio_cleaning_portion":1,
       "mesh_quality_metrics":"all",
       "store_preprocessed_pointcloud":false,
-      "store_mesh":false,
+      "store_mesh":true,
       "triangle_normal_deviation_method":"adj",
       "processes":1,
       "chunk_size":50000

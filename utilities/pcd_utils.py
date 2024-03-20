@@ -77,8 +77,8 @@ def load_point_cloud(path: Union[Path, str],
         print(f"Downsampled {npof} pts -> {utils.format_number(npad)} pts ({ratio}%) "
               f"({down_sample_method} @ {down_sample_param}) [{elapsed}s]")
 
-    results.number_of_vertices_original = num_points_original
-    results.number_of_vertices_after_downsampling = npad
+    results.number_of_points_original = num_points_original
+    results.number_of_points_after_downsampling = npad
     return raw_pcd, pcd
 
 

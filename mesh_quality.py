@@ -320,8 +320,8 @@ def evaluate_connectivity(triangles, vertices, results: EvaluationResults, verbo
         num_conn_comp = len(nf)  # Number of connected components (according to triangles)
         largest_component_ratio = round(np.max(nf) / np.sum(nf), 3)
 
-    results.connectivity_vertices_per_component = nv if isinstance(nv, list) or isinstance(nv, np.ndarray) else [nv]
-    results.connectivity_triangles_per_component = nf if isinstance(nf, list) or isinstance(nf, np.ndarray) else [nf]
+    results.connectivity_vertices_per_component = nv if isinstance(nv, (list, tuple, set, np.ndarray)) else [nv]
+    results.connectivity_triangles_per_component = nf if isinstance(nf, (list, tuple, set, np.ndarray)) else [nf]
 
     if verbose:
         print(f"Connectivity: Connected Components={num_conn_comp}, largest component ratio={largest_component_ratio}")

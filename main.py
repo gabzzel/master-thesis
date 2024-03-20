@@ -37,11 +37,14 @@ def execute(config_file: Optional[str]):
 
     for i in range(len(run_configs)):
         print(f"\n================== Starting Run {i + 1} (of {len(run_configs)}) ==================")
-        run_result_path = results_path.joinpath(f"result{i}")
+        run_config = run_configs[i]
+        run_config.name = str(time.time()) + "_run_" + str(i)
+
+        run_result_path = results_path.joinpath(run_config.name)
         if not run_result_path.exists():
             os.makedirs(run_result_path)
 
-        execute_run(run_configs[i], results_path=run_result_path, verbose=verbose, draw=draw)
+        execute_run(run_config, results_path=run_result_path, verbose=verbose, draw=draw)
 
 
 def execute_run(run_config: RunConfiguration, results_path: pathlib.Path, verbose: bool = True, draw: bool = False):
@@ -74,7 +77,7 @@ def execute_run(run_config: RunConfiguration, results_path: pathlib.Path, verbos
 
     print("\n============= Step 5 : Saving Results =============")
     start_time = time.time()
-    results.save_to_file(results_path)
+    results.save_to_file(run_config=run_config, folder_path=results_path, pcd=pcd, raw_pcd=raw_pcd)
     print(f"Saved results to {results_path}. [{round(time.time() - start_time, 3)}s]")
 
     if run_config.store_mesh:

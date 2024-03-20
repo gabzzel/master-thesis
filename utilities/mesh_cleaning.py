@@ -33,6 +33,9 @@ def run_mesh_cleaning(mesh: open3d.geometry.TriangleMesh,
     if not config.mesh_cleaning_methods:
         return None
 
+    results.number_of_vertices_original = len(mesh.vertices)
+    results.number_of_triangles_original = len(mesh.triangles)
+
     if MeshCleaningMethod.SIMPLE in config.mesh_cleaning_methods:
         clean_mesh_simple(mesh=mesh, verbose=verbose)
 
@@ -50,6 +53,7 @@ def run_mesh_cleaning(mesh: open3d.geometry.TriangleMesh,
                                          verbose=verbose)
 
     results.number_of_vertices_after_cleaning = len(mesh.vertices)
+    results.number_of_triangles_after_cleaning = len(mesh.triangles)
     results.cleaning_time = time.time() - start_time
     return ar, ar_clean
 

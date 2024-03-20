@@ -15,6 +15,7 @@ from utilities.enumerations import TriangleNormalDeviationMethod as TNDM
 
 class RunConfiguration:
     def __init__(self):
+        self.name: str = "Unnamed run configuration"
         # Point Cloud Settings (incl. down sampling)
         self.point_cloud_path: Path = None
         self.down_sample_method: Optional[DSM] = None

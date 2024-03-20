@@ -14,12 +14,12 @@ def format_number(number, digits=1):
     return str(number)
 
 
-def get_stats(a: np.array, name: str, print_results=True, round_digits=3, return_results=False):
-    _max = round(np.max(a), round_digits)
-    _min = round(np.min(a), round_digits)
-    avg = round(np.average(a), round_digits)
-    med = round(float(np.median(a=a)), round_digits)
-    std = round(float(np.std(a=a)), round_digits)
+def get_stats(a: np.array, name: str = "", print_results=True, round_digits=3, return_results=False):
+    _max = round(np.max(a), round_digits) if round_digits >= 0 else np.max(a)
+    _min = round(np.min(a), round_digits) if round_digits >= 0 else np.min(a)
+    avg = round(np.average(a), round_digits) if round_digits >= 0 else np.average(a)
+    med = round(float(np.median(a=a)), round_digits) if round_digits >= 0 else np.median(a)
+    std = round(float(np.std(a=a)), round_digits) if round_digits >= 0 else np.std(a)
     count = len(a)
 
     if print_results:
