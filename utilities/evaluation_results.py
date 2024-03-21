@@ -155,10 +155,14 @@ class EvaluationResults:
 
             largest_component_ratio = 1
             component_count = 1
-            if isinstance(self.connectivity_triangles_per_component, Sized):
-                largest_component_ratio = np.max(self.connectivity_triangles_per_component) / \
-                                          np.sum(self.connectivity_triangles_per_component)
-                component_count = len(self.connectivity_triangles_per_component)
+            try:
+                if isinstance(self.connectivity_triangles_per_component, Sized):
+                    largest_component_ratio = np.max(self.connectivity_triangles_per_component) / \
+                                              np.sum(self.connectivity_triangles_per_component)
+                    component_count = len(self.connectivity_triangles_per_component)
+            except Exception as e:
+                print("Could not write component ratio and count. It's 1 in that case.")
+
             file.write(f"{largest_component_ratio}{delimiter}")
             file.write(f"{component_count}{delimiter}")
 
