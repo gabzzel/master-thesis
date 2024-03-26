@@ -1,4 +1,11 @@
 /data/
-/__pycache__/
-.idea/*
+*/__pycache__/*
+*/.idea/*
 /run_configs/result*
+/master-thesis-reconstruction/utilities/__pycache__
+/utilities/__pycache__
+*.ply
+*.gz
+*.pcd
+*.e57
+master-thesis-reconstruction/data/dummy/stanford-dragon/dragon_recon/README
