@@ -120,7 +120,19 @@ def load_point_cloud(config: RunConfiguration,
     return raw_pcd, pcd
 
 
+
+def run_with_test_cube():
+    mesh = open3d.geometry.TriangleMesh()
+    size = 10
+    alpha = 1
+    mesh: open3d.geometry.TriangleMesh = mesh.create_mobius()
+    pcd = mesh.sample_points_poisson_disk(number_of_points=int(size / alpha * 6))
+    mesh2 = open3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(pcd, alpha)
+    open3d.visualization.draw_geometries([pcd, mesh2])
+
 if __name__ == "__main__":
+    # run_with_test_cube()
+
     main_script_path = pathlib.Path(sys.argv[0])
 
     if not main_script_path.exists():
