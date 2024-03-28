@@ -15,6 +15,10 @@ def format_number(number, digits=1):
 
 
 def get_stats(a: np.array, name: str = "", print_results=True, round_digits=3, return_results=False):
+    if (a is None or len(a) == 0) and return_results:
+        print(f"No stats for {name}.")
+        return 0, 0, 0, 0, 0
+
     _max = round(np.max(a), round_digits) if round_digits >= 0 else np.max(a)
     _min = round(np.min(a), round_digits) if round_digits >= 0 else np.min(a)
     avg = round(np.average(a), round_digits) if round_digits >= 0 else np.average(a)

@@ -21,11 +21,11 @@ def hdbscan(pcd: open3d.geometry.PointCloud):
     # Leaf size for trees responsible for fast nearest neighbour queries when a KDTree or a BallTree are used as
     # core-distance algorithms. A large dataset size and small leaf_size may induce excessive memory usage.
     # If you are running out of memory consider increasing the leaf_size parameter. Ignored for algorithm="brute".
-    leaf_size: int = 40
+    leaf_size: int = 100
 
     # Number of jobs to run in parallel to calculate distances. None means 1 unless in a joblib.parallel_backend
     # context. -1 means using all processors. See Glossary for more details.
-    n_jobs: int = 1
+    n_jobs: int = -1
 
     model = HDBSCAN(min_cluster_size=min_cluster_size,
                     min_samples=min_samples,
