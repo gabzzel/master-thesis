@@ -43,6 +43,10 @@ def run(pcd: open3d.geometry.PointCloud,
         raise ValueError(f"Unknown algorithm {config.surface_reconstruction_method}. "
                          f"Must be one of {list(SRM)}")
 
+    if config.surface_reconstruction_method == SRM.SCREENED_POISSON_SURFACE_RECONSTRUCTION and \
+            config.orient_normals <= 0:
+        print("Specified SPSR without orienting normals... This is probably undesired behaviour.")
+
     if verbose:
         print(f"Starting surface reconstruction using {config.surface_reconstruction_method}")
 

@@ -8,8 +8,10 @@ import os
 import open3d
 
 import evaluation
+import utilities.enumerations
 from utilities import io, mesh_cleaning, pcd_utils
 import surface_reconstruction
+from utilities.enumerations import SurfaceReconstructionMethod
 from utilities.run_configuration import RunConfiguration
 from utilities.evaluation_results import EvaluationResults
 
@@ -133,12 +135,16 @@ def load_point_cloud(config: RunConfiguration,
                                               down_sample_param=config.down_sample_params,
                                               verbose=verbose)
 
-    pcd_utils.estimate_normals(pcd,
-                               max_nn=config.normal_estimation_neighbours,
-                               radius=config.normal_estimation_radius,
-                               orient=config.orient_normals,
-                               normalize=not config.skip_normalizing_normals,
-                               verbose=verbose)
+    if config.surface_reconstruction_method != SurfaceReconstructionMethod.SCREENED_POISSON_SURFACE_RECONSTRUCTION and \
+            config.surface_reconstruction_method != SurfaceReconstructionMethod.BALL_PIVOTING_ALGORITHM:
+        print("Skipped normal estimation since surface reconstruction method is neither SPSR or BPA.")
+    else:
+        pcd_utils.estimate_normals(pcd,
+                                   max_nn=config.normal_estimation_neighbours,
+                                   radius=config.normal_estimation_radius,
+                                   orient=config.orient_normals,
+                                   normalize=not config.skip_normalizing_normals,
+                                   verbose=verbose)
 
     results.loading_and_preprocessing_time = time.time() - start_time
     return raw_pcd, pcd
