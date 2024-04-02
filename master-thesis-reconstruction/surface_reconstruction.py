@@ -18,10 +18,10 @@ def get_surface_reconstruction_method(to_evaluate: Union[str, SRM]) -> SRM:
     t = to_evaluate.lower().strip()
     t = t.replace(" ", "_")
 
-    if t == "alpha_shapes" or t == "alpha" or t == "a":
+    if t == "alpha_shapes" or "alpha" in t or t == "a":
         return SRM.ALPHA_SHAPES
 
-    elif t == "ball_pivoting_algorithm" or t == "ball_pivoting" or t == "bpa" or t == "b":
+    elif "ball" in t or t == "bpa" or t == "b":
         return SRM.BALL_PIVOTING_ALGORITHM
 
     elif t == "screened_poisson_surface_reconstruction" or t == "poisson_surface_reconstruction" or t == "poisson" or \
