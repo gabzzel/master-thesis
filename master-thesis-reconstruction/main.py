@@ -35,8 +35,11 @@ def execute(config_file: Optional[str]):
 
     results_path = pathlib.Path(config_file).parent
 
+    reused_point_clouds: Tuple[open3d.geometry.PointCloud, open3d.geometry.PointCloud] = None
+
     for i in range(len(run_configs)):
         print(f"\n================== Starting Run {i + 1} (of {len(run_configs)}) ==================")
+        prev_run_config = run_configs[i - 1] if i > 0 else None
         run_config = run_configs[i]
         run_config.name = str(time.time()) + "_run_" + str(i)
 
@@ -44,14 +47,32 @@ def execute(config_file: Optional[str]):
         if not run_result_path.exists():
             os.makedirs(run_result_path)
 
-        execute_run(run_config, results_path=run_result_path, verbose=verbose, draw=draw)
+        # If we have no previous run config, or we may not reuse the previous pointcloud, set this to None to force
+        # recalculation
+        may_reuse = prev_run_config is not None and prev_run_config.reuse_pointcloud
+        if not may_reuse or not run_config.eligible_for_pointcloud_reuse(prev_run_config):
+            reused_point_clouds = None
+
+        reused_point_clouds = execute_run(run_config,
+                                          reused_point_clouds=reused_point_clouds,
+                                          results_path=run_result_path,
+                                          verbose=verbose,
+                                          draw=draw)
 
 
-def execute_run(run_config: RunConfiguration, results_path: pathlib.Path, verbose: bool = True, draw: bool = False):
+def execute_run(run_config: RunConfiguration,
+                reused_point_clouds: Optional[Tuple[open3d.geometry.PointCloud, open3d.geometry.PointCloud]],
+                results_path: pathlib.Path,
+                verbose: bool = True,
+                draw: bool = False) -> Tuple[open3d.geometry.PointCloud, open3d.geometry.PointCloud]:
     results = EvaluationResults(name="results")
 
     print("\n============= Step 1 : Loading & Preprocessing =============")
-    raw_pcd, pcd = load_point_cloud(run_config, results, verbose=verbose)
+    if reused_point_clouds is not None:
+        raw_pcd, pcd = reused_point_clouds
+        print("Reused point clouds from previous run.")
+    else:
+        raw_pcd, pcd = load_point_cloud(run_config, results, verbose=verbose)
 
     if run_config.store_preprocessed_pointcloud:
         original_path = run_config.point_cloud_path
@@ -90,6 +111,8 @@ def execute_run(run_config: RunConfiguration, results_path: pathlib.Path, verbos
 
     if draw:
         open3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
+
+    return raw_pcd, pcd
 
 
 def load_point_cloud(config: RunConfiguration,

@@ -18,16 +18,23 @@ def plot_results():
     labels = ["Alpha Shapes", "BPA", "Delaunay", "SPSR"]
     # bins = 100
     bins = np.arange(start=0, stop=1000, step=0.1).tolist()
-    plt.hist(arrays, histtype='step', log=True, label=labels, bins=bins)
+    #plt.hist(arrays, histtype='step', log=True, label=labels, bins=bins)
     # plt.ylim(ymin=1)
-    plt.ylabel('Number of triangles')
-    plt.xlabel('Aspect Ratio')
-    plt.xscale('log')
-    plt.xlim(xmin=1)
-    plt.gca().spines['top'].set_visible(False)
-    plt.gca().spines['right'].set_visible(False)
-    plt.legend(labels)
-    plt.show()
+    fig, ax = plt.subplots()
+    ax.set_xlabel("Number of triangles")
+    ax.set_ylabel("Aspect ratio")
+    # ax.set_title("Aspect ratio distribution of Training Complex dataset reconstructions")
+    ax.set_xscale('log')
+    ax.set_xlim(xmin=1, xmax=1200)
+    n, bins, patches = ax.hist(arrays, histtype='step', log=True, bins=bins)
+    plt.legend(labels=labels)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    fig.set_size_inches(10, 5)
+    fig.dpi = 300
+    # fig = plt.figure(figsize=(10, 5), dpi=300)
+    fig.savefig("aspect-ratios-training-complex.png", dpi=300)
+    fig.show()
 
 def show_meshes():
     paths = [
@@ -40,5 +47,5 @@ def show_meshes():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    # plot_results()
-    show_meshes()
+    plot_results()
+    # show_meshes()

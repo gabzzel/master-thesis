@@ -13,6 +13,7 @@ def hdbscan(pcd: open3d.geometry.PointCloud):
     min_samples: int = None
 
     # A distance threshold. Clusters below this value will be merged.
+    # I probably need to keep this to 0 to keep to the original HDBSCAN method.
     cluster_selection_epsilon: float = 0.0
 
     # A distance scaling parameter as used in robust single linkage. See [3] for more information.
@@ -43,7 +44,7 @@ def hdbscan(pcd: open3d.geometry.PointCloud):
                     copy=True)  # Just to be safe.
 
     X: np.ndarray = np.asarray(pcd.points)
-    if pcd.has_colors():
-        X = np.hstack((X, np.asarray(pcd.colors)), dtype=np.float32)
+    # if pcd.has_colors():
+    #    X = np.hstack((X, np.asarray(pcd.colors)), dtype=np.float32)
 
     return model.fit_predict(X)

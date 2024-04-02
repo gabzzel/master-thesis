@@ -307,6 +307,7 @@ def get_run_config_from_json(data, pcd_path: Union[Path, str], base_config: RunC
     config.set_setting(data, "store_preprocessed_pointcloud", default=False, cast_method=bool)
     config.set_setting(data, "processes", default=1, cast_method=int)
     config.set_setting(data, "chunk_size", default=1000_000, cast_method=int)
+    config.set_setting(data, "reuse_pointcloud", default=True, cast_method=bool)
     return config
 
 

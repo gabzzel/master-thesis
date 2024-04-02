@@ -49,6 +49,7 @@ class RunConfiguration:
         self.preprocessed_pointcloud_path: Optional[Union[str, Path]] = None
         self.processes: int = 1
         self.chunk_size: int = 1000
+        self.reuse_pointcloud: bool = True
 
         self.overwritten_attributes: Set[str] = set()
 
@@ -67,6 +68,18 @@ class RunConfiguration:
 
     def copy(self):
         return self.__copy__()
+
+    def eligible_for_pointcloud_reuse(self, other) -> bool:
+        if other is None:
+            return False
+
+        return self.point_cloud_path == other.point_cloud_path and \
+            self.down_sample_method == other.down_sample_method and \
+            self.down_sample_params == other.down_sample_params and \
+            self.normal_estimation_neighbours == other.normal_estimation_neighbours and \
+            self.normal_estimation_radius == other.normal_estimation_radius and \
+            self.skip_normalizing_normals == other.skip_normalizing_normals and \
+            self.orient_normals == other.orient_normals
 
     def set_setting(self,
                     data: dict,
