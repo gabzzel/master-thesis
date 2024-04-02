@@ -83,10 +83,11 @@ def execute_run(run_config: RunConfiguration,
         print(f"Stored preprocessed point cloud at {pcd_path}")
 
     print("\n============= Step 2 : Surface Reconstruction =============")
-    mesh = surface_reconstruction.run(pcd=pcd, results=results, config=run_config, verbose=verbose)
+    # Densities array is None if not applicable
+    mesh, densities = surface_reconstruction.run(pcd=pcd, results=results, config=run_config, verbose=verbose)
 
     print("\n============= Step 3 : Cleaning =============")
-    aspect_ratios = mesh_cleaning.run_mesh_cleaning(mesh, run_config, results, verbose=verbose)
+    aspect_ratios = mesh_cleaning.run_mesh_cleaning(mesh, run_config, results, densities=densities, verbose=verbose)
 
     # If we have aspect ratios return from the mesh cleaning, we want the remaining after-cleaning aspect ratios
     if aspect_ratios is not None:
@@ -143,7 +144,6 @@ def load_point_cloud(config: RunConfiguration,
     return raw_pcd, pcd
 
 
-
 def run_with_test_cube():
     mesh = open3d.geometry.TriangleMesh()
     size = 10
@@ -152,6 +152,7 @@ def run_with_test_cube():
     pcd = mesh.sample_points_poisson_disk(number_of_points=int(size / alpha * 6))
     mesh2 = open3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(pcd, alpha)
     open3d.visualization.draw_geometries([pcd, mesh2])
+
 
 if __name__ == "__main__":
     # run_with_test_cube()

@@ -3,7 +3,7 @@ from typing import Union, Optional, Tuple
 import numpy as np
 import open3d
 
-from utilities import mesh_utils, run_configuration
+from utilities import mesh_utils, run_configuration, utils
 from utilities.enumerations import MeshCleaningMethod
 from utilities.evaluation_results import EvaluationResults
 
@@ -27,6 +27,7 @@ def get_cleaning_type(cleaning_type_text: str) -> Optional[MeshCleaningMethod]:
 def run_mesh_cleaning(mesh: open3d.geometry.TriangleMesh,
                       config: run_configuration.RunConfiguration,
                       results: EvaluationResults,
+                      densities: Optional[np.ndarray] = None,
                       verbose: bool = True) -> Optional[Tuple[np.ndarray, np.ndarray]]:
 
     start_time = time.time()
@@ -35,6 +36,16 @@ def run_mesh_cleaning(mesh: open3d.geometry.TriangleMesh,
 
     results.number_of_vertices_original = len(mesh.vertices)
     results.number_of_triangles_original = len(mesh.triangles)
+
+    poisson_density_quantile = min(1.0, max(config.poisson_density_quantile, 0.0))
+    if densities is not None and poisson_density_quantile > 0.0:
+        vertices_to_remove = densities < np.quantile(densities, poisson_density_quantile)
+        mesh.remove_vertices_by_mask(vertices_to_remove)
+
+        if verbose:
+            nrv = utils.format_number(np.sum(vertices_to_remove))  # Number of Removed Vertices
+            rem_tris = utils.format_number(len(mesh.triangles))  # Remaining Triangles
+            print(f"Removed {nrv} verts in {poisson_density_quantile} density quantile, tris remaining: {rem_tris}.")
 
     if MeshCleaningMethod.SIMPLE in config.mesh_cleaning_methods:
         clean_mesh_simple(mesh=mesh, verbose=verbose)

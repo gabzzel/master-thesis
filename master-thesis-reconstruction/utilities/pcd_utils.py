@@ -94,8 +94,8 @@ def estimate_normals(point_cloud: open3d.geometry.PointCloud,
     :param point_cloud: The point cloud for which to estimate the normals.
     :param max_nn: The maximum amount of neighbours used to estimate the normal of a given point.
     :param radius: The maximum radius in which neighbours will be used to estimate the normal of a given point.
-    :param orient: The amount of points used around a given point to align / orient normals consistently. Costly,
-    but can improve the quality of surface reconstruction or other calculations downstream. Set to None or 0 to ignore.
+    :param orient: The amount of points used around a given point to align / orient normals consistently. Costly, \
+        but can improve the quality of surface reconstruction or other calculations downstream. Set to None or 0 to ignore.
     :param normalize: Whether to normalize the normals after calculation. [Recommended = True]
     :param verbose: Whether to print the progress.
     """

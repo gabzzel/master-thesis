@@ -1,5 +1,5 @@
 import time
-from typing import Union, Optional
+from typing import Union, Optional, Tuple
 
 import numpy as np
 import open3d
@@ -37,8 +37,7 @@ def get_surface_reconstruction_method(to_evaluate: Union[str, SRM]) -> SRM:
 def run(pcd: open3d.geometry.PointCloud,
         config: RunConfiguration,
         results: EvaluationResults,
-        verbose: bool = True) -> Optional[open3d.geometry.TriangleMesh]:
-
+        verbose: bool = True) -> Tuple[Optional[open3d.geometry.TriangleMesh], Optional[np.ndarray]]:
     start_time = time.time()
     if config.surface_reconstruction_method not in SRM:
         raise ValueError(f"Unknown algorithm {config.surface_reconstruction_method}. "
@@ -47,7 +46,8 @@ def run(pcd: open3d.geometry.PointCloud,
     if verbose:
         print(f"Starting surface reconstruction using {config.surface_reconstruction_method}")
 
-    mesh = None
+    mesh: open3d.geometry.TriangleMesh = None
+    densities: np.ndarray = None
 
     if config.surface_reconstruction_method == SRM.BALL_PIVOTING_ALGORITHM:
         radii = config.surface_reconstruction_params[SRP.BPA_RADII]
@@ -61,12 +61,10 @@ def run(pcd: open3d.geometry.PointCloud,
 
     elif config.surface_reconstruction_method == SRM.SCREENED_POISSON_SURFACE_RECONSTRUCTION:
         octree_max_depth = config.surface_reconstruction_params[SRP.POISSON_OCTREE_MAX_DEPTH]
-        poisson_density_quantile = config.surface_reconstruction_params[SRP.POISSON_DENSITY_QUANTILE_THRESHOLD]
-        mesh = screened_poisson_surface_reconstruction(point_cloud=pcd,
-                                                       octree_max_depth=octree_max_depth,
-                                                       density_quantile_threshold=poisson_density_quantile,
-                                                       processes=1,
-                                                       verbose=verbose)
+        mesh, densities = screened_poisson_surface_reconstruction(point_cloud=pcd,
+                                                                  octree_max_depth=octree_max_depth,
+                                                                  processes=1,
+                                                                  verbose=verbose)
 
     elif config.surface_reconstruction_method == SRM.DELAUNAY_TRIANGULATION:
         mesh = delaunay_triangulation(point_cloud=pcd, as_tris=True)
@@ -76,7 +74,7 @@ def run(pcd: open3d.geometry.PointCloud,
               f" or invalid parameters {config.surface_reconstruction_params}.")
 
     results.surface_reconstruction_time = time.time() - start_time
-    return mesh
+    return mesh, densities
 
 
 def alpha_shapes(point_cloud, alpha: float = 0.02, verbose=True):
@@ -163,9 +161,8 @@ def delaunay_triangulation(point_cloud: open3d.geometry.PointCloud, as_tris: boo
 
 def screened_poisson_surface_reconstruction(point_cloud: open3d.geometry.PointCloud,
                                             octree_max_depth=8,
-                                            density_quantile_threshold=0.1,
                                             processes=1,
-                                            verbose=True) -> open3d.geometry.TriangleMesh:
+                                            verbose=True) -> Tuple[open3d.geometry.TriangleMesh, np.ndarray]:
     """
     Create a triangulated mesh using Screened Poisson Surface Reconstruction.
     This function is a spiced up wrapper for the Open3D implementation.
@@ -174,8 +171,6 @@ def screened_poisson_surface_reconstruction(point_cloud: open3d.geometry.PointCl
     :param point_cloud: The Open3D PointCloud object out of which the mesh will be constructed.
     :param octree_max_depth: The maximum depth of the constructed octree which is used by the SPSR algorithm.
     A higher value indicates higher detail and a finer grained mesh, at the cost of computing time.
-    :param density_quantile_threshold: Points with a density (i.e. support) below the quantile will be removed,
-    cleaning up the mesh. Set to 0 to ignore.
 
     :return: Returns a TriangleMesh created using Screened Poisson Surface Reconstruction.
     """
@@ -185,12 +180,12 @@ def screened_poisson_surface_reconstruction(point_cloud: open3d.geometry.PointCl
     # Densities are by how many vertices the other vertex is supported
 
     mesh = open3d.geometry.TriangleMesh()
-    (mesh, densities) = mesh.create_from_point_cloud_poisson(pcd=point_cloud,
-                                                             depth=octree_max_depth,
-                                                             width=0,
-                                                             scale=1.1,
-                                                             linear_fit=False,
-                                                             n_threads=processes)
+    mesh, densities = mesh.create_from_point_cloud_poisson(pcd=point_cloud,
+                                                           depth=octree_max_depth,
+                                                           width=0,
+                                                           scale=1.1,
+                                                           linear_fit=False,
+                                                           n_threads=processes)
 
     end_time = time.time()
     if verbose:
@@ -198,19 +193,7 @@ def screened_poisson_surface_reconstruction(point_cloud: open3d.geometry.PointCl
         elapsed_time = str(round(end_time - start_time, 2))
         print(f"Created mesh: SPSR ({ntf} tris, max octree depth {octree_max_depth}) [{elapsed_time}s]")
 
-    density_quantile_threshold = min(1.0, max(density_quantile_threshold, 0.0))
-    if density_quantile_threshold <= 0.0:
-        return mesh
-
-    vertices_to_remove = densities < np.quantile(densities, density_quantile_threshold)
-    mesh.remove_vertices_by_mask(vertices_to_remove)
-
-    if verbose:
-        nrv = utils.format_number(np.sum(vertices_to_remove))  # Number of Removed Vertices
-        rem_tris = utils.format_number(len(mesh.triangles))  # Remaining Triangles
-        print(f"Removed {nrv} verts in {density_quantile_threshold} density quantile, tris remaining: {rem_tris}.")
-
-    return mesh
+    return mesh, np.asarray(densities)
 
 
 def tetrahedra_to_triangles_numpy(tetrahedra: np.ndarray) -> np.ndarray:
