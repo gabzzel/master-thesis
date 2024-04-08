@@ -12,30 +12,21 @@
       "normal_estimation_radius":0.1,
       "skip_normalizing_normals":false,
       "orient_normals": 30,
-      "surface_reconstruction_method":"spsr",
+      "surface_reconstruction_method":"d",
       "alpha":0.5,
       "ball_pivoting_radii":[0.1, 0.05, 0.02, 0.01],
       "poisson_density_quantile":0.1,
       "poisson_octree_max_depth":8,
       "mesh_cleaning_methods":["simple", "edge_length", "aspect_ratio"],
-      "edge_length_cleaning_portion":1,
-      "aspect_ratio_cleaning_portion":1,
-      "mesh_quality_metrics":"all",
+      "edge_length_cleaning_portion":0.95,
+      "aspect_ratio_cleaning_portion":0.95,
+      "mesh_quality_metrics":["c"],
       "store_preprocessed_pointcloud":false,
       "store_mesh":true,
       "triangle_normal_deviation_method":"adj",
       "processes":1,
       "chunk_size":50000,
 	  "reuse_pointcloud":true
-    },
-    {
-      "surface_reconstruction_method":"a"
-	},
-    {
-      "surface_reconstruction_method":"b"
-    },
-    {
-      "surface_reconstruction_method":"d"
     }
   ]
 }

@@ -10,6 +10,7 @@ import trimesh
 from matplotlib import pyplot as plt
 import point_cloud_utils as pcu
 
+import utilities.run_configuration
 from utilities import mesh_utils, utils
 from utilities.enumerations import MeshEvaluationMetric
 from utilities.evaluation_results import EvaluationResults
@@ -327,18 +328,30 @@ def evaluate_connectivity(triangles, vertices, results: EvaluationResults, verbo
         print(f"Connectivity: Connected Components={num_conn_comp}, largest component ratio={largest_component_ratio}")
 
 
-def evaluate_point_cloud_mesh(point_cloud: PointCloud, mesh: Union[TriangleMesh, TetraMesh]) \
+def evaluate_point_cloud_mesh(point_cloud: PointCloud,
+                              mesh: Union[TriangleMesh, TetraMesh],
+                              config: utilities.run_configuration.RunConfiguration) \
         -> Tuple[float, float, np.ndarray]:
     pcd_points = np.asarray(point_cloud.points)
     mesh_points = np.asarray(mesh.vertices)
 
-    # Compute Hausdorff and Chamfer distances
-    hausdorff = pcu.hausdorff_distance(pcd_points, mesh_points)
-    chamfer = pcu.chamfer_distance(pcd_points, mesh_points)
-    print(f"Hausdorff={round(hausdorff, 4)}, Chamfer={round(chamfer, 4)}")
+    hausdorff = 0
+    chamfer = 0
+    distances_pts_to_mesh = np.asarray([])
 
-    distances_pts_to_mesh = mesh_utils.get_points_to_mesh_distances(pcd_points, mesh)
-    utils.get_stats(distances_pts_to_mesh, "Point-to-mesh distances")
+    # Compute Hausdorff and Chamfer distances
+    if utilities.enumerations.MeshEvaluationMetric.HAUSDORFF_DISTANCE in config.mesh_quality_metrics:
+        hausdorff = pcu.hausdorff_distance(pcd_points, mesh_points)
+        print(f"Hausdorff={round(hausdorff, 4)}")
+
+    if utilities.enumerations.MeshEvaluationMetric.CHAMFER_DISTANCE in config.mesh_quality_metrics:
+        chamfer = pcu.chamfer_distance(pcd_points, mesh_points)
+        print(f"Chamfer={round(chamfer, 4)}")
+
+    if utilities.enumerations.MeshEvaluationMetric.MESH_TO_CLOUD_DISTANCE in config.mesh_quality_metrics:
+        distances_pts_to_mesh = mesh_utils.get_points_to_mesh_distances(pcd_points, mesh)
+        utils.get_stats(distances_pts_to_mesh, "Point-to-mesh distances")
+
     return hausdorff, chamfer, distances_pts_to_mesh
 
     #distances_normalized = distances_pts_to_mesh / distance_results[0]  # Index 0 is the max distance.

@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.cluster import HDBSCAN
 import open3d
-
+from regionGrowingOctree import RegionGrowingOctree
 
 def hdbscan(pcd: open3d.geometry.PointCloud):
     # The minimum number of samples in a group for that group to be considered a cluster;
@@ -22,7 +22,7 @@ def hdbscan(pcd: open3d.geometry.PointCloud):
     # Leaf size for trees responsible for fast nearest neighbour queries when a KDTree or a BallTree are used as
     # core-distance algorithms. A large dataset size and small leaf_size may induce excessive memory usage.
     # If you are running out of memory consider increasing the leaf_size parameter. Ignored for algorithm="brute".
-    leaf_size: int = 100
+    leaf_size: int = 10
 
     # Number of jobs to run in parallel to calculate distances. None means 1 unless in a joblib.parallel_backend
     # context. -1 means using all processors. See Glossary for more details.
@@ -48,3 +48,9 @@ def hdbscan(pcd: open3d.geometry.PointCloud):
     #    X = np.hstack((X, np.asarray(pcd.colors)), dtype=np.float32)
 
     return model.fit_predict(X)
+
+
+def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
+                                initial_voxel_size: float = 0.01):
+    # Step 1, initial voxelization
+    octree = RegionGrowingOctree.RegionGrowingOctree(pcd, root_margin=0.1)

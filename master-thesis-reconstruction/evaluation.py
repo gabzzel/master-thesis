@@ -85,14 +85,14 @@ def evaluate(mesh: open3d.geometry.TriangleMesh,
     if MQM.TRIANGLE_NORMAL_DEVIATIONS in config.mesh_quality_metrics:
         evaluate_normal_deviations(config, mesh.adjacency_list, triangle_normals, triangles, results=results)
 
-    hausdorff, chamfer, point_cloud_to_mesh_distances = mesh_quality.evaluate_point_cloud_mesh(original_point_cloud, mesh)
+    hausdorff, chamfer, pc2md = mesh_quality.evaluate_point_cloud_mesh(original_point_cloud, mesh, config)
 
     if MQM.HAUSDORFF_DISTANCE in config.mesh_quality_metrics:
         results.hausdorff_distance = hausdorff
     if MQM.CHAMFER_DISTANCE in config.mesh_quality_metrics:
         results.chamfer_distance = chamfer
     if MQM.MESH_TO_CLOUD_DISTANCE in config.mesh_quality_metrics:
-        results.point_cloud_to_mesh_distances = point_cloud_to_mesh_distances
+        results.point_cloud_to_mesh_distances = pc2md
 
     results.evaluation_time = time.time() - start_time
 

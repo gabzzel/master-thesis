@@ -136,11 +136,12 @@ def delaunay_triangulation(point_cloud: open3d.geometry.PointCloud, as_tris: boo
     delaunay = scipy.spatial.Delaunay(np.asarray(point_cloud.points).copy(), qhull_options=qhull_options)
 
     if as_tris:
-        tetrahedra = delaunay.simplices
-        tris = np.vstack((tetrahedra[:, [0, 1, 2]],
-                          tetrahedra[:, [0, 1, 3]],
-                          tetrahedra[:, [0, 2, 3]],
-                          tetrahedra[:, [1, 2, 3]]))
+        # tetrahedra = delaunay.simplices
+        tris = vertex_neighbours_to_triangles(delaunay.vertex_neighbor_vertices)
+        #tris = np.vstack((tetrahedra[:, [0, 1, 2]],
+        #                  tetrahedra[:, [0, 1, 3]],
+        #                  tetrahedra[:, [0, 2, 3]],
+        #                  tetrahedra[:, [1, 2, 3]]))
 
         # Sort and remove duplicates
         tris.sort(axis=1)
@@ -162,6 +163,18 @@ def delaunay_triangulation(point_cloud: open3d.geometry.PointCloud, as_tris: boo
     print(f"Created mesh: Delaunay ({count} {form}) [{elapsed_time}s]")
     return mesh
 
+
+def vertex_neighbours_to_triangles(vertex_neighbours: Tuple[np.ndarray, np.ndarray]):
+    indptr = vertex_neighbours[0]
+    indices = vertex_neighbours[1]
+    triangles = []
+
+    for vertex_index in range(len(indptr) - 1):
+        neighbours = indices[indptr[vertex_index]:indptr[vertex_index+1]]
+        for slice_index in range(len(neighbours) - 1):
+            triangles.append([vertex_index, neighbours[slice_index], neighbours[slice_index + 1]])
+
+    return np.array(triangles)
 
 def screened_poisson_surface_reconstruction(point_cloud: open3d.geometry.PointCloud,
                                             octree_max_depth=8,
