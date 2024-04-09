@@ -18,11 +18,11 @@ if __name__ == '__main__':
     print("Clustering...")
     segmentation.octree_based_region_growing(pcd)
 
-    cluster_per_point = segmentation.hdbscan(pcd)
-    print("Clustering done.")
-    unique_clusters = np.unique(cluster_per_point)
-    rng = np.random.default_rng()
-    colors_per_cluster = rng.random((len(unique_clusters), 3), dtype=np.float64)
-    colors = colors_per_cluster[cluster_per_point]
-    pcd.colors = open3d.utility.Vector3dVector(colors)
-    open3d.visualization.draw_geometries([pcd])
+    #cluster_per_point = segmentation.hdbscan(pcd)
+    #print("Clustering done.")
+    #unique_clusters = np.unique(cluster_per_point)
+    #rng = np.random.default_rng()
+    #colors_per_cluster = rng.random((len(unique_clusters), 3), dtype=np.float64)
+    #colors = colors_per_cluster[cluster_per_point]
+    #pcd.colors = open3d.utility.Vector3dVector(colors)
+    #open3d.visualization.draw_geometries([pcd])

@@ -51,6 +51,23 @@ def hdbscan(pcd: open3d.geometry.PointCloud):
 
 
 def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
-                                initial_voxel_size: float = 0.01):
-    # Step 1, initial voxelization
+                                initial_voxel_size: float = 0.05):
+
+    original_number_of_points = len(pcd.points)
+    pcd = pcd.voxel_down_sample(voxel_size=initial_voxel_size / 10)
+    print(f"Downsampled point cloud from {original_number_of_points} to {len(pcd.points)} points")
+
+    if not pcd.has_normals():
+        print("Computing normals...")
+        pcd.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=initial_voxel_size / 10, max_nn=10))
+        print("Orienting normals...")
+        # pcd.orient_normals_consistent_tangent_plane(k=10)
+
+    print("Creating octree for Octree-based-region-growing...")
     octree = RegionGrowingOctree.RegionGrowingOctree(pcd, root_margin=0.1)
+    print("Performing initial voxelization...")
+    octree.initial_voxelization(initial_voxel_size, points=False)
+    # octree.visualize_voxels()
+    print("Creating octree cells...")
+    octree.recursive_subdivide(minimum_voxel_size=0.01, residual_threshold=0, full_threshold=4, max_depth=10)
+    print("Done!")
