@@ -35,55 +35,53 @@ class RegionGrowingOctree:
 
     def _initial_voxelization_sorted(self, voxel_size: float):
         original_points = np.asarray(self.origin_point_cloud.points)
-        indices = np.arange(len(original_points))
-        points = np.hstack((original_points, indices[:, np.newaxis]))
-
-        # sorted_by_coordinate = []
-        # sorted_by_coordinate_indices = []
-        # for i in range(3):
-        #    sorted_by_coordinate_indices.append(np.argsort(points[:, i]))
-        #    sorted_by_coordinate.append(points[sorted_by_coordinate_indices[i]])
 
         print("Sorting...")
-        sorted_by_x: np.ndarray = points[np.argsort(points[:, 0])]
+        sorted_by_coordinate: List[np.ndarray] = []  # The array containing a single dimension of the points data, sorted
+        sorted_by_coordinate_indices: List[np.ndarray] = []
+        for i in range(3):
+            sorted_by_coordinate_indices.append(np.argsort(original_points[:, i]))
+            sorted_by_coordinate.append(original_points[sorted_by_coordinate_indices[i]][:, i])
 
         voxel_count = int(np.ceil(self.root_node.size / voxel_size))
         for x in tqdm.trange(voxel_count, desc="Initial voxelization)"):
             min_x = self.root_node.position_min[0] + x * voxel_size
             max_x = min_x + voxel_size
-            first_index_x = bisect.bisect_left(sorted_by_x[:, 0], min_x)
-            last_index_x = bisect.bisect_right(sorted_by_x[:, 0], max_x, lo=first_index_x)
+            first_index_x = bisect.bisect_left(sorted_by_coordinate[0], min_x)
+            last_index_x = bisect.bisect_right(sorted_by_coordinate[0], max_x, lo=first_index_x)
 
             if last_index_x <= 0 or first_index_x == last_index_x:
                 continue
 
-            filtered_x = sorted_by_x[first_index_x:last_index_x]
+            search_range_y_indices = sorted_by_coordinate_indices[0][first_index_x:last_index_x]
+            search_range_y = sorted_by_coordinate[1][search_range_y_indices]
+
             for y in range(voxel_count):
                 min_y = self.root_node.position_min[1] + y * voxel_size
                 max_y = min_y + voxel_size
 
-                sorted_by_y = filtered_x[np.argsort(filtered_x[:, 1])]
-                first_index_y = bisect.bisect_left(sorted_by_y[:, 1], min_y)
-                last_index_y = bisect.bisect_right(sorted_by_y[:, 1], max_y, lo=first_index_y)
+                first_index_y = bisect.bisect_left(search_range_y, min_y)
+                last_index_y = bisect.bisect_right(search_range_y, max_y, lo=first_index_y)
 
                 if last_index_y <= 0 or first_index_y == last_index_y:
                     continue
 
-                filtered_y = sorted_by_y[first_index_y:last_index_y]
+                search_range_z_indices = sorted_by_coordinate_indices[1][first_index_y:last_index_y]
+                search_range_z = sorted_by_coordinate[2][search_range_z_indices]
+
                 for z in range(voxel_count):
                     min_z = self.root_node.position_min[2] + z * voxel_size
                     max_z = min_z + voxel_size
 
-                    sorted_by_z = filtered_y[np.argsort(filtered_y[:, 2])]
-                    first_index_z = bisect.bisect_left(sorted_by_z[:, 2], min_z)
-                    last_index_z = bisect.bisect_right(sorted_by_z[:, 2], max_z, lo=first_index_z)
+                    first_index_z = bisect.bisect_left(search_range_z, min_z)
+                    last_index_z = bisect.bisect_right(search_range_z, max_z, lo=first_index_z)
 
                     if last_index_z == 0 or first_index_z == last_index_z:
                         continue
 
                     position = np.array([min_x, min_y, min_z])
                     node = RegionGrowingOctreeNode(depth=1, min_position=position, size=voxel_size)
-                    node.vertex_indices = sorted_by_z[first_index_z:last_index_z, 3].astype(int).tolist()
+                    node.vertex_indices = sorted_by_coordinate_indices[2][first_index_z:last_index_z].tolist()
                     self.root_node.children.append(node)
 
 
