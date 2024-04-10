@@ -161,7 +161,13 @@ def run_with_test_cube():
 
 
 if __name__ == "__main__":
-    # run_with_test_cube()
+    #point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\etvr\\enfsi-2023_reduced_cloud.pcd"
+    #raw_pcd, pcd = pcd_utils.load_point_cloud(point_cloud_path,
+    #                                          results=EvaluationResults("test"),
+    #                                          down_sample_method=None,
+    #                                          down_sample_param=None,
+    #                                          verbose=True)
+    #open3d.visualization.draw_geometries([pcd])
 
     main_script_path = pathlib.Path(sys.argv[0])
 
