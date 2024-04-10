@@ -1,20 +1,20 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Set
 
 import numpy as np
 import open3d
 import tqdm
 from open3d.cpu.pybind.geometry import PointCloud as PointCloud
-import bisect
+
+from regionGrowingOctree.RegionGrowingOctreeNode import RegionGrowingOctreeNode
 
 
 class RegionGrowingOctree:
     def __init__(self, point_cloud: PointCloud, root_margin: float = 0.1):
-        self.root_node: RegionGrowingOctreeNode = None
+        self.root_node: Optional[RegionGrowingOctreeNode] = None
         self.leaf_nodes = []
         self.nodes_per_depth: List[List[RegionGrowingOctreeNode]] = []
         self.origin_point_cloud = point_cloud
         self._create_root_node(root_margin)
-
 
     def _create_root_node(self, root_margin):
         points = np.asarray(self.origin_point_cloud.points)
@@ -31,87 +31,6 @@ class RegionGrowingOctree:
 
     def initial_voxelization(self, voxel_size: float):
         self._initial_voxelization_points(voxel_size)
-
-    def _initial_voxelization_naive(self, voxel_size: float):
-        points = np.asarray(self.origin_point_cloud.points)
-
-        voxel_count_1_dim = int(np.ceil(self.root_node.size / voxel_size))
-        for x in tqdm.trange(voxel_count_1_dim, desc="Initial voxelization (naive)"):
-            min_x = self.root_node.position_min[0] + x * voxel_size
-            max_x = min_x + voxel_size
-
-            for y in range(voxel_count_1_dim):
-                min_y = self.root_node.position_min[1] + y * voxel_size
-                max_y = min_y + voxel_size
-
-                for z in range(voxel_count_1_dim):
-                    min_z = self.root_node.position_min[2] + z * voxel_size
-                    max_z = min_z + voxel_size
-
-                    indices = np.nonzero((points[:, 0] >= min_x) &
-                                         (points[:, 0] < max_x) &
-                                         (points[:, 1] >= min_y) &
-                                         (points[:, 1] < max_y) &
-                                         (points[:, 2] >= min_z) &
-                                         (points[:, 2] < max_z))
-                    if len(indices) > 0:
-                        node = RegionGrowingOctreeNode(depth=1, size=voxel_size,
-                                                       min_position=np.array([min_x, min_y, min_z]))
-                        node.vertex_indices = indices
-                        self.root_node.children.append(node)
-
-        print("Voxelization done.")
-
-    def _initial_voxelization_sorted(self, voxel_size: float):
-        original_points = np.asarray(self.origin_point_cloud.points)
-
-        print("Sorting...")
-        sorted_by_coordinate: List[np.ndarray] = []
-        sorted_by_coordinate_indices: List[np.ndarray] = []
-        for i in range(3):
-            sorted_by_coordinate_indices.append(np.argsort(original_points[:, i]))
-            sorted_by_coordinate.append(original_points[sorted_by_coordinate_indices[i]][:, i])
-
-        voxel_count_1_dim = int(np.ceil(self.root_node.size / voxel_size))
-
-        # voxel_ranges = np.full(shape=(3, voxel_count_1_dim, 2), fill_value=-1, dtype=np.int32)
-        voxel_ranges: List[Dict[int, tuple]] = [{}, {}, {}]
-
-        for voxel_index in tqdm.trange(voxel_count_1_dim, desc="Initial voxelization (step 1)"):
-            for dimension in range(3):
-                min_coordinate = self.root_node.position_min[dimension] + voxel_index * voxel_size
-                max_coordinate = min_coordinate + voxel_size
-                min_index = bisect.bisect_left(a=sorted_by_coordinate[dimension], x=min_coordinate)
-                max_index = bisect.bisect_right(a=sorted_by_coordinate[dimension], x=max_coordinate, lo=min_index)
-
-                if max_index > min_index:
-                    voxel_ranges[dimension][voxel_index] = (min_index, max_index)
-
-        progress_bar = tqdm.tqdm(total=len(voxel_ranges[0]),
-                                 desc="Initial voxelization (step 2)")
-
-        for voxel_index_x, (min_index_x, max_index_x) in voxel_ranges[0].items():
-            progress_bar.update()
-            x_indices = sorted_by_coordinate_indices[0][min_index_x:max_index_x]
-            for voxel_index_y, (min_index_y, max_index_y) in voxel_ranges[1].items():
-                y_indices = sorted_by_coordinate_indices[1][min_index_y:max_index_y]
-                relevant_indices = np.intersect1d(x_indices, y_indices)
-                if len(relevant_indices) == 0:
-                    continue
-
-                for voxel_index_z, (min_index_z, max_index_z) in voxel_ranges[2].items():
-                    z_indices = sorted_by_coordinate_indices[2][min_index_z:max_index_z]
-                    relevant_indices = np.intersect1d(relevant_indices, z_indices)
-                    if len(relevant_indices) == 0:
-                        continue
-
-                    offset = np.array([voxel_index_x, voxel_index_y, voxel_index_z]) * voxel_size
-                    pos = self.root_node.position_min + offset
-                    node = RegionGrowingOctreeNode(1, pos, voxel_size)
-                    node.vertex_indices = relevant_indices.tolist()
-                    self.root_node.children.append(node)
-
-        dsnadas = 0
 
     def _initial_voxelization_points(self, voxel_size: float):
         points = np.asarray(self.origin_point_cloud.points)
@@ -209,158 +128,71 @@ class RegionGrowingOctree:
 
             open3d.visualization.draw_geometries(meshes, mesh_show_back_face=True)
 
+    def grow_regions(self,
+                     residual_threshold: float,
+                     normal_deviation_threshold_radians: float,
+                     minimum_valid_segment_size: int):
+        segments: List[Region] = []
 
-class RegionGrowingOctreeNode:
-    def __init__(self,
-                 depth: int,
-                 min_position: np.ndarray,
-                 size: float):
+        A = sorted(self.leaf_nodes, reverse=True, key=lambda x: x.residual)
 
-        self.depth: int = depth
-        self.children: List[RegionGrowingOctreeNode] = []
-        self.vertex_indices: List[int] = []
+        while len(A) > 0:
+            current_region: Region = Region()
+            current_seed = set()
+            v_min = A.pop()
+            if v_min > residual_threshold:
+                break
 
-        self.size: float = size
-        self.position_min: np.ndarray = min_position
-        self.normal: np.ndarray = np.zeros(shape=(3,), dtype=np.float64)
-        self.residual: float = 0
+            current_region.add(v_min)
+            current_seed.add(v_min)
+
+            for v_i in current_seed:
+                B_c = self.get_neighbors(v_i)
+                for v_j in B_c:
+                    theta = np.arccos(np.dot(v_i.normal, v_j.normal))
+                    try:
+                        v_j_index = A.index(v_j)
+                        # We know v_j is in A, else it will throw an error
+                        if theta <= normal_deviation_threshold_radians:
+                            current_region.add(v_j)
+                            A.pop(v_j_index)
+                            if v_j.residual < residual_threshold:
+                                current_seed.add(v_j)
+
+                    # v_j is not in A
+                    except ValueError:
+                        continue
+
+                if current_region.node_count > minimum_valid_segment_size:
+                    segments.append(current_region)
+                else:
+                    A.extend(current_region.nodes)
+                    A.sort(key=lambda x: x.residual, reverse=True)
+
+        segments.sort(key=lambda x: x.area)
+        return segments
+
+    def get_neighbors(self, node: RegionGrowingOctreeNode) -> List[RegionGrowingOctreeNode]:
+        """
+        return all voxels from O that share at least a vertex, an edge or a face with v
+        """
+        return
+
+
+class Region:
+    def __init__(self):
+        self.nodes: Set[RegionGrowingOctreeNode] = set()
+        self.area: float = 0.0
+
+    def union(self, other: Set[RegionGrowingOctreeNode]):
+        self.nodes.union(other)
+        for node in other:
+            self.area += node.size ** 3
+
+    def add(self, node: RegionGrowingOctreeNode):
+        self.nodes.add(node)
+        self.area += node.size ** 3
 
     @property
-    def is_leaf(self) -> bool:
-        return len(self.children) == 0
-
-    @property
-    def position_max(self) -> np.ndarray:
-        return self.position_min + np.full(shape=(3,), fill_value=self.size)
-
-    @property
-    def center_position(self) -> np.ndarray:
-        return self.position_min + np.full(shape=(3,), fill_value=self.size * 0.5)
-
-    def subdivide(self,
-                  leaf_node_list: List,
-                  nodes_per_depth: List[List],
-                  points: np.ndarray,
-                  normals: np.ndarray,
-                  full_threshold: int,
-                  minimum_voxel_size: float,
-                  residual_threshold: float,
-                  max_depth: Optional[int] = None):
-
-        if len(self.vertex_indices) >= full_threshold:
-            self.compute_normal_and_residual(points, normals)
-
-        if max_depth is not None and self.depth >= max_depth:
-            leaf_node_list.append(self)
-            return
-
-        if self.residual < residual_threshold:
-            leaf_node_list.append(self)
-            return
-
-        if len(self.vertex_indices) < full_threshold:
-            leaf_node_list.append(self)
-            return
-
-        if self.size * 0.5 < minimum_voxel_size:
-            leaf_node_list.append(self)
-            return
-
-        shifted_points = points[self.vertex_indices] - self.position_min
-        new_size = self.size * 0.5
-        voxel_indices = np.floor(shifted_points / new_size).astype(int)
-        voxel_grid = {}
-
-        # Iterate over each point to determine its voxel index
-        for i in range(len(voxel_indices)):
-            # Convert voxel index to tuple to use it as a dictionary key
-            voxel_index_tuple = tuple(voxel_indices[i])
-            # Create a new Voxel object if it doesn't exist already
-            if voxel_index_tuple not in voxel_grid:
-                min_position = self.position_min + voxel_indices[i] * new_size
-                node = RegionGrowingOctreeNode(depth=self.depth + 1, min_position=min_position, size=new_size)
-                voxel_grid[voxel_index_tuple] = node
-                self.children.append(node)
-
-            # Append the point index to the list of points in the corresponding voxel
-            voxel_grid[voxel_index_tuple].vertex_indices.append(self.vertex_indices[i])
-
-        self.vertex_indices = None
-
-        # Store our children in the nodes_per_depth list.
-        if len(nodes_per_depth) <= self.depth:
-            nodes_per_depth.append(self.children.copy())
-        else:
-            nodes_per_depth[self.depth].extend(self.children)
-
-        for child in self.children:
-            child.subdivide(leaf_node_list, nodes_per_depth, points, normals, full_threshold,
-                            minimum_voxel_size, residual_threshold, max_depth)
-
-
-    def compute_normal_and_residual(self, points, normals):
-        relevant_normals = normals[self.vertex_indices]
-        mean_normal = np.mean(relevant_normals, axis=0)
-        centered_normals = relevant_normals - mean_normal
-
-        # Step 3: Covariance Matrix
-        cov_matrix = np.cov(centered_normals, rowvar=False)
-
-        # Step 4: PCA
-        eigenvalues, eigenvectors = np.linalg.eig(cov_matrix)
-
-        # Step 5: Extract Normal Vector
-        # Find the index of the smallest eigenvalue
-        min_eigenvalue_index = np.argmin(eigenvalues)
-        self.normal = eigenvectors[:, min_eigenvalue_index]
-
-        summed_squared_distances = 0
-        for i in self.vertex_indices:
-            vector_to_point = points[i] - self.center_position
-
-            # Calculate dot product of vector to point and normal vector
-            dot_product = np.dot(vector_to_point, self.normal)
-
-            # Calculate squared distance
-            summed_squared_distances += (dot_product ** 2)
-
-        self.residual = np.sqrt(summed_squared_distances / len(self.vertex_indices))
-
-    def get_corner_points(self) -> np.ndarray:
-        points = np.zeros(shape=(8, 3), dtype=np.float64)
-
-        #    5 ---- 6
-        #   /|     /|
-        #  / |    / |
-        # 4 ---- 7  |
-        # |  |   |  |
-        # |  1 --|- 2
-        # | /    | /
-        # 0 ---- 3
-
-        points[0] = self.position_min
-        points[1] = self.position_min + np.array([0, 0, self.size])
-        points[2] = self.position_min + np.array([self.size, 0, self.size])
-        points[3] = self.position_min + np.array([self.size, 0, 0])
-        points[4] = self.position_min + np.array([0, self.size, 0])
-        points[5] = self.position_min + np.array([0, self.size, self.size])
-        points[6] = self.position_max
-        points[7] = self.position_min + np.array([self.size, self.size, 0])
-        return points
-
-    def get_triangles(self) -> np.ndarray:
-        triangles = np.zeros(shape=(12, 3, 3), dtype=np.float64)
-        corner_points = self.get_corner_points()
-        triangles[0] = np.array([corner_points[0], corner_points[1], corner_points[2]])  # Bottom
-        triangles[1] = np.array([corner_points[0], corner_points[2], corner_points[3]])
-        triangles[2] = np.array([corner_points[0], corner_points[4], corner_points[7]])  # Front
-        triangles[3] = np.array([corner_points[0], corner_points[7], corner_points[3]])
-        triangles[4] = np.array([corner_points[0], corner_points[1], corner_points[4]])  # Left
-        triangles[5] = np.array([corner_points[1], corner_points[4], corner_points[5]])
-        triangles[6] = np.array([corner_points[1], corner_points[2], corner_points[5]])  # Back
-        triangles[7] = np.array([corner_points[2], corner_points[5], corner_points[6]])
-        triangles[8] = np.array([corner_points[2], corner_points[3], corner_points[6]])  # Right
-        triangles[9] = np.array([corner_points[3], corner_points[6], corner_points[7]])
-        triangles[10] = np.array([corner_points[4], corner_points[5], corner_points[6]])  # Top
-        triangles[11] = np.array([corner_points[4], corner_points[6], corner_points[7]])
-        return triangles
+    def node_count(self):
+        return len(self.nodes)

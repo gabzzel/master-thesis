@@ -62,11 +62,13 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
         pcd.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=initial_voxel_size * 2, max_nn=5))
         # print("Orienting normals...")
         # pcd.orient_normals_consistent_tangent_plane(k=3)
+        pcd.normalize_normals()
 
     print("Creating octree for Octree-based-region-growing...")
     octree = RegionGrowingOctree.RegionGrowingOctree(pcd, root_margin=0.1)
     print("Performing initial voxelization...")
     octree.initial_voxelization(initial_voxel_size)
     octree.recursive_subdivide(minimum_voxel_size=0.001, residual_threshold=0.01, full_threshold=4, max_depth=5)
+    octree.grow_regions()
     octree.visualize_voxels(depth=1, maximum=2000)
     print("Done!")
