@@ -24,7 +24,7 @@ def parse_string_to_number(value: str):
             raise v
 
 
-def parse_setting_value_to_range(raw_value, delimiter:str = ";") -> Optional[List[Any[float, int]]]:
+def parse_setting_value_to_range(raw_value, delimiter:str = ";") -> Optional[List[Any]]:
     if not isinstance(raw_value, str):
         return None
 
