@@ -132,7 +132,7 @@ class RegionGrowingOctreeNode:
             vector_to_point = points[i] - self.center_position
 
             # Calculate dot product of vector to point and normal vector
-            dot_product = np.dot(vector_to_point, self.normal)
+            dot_product = abs(np.dot(vector_to_point, self.normal))
 
             # Calculate squared distance
             summed_squared_distances += (dot_product ** 2)

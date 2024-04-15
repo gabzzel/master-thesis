@@ -54,7 +54,7 @@ def hdbscan(pcd: open3d.geometry.PointCloud):
 
 
 def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
-                                initial_voxel_size: float = 0.01):
+                                initial_voxel_size: float = 0.1):
     original_number_of_points = len(pcd.points)
     down_sample_voxel_size = initial_voxel_size / 10.0
     if down_sample_voxel_size > 0.0:
@@ -71,10 +71,9 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
         ds_pcd.orient_normals_consistent_tangent_plane(k=26)
         ds_pcd.normalize_normals()
 
-    open3d.visualization.draw_geometries([pcd, ds_pcd], point_show_normal=True)
-    return
+    # open3d.visualization.draw_geometries([pcd, ds_pcd], point_show_normal=True)
     print("Creating octree for Octree-based-region-growing...")
-    octree = RegionGrowingOctree.RegionGrowingOctree(pcd, root_margin=0.1)
+    octree = RegionGrowingOctree.RegionGrowingOctree(ds_pcd, root_margin=0.1)
     print("Performing initial voxelization...")
 
     octree.initial_voxelization(initial_voxel_size)
@@ -84,9 +83,9 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
                                max_depth=5)
     print("Growing regions...")
     octree.grow_regions(minimum_valid_segment_size=4, residual_threshold=residual_threshold,
-                                   normal_deviation_threshold_radians=90 / 180.0 * math.pi)
+                        normal_deviation_threshold_radians=45 / 180.0 * math.pi)
 
     print("Visualizing voxels...")
-    #octree.visualize_voxels(maximum=2000, segments=segments)
+    # octree.visualize_voxels(maximum=2000, segments=segments)
     octree.show_point_cloud_with_segment_color()
     print("Done!")
