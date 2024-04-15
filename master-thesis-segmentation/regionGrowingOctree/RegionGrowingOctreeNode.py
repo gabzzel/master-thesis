@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import numpy as np
 
@@ -6,10 +6,22 @@ import numpy as np
 class RegionGrowingOctreeNode:
     def __init__(self,
                  depth: int,
+                 local_index: np.ndarray,
+                 global_index: np.ndarray,
                  min_position: np.ndarray,
                  size: float):
 
         self.depth: int = depth
+
+        # The index of this node within its parent. For example (0, 1, 1)
+        # Can contain other indices than 0 and 1 if depth is 1, because of initial voxelization
+        self.local_index: np.ndarray = local_index
+
+        # The index of this node globally, assuming all nodes exist at this depth.
+        # Only valid at the depth of this node.
+        self.global_index: np.ndarray = global_index
+        self.global_index_tuple: tuple = tuple(global_index)
+
         self.children: List[RegionGrowingOctreeNode] = []
         self.vertex_indices: List[int] = []
 
@@ -17,6 +29,7 @@ class RegionGrowingOctreeNode:
         self.position_min: np.ndarray = min_position
         self.normal: np.ndarray = np.zeros(shape=(3,), dtype=np.float64)
         self.residual: float = 0
+        self.region = None
 
     @property
     def is_leaf(self) -> bool:
@@ -31,7 +44,7 @@ class RegionGrowingOctreeNode:
         return self.position_min + np.full(shape=(3,), fill_value=self.size * 0.5)
 
     def subdivide(self,
-                  leaf_node_list: List,
+                  leaf_nodes: List[Dict],
                   nodes_per_depth: List[List],
                   points: np.ndarray,
                   normals: np.ndarray,
@@ -42,20 +55,15 @@ class RegionGrowingOctreeNode:
 
         self.compute_normal_and_residual(points, normals)
 
-        if max_depth is not None and self.depth >= max_depth:
-            leaf_node_list.append(self)
-            return
+        if (max_depth is not None and self.depth >= max_depth) or \
+                self.residual < residual_threshold or \
+                len(self.vertex_indices) < full_threshold or \
+                self.size * 0.5 < minimum_voxel_size:
 
-        if self.residual < residual_threshold:
-            leaf_node_list.append(self)
-            return
+            while len(leaf_nodes) <= self.depth:
+                leaf_nodes.append({})
 
-        if len(self.vertex_indices) < full_threshold:
-            leaf_node_list.append(self)
-            return
-
-        if self.size * 0.5 < minimum_voxel_size:
-            leaf_node_list.append(self)
+            leaf_nodes[self.depth][tuple(self.global_index)] = self
             return
 
         shifted_points = points[self.vertex_indices] - self.position_min
@@ -69,8 +77,10 @@ class RegionGrowingOctreeNode:
             voxel_index_tuple = tuple(voxel_indices[i])
             # Create a new Voxel object if it doesn't exist already
             if voxel_index_tuple not in voxel_grid:
-                min_position = self.position_min + voxel_indices[i] * new_size
-                node = RegionGrowingOctreeNode(depth=self.depth + 1, min_position=min_position, size=new_size)
+                min_position: np.ndarray = self.position_min + voxel_indices[i] * new_size
+                global_index: np.ndarray = self.global_index * 2 + voxel_indices[i]
+                node = RegionGrowingOctreeNode(depth=self.depth + 1, min_position=min_position, size=new_size,
+                                               local_index=voxel_indices[i], global_index=global_index)
                 voxel_grid[voxel_index_tuple] = node
                 self.children.append(node)
 
@@ -86,9 +96,9 @@ class RegionGrowingOctreeNode:
             nodes_per_depth[self.depth].extend(self.children)
 
         for child in self.children:
-            child.subdivide(leaf_node_list, nodes_per_depth, points, normals, full_threshold,
-                            minimum_voxel_size, residual_threshold, max_depth)
-
+            child.subdivide(leaf_nodes=leaf_nodes, nodes_per_depth=nodes_per_depth, points=points, normals=normals,
+                            full_threshold=full_threshold, minimum_voxel_size=minimum_voxel_size,
+                            residual_threshold=residual_threshold, max_depth=max_depth)
 
     def compute_normal_and_residual(self, points, normals):
         if len(self.vertex_indices) == 0:
@@ -100,7 +110,6 @@ class RegionGrowingOctreeNode:
             self.normal = normals[self.vertex_indices[0]]
             self.residual = 0
             return
-
 
         relevant_normals = normals[self.vertex_indices]
         mean_normal = np.mean(relevant_normals, axis=0)

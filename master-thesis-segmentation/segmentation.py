@@ -1,7 +1,10 @@
+import math
+import cProfile
 import numpy as np
 from sklearn.cluster import HDBSCAN
 import open3d
 from regionGrowingOctree import RegionGrowingOctree
+
 
 def hdbscan(pcd: open3d.geometry.PointCloud):
     # The minimum number of samples in a group for that group to be considered a cluster;
@@ -51,24 +54,39 @@ def hdbscan(pcd: open3d.geometry.PointCloud):
 
 
 def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
-                                initial_voxel_size: float = 0.05):
-
+                                initial_voxel_size: float = 0.01):
     original_number_of_points = len(pcd.points)
-    pcd = pcd.voxel_down_sample(voxel_size=initial_voxel_size / 10)
-    print(f"Downsampled point cloud from {original_number_of_points} to {len(pcd.points)} points")
+    down_sample_voxel_size = initial_voxel_size / 10.0
+    if down_sample_voxel_size > 0.0:
+        ds_pcd = pcd.voxel_down_sample(voxel_size=down_sample_voxel_size)
+    else:
+        ds_pcd = pcd
+    # print(f"Downsampled point cloud from {original_number_of_points} to {len(pcd.points)} points")
 
-    if not pcd.has_normals():
+    if not ds_pcd.has_normals():
         print("Computing normals...")
-        pcd.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=initial_voxel_size * 2, max_nn=5))
-        # print("Orienting normals...")
-        # pcd.orient_normals_consistent_tangent_plane(k=3)
-        pcd.normalize_normals()
+        r = down_sample_voxel_size * math.sqrt(12.0)
+        ds_pcd.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=r, max_nn=26))
+        print("Orienting normals...")
+        ds_pcd.orient_normals_consistent_tangent_plane(k=26)
+        ds_pcd.normalize_normals()
 
+    open3d.visualization.draw_geometries([pcd, ds_pcd], point_show_normal=True)
+    return
     print("Creating octree for Octree-based-region-growing...")
     octree = RegionGrowingOctree.RegionGrowingOctree(pcd, root_margin=0.1)
     print("Performing initial voxelization...")
+
     octree.initial_voxelization(initial_voxel_size)
-    octree.recursive_subdivide(minimum_voxel_size=0.001, residual_threshold=0.01, full_threshold=4, max_depth=5)
-    octree.grow_regions()
-    octree.visualize_voxels(depth=1, maximum=2000)
+
+    residual_threshold = 0.005
+    octree.recursive_subdivide(minimum_voxel_size=0.001, residual_threshold=residual_threshold, full_threshold=50,
+                               max_depth=5)
+    print("Growing regions...")
+    octree.grow_regions(minimum_valid_segment_size=4, residual_threshold=residual_threshold,
+                                   normal_deviation_threshold_radians=90 / 180.0 * math.pi)
+
+    print("Visualizing voxels...")
+    #octree.visualize_voxels(maximum=2000, segments=segments)
+    octree.show_point_cloud_with_segment_color()
     print("Done!")
