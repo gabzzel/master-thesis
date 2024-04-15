@@ -13,6 +13,40 @@ from utilities.enumerations import SurfaceReconstructionParameters as SRP
 from utilities.enumerations import TriangleNormalDeviationMethod as TNDM
 
 
+def parse_string_to_number(value: str):
+    try:
+        return int(value)
+    except ValueError:
+        try:
+            return float(value)
+        except ValueError as v:
+            print(f"Could not convert {value} to number.")
+            raise v
+
+
+def parse_setting_value_to_range(raw_value, delimiter:str = ";") -> Optional[List[Any[float, int]]]:
+    if not isinstance(raw_value, str):
+        return None
+
+    if delimiter not in raw_value:
+        return None
+
+    value_strings = raw_value.split(delimiter)
+    if len(value_strings) != 3:
+        print(f"Invalid range setting value {raw_value}")
+        return None
+
+    try:
+        start = parse_string_to_number(value_strings[0])
+        stop = parse_string_to_number(value_strings[1])
+        step = parse_string_to_number(value_strings[2])
+    except ValueError as v:
+        print(f"Could not parse range {raw_value}, exception {v}")
+        return None
+
+    return list(range(start, stop, step))
+
+
 class RunConfiguration:
     def __init__(self):
         self.name: str = "Unnamed run configuration"

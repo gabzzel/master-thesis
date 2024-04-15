@@ -1,5 +1,6 @@
 import argparse
 import json
+import math
 from pathlib import Path
 from typing import Optional, List, Tuple, Union, Set
 
@@ -274,7 +275,12 @@ def get_run_config_from_json(data, pcd_path: Union[Path, str], base_config: RunC
     config.set_setting(data, "down_sample_method", default=None, cast_method=pcd_utils.get_down_sample_method)
     config.set_setting(data, "down_sample_params", default=0, cast_method=float)
     config.set_setting(data, "normal_estimation_neighbours", default=0, cast_method=int)
-    config.set_setting(data, "normal_estimation_radius", default=0.0, cast_method=float)
+
+    if "normal_estimation_radius" in data and data["normal_estimation_radius"] == "auto":
+        config.normal_estimation_radius = config.normal_estimation_neighbours * math.sqrt(3)
+        print(f"Set normal estimation to auto: {config.normal_estimation_radius}")
+    else:
+        config.set_setting(data, "normal_estimation_radius", default=0.0, cast_method=float)
     config.set_setting(data, "skip_normalizing_normals", default=False, cast_method=bool)
     config.set_setting(data, "orient_normals", default=0, cast_method=int)
 
