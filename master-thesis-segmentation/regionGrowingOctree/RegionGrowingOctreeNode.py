@@ -2,6 +2,8 @@ from typing import List, Optional, Dict
 
 import numpy as np
 
+from regionGrowingOctree.RegionGrowingOctree import RegionGrowingOctree
+
 
 class RegionGrowingOctreeNode:
     def __init__(self,
@@ -44,8 +46,7 @@ class RegionGrowingOctreeNode:
         return self.position_min + np.full(shape=(3,), fill_value=self.size * 0.5)
 
     def subdivide(self,
-                  leaf_nodes: List[Dict],
-                  nodes_per_depth: List[List],
+                  octree: RegionGrowingOctree,
                   points: np.ndarray,
                   normals: np.ndarray,
                   full_threshold: int,
@@ -60,10 +61,11 @@ class RegionGrowingOctreeNode:
                 len(self.vertex_indices) < full_threshold or \
                 self.size * 0.5 < minimum_voxel_size:
 
-            while len(leaf_nodes) <= self.depth:
-                leaf_nodes.append({})
+            while len(octree.leaf_nodes) <= self.depth:
+                octree.leaf_nodes.append({})
 
-            leaf_nodes[self.depth][tuple(self.global_index)] = self
+            octree.leaf_nodes[self.depth][tuple(self.global_index)] = self
+            octree.leaf_node_count += 1
             return
 
         shifted_points = points[self.vertex_indices] - self.position_min
@@ -90,13 +92,13 @@ class RegionGrowingOctreeNode:
         self.vertex_indices = None
 
         # Store our children in the nodes_per_depth list.
-        if len(nodes_per_depth) <= self.depth:
-            nodes_per_depth.append(self.children.copy())
+        if len(octree.nodes_per_depth) <= self.depth:
+            octree.nodes_per_depth.append(self.children.copy())
         else:
-            nodes_per_depth[self.depth].extend(self.children)
+            octree.nodes_per_depth[self.depth].extend(self.children)
 
         for child in self.children:
-            child.subdivide(leaf_nodes=leaf_nodes, nodes_per_depth=nodes_per_depth, points=points, normals=normals,
+            child.subdivide(octree=octree, points=points, normals=normals,
                             full_threshold=full_threshold, minimum_voxel_size=minimum_voxel_size,
                             residual_threshold=residual_threshold, max_depth=max_depth)
 

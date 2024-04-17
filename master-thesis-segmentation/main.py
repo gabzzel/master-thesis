@@ -5,7 +5,7 @@ import segmentation
 import open3d
 
 if __name__ == '__main__':
-    point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis-reconstruction\\data\\etvr\\enfsi-2023_reduced_cloud.pcd"
+    point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis-reconstruction\\data\\etvr\\enfsi-2023_reduced_cloud_preprocessed.ply"
     pcd: open3d.geometry.PointCloud = open3d.io.read_point_cloud(point_cloud_path)
     print(f"Loaded point cloud with {len(pcd.points)} points.")
     #voxel_size = 0.05
@@ -16,7 +16,7 @@ if __name__ == '__main__':
     #print(f"Downsampled point cloud to {len(pcd.points)} points.")
 
     print("Clustering...")
-    segmentation.octree_based_region_growing(pcd)
+    segmentation.octree_based_region_growing(pcd, initial_voxel_size=0.05, down_sample_voxel_size=None)
 
     #cluster_per_point = segmentation.hdbscan(pcd)
     #print("Clustering done.")

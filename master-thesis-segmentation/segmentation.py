@@ -1,5 +1,7 @@
 import math
 import cProfile
+from typing import Optional
+
 import numpy as np
 from sklearn.cluster import HDBSCAN
 import open3d
@@ -54,21 +56,21 @@ def hdbscan(pcd: open3d.geometry.PointCloud):
 
 
 def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
-                                initial_voxel_size: float = 0.1):
+                                initial_voxel_size: float = 0.1,
+                                down_sample_voxel_size: Optional[float] = 0.01):
     original_number_of_points = len(pcd.points)
-    down_sample_voxel_size = initial_voxel_size / 10.0
-    if down_sample_voxel_size > 0.0:
+    if down_sample_voxel_size is not None and down_sample_voxel_size > 0.0:
         ds_pcd = pcd.voxel_down_sample(voxel_size=down_sample_voxel_size)
+        print(f"Downsampled point cloud from {original_number_of_points} to {len(ds_pcd.points)} points")
     else:
         ds_pcd = pcd
-    # print(f"Downsampled point cloud from {original_number_of_points} to {len(pcd.points)} points")
 
     if not ds_pcd.has_normals():
         print("Computing normals...")
         r = down_sample_voxel_size * math.sqrt(12.0)
-        ds_pcd.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=r, max_nn=26))
+        ds_pcd.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=r, max_nn=10))
         print("Orienting normals...")
-        ds_pcd.orient_normals_consistent_tangent_plane(k=26)
+        ds_pcd.orient_normals_consistent_tangent_plane(k=10)
         ds_pcd.normalize_normals()
 
     # open3d.visualization.draw_geometries([pcd, ds_pcd], point_show_normal=True)
@@ -79,11 +81,23 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
     octree.initial_voxelization(initial_voxel_size)
 
     residual_threshold = 0.005
-    octree.recursive_subdivide(minimum_voxel_size=0.001, residual_threshold=residual_threshold, full_threshold=50,
-                               max_depth=5)
+    octree.recursive_subdivide(minimum_voxel_size=0.001,
+                               residual_threshold=residual_threshold,
+                               full_threshold=30,
+                               max_depth=4)
+
     print("Growing regions...")
-    octree.grow_regions(minimum_valid_segment_size=4, residual_threshold=residual_threshold,
-                        normal_deviation_threshold_radians=45 / 180.0 * math.pi)
+    octree.grow_regions(minimum_valid_segment_size=4,
+                        residual_threshold=residual_threshold,
+                        normal_deviation_threshold_degrees=30.0,
+                        profile=True)
+
+    print("Refining...")
+    octree.refine_regions(planar_amount_threshold=0.9,
+                          planar_distance_threshold=0.01,
+                          fast_refinement_distance_threshold=0.01,
+                          buffer_zone_size=0.02,
+                          angular_divergence_threshold_degrees=30.0)
 
     print("Visualizing voxels...")
     # octree.visualize_voxels(maximum=2000, segments=segments)
