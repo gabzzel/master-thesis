@@ -277,10 +277,10 @@ def get_run_config_from_json(data, pcd_path: Union[Path, str], base_config: RunC
     config.set_setting(data, "normal_estimation_neighbours", default=0, cast_method=int)
 
     if "normal_estimation_radius" in data and data["normal_estimation_radius"] == "auto":
-        config.normal_estimation_radius = config.down_sample_params * math.sqrt(3)
+        config.normal_estimation_radius = config.down_sample_params * math.sqrt(12)
         print(f"Set normal estimation to auto: {config.normal_estimation_radius}")
     else:
-        config.set_setting(data, "normal_estimation_radius", default=config.down_sample_params * math.sqrt(3), cast_method=float)
+        config.set_setting(data, "normal_estimation_radius", default=config.down_sample_params * math.sqrt(12), cast_method=float)
     config.set_setting(data, "skip_normalizing_normals", default=False, cast_method=bool)
     config.set_setting(data, "orient_normals", default=0, cast_method=int)
 
