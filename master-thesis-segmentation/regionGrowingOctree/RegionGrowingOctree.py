@@ -4,6 +4,7 @@ from typing import List, Optional, Dict, Set
 
 import numpy as np
 import open3d
+import pymorton
 import scipy.linalg
 import tqdm
 from open3d.cpu.pybind.geometry import PointCloud as PointCloud
@@ -53,10 +54,10 @@ class RegionGrowingOctree:
 
     def _initial_voxelization_points(self, voxel_size: float):
         self.initial_voxel_size = voxel_size
-        #with cProfile.Profile() as pr:
+        # with cProfile.Profile() as pr:
         points = np.asarray(self.origin_point_cloud.points)
         shifted_points = points - self.root_node.position_min
-        voxel_grid = {}
+        voxel_grid: Dict[int, RegionGrowingOctreeNode] = {}
 
         # Calculate the indices of the voxels that each point belongs to
         voxel_indices = np.floor(shifted_points / voxel_size).astype(int)
@@ -67,20 +68,23 @@ class RegionGrowingOctree:
 
         # Iterate over each point to determine its voxel index
         for i in tqdm.trange(len(voxel_indices), unit="points", desc="Initial voxelization"):
+            voxel_index_3d = voxel_indices[i]
+            voxel_grid_index = pymorton.interleave3(int(voxel_index_3d[0]),
+                                                    int(voxel_indices[i][1]),
+                                                    int(voxel_indices[i][2]))
 
-            voxel_index_tuple = tuple(voxel_indices[i])
             # Create a new Voxel object if it doesn't exist already
-            if voxel_index_tuple not in voxel_grid:
-                node = self._create_initial_voxel(local_voxel_index=voxel_indices[i], voxel_size=voxel_size)
-                voxel_grid[voxel_index_tuple] = node
+            if voxel_grid_index not in voxel_grid:
+                node = self._create_initial_voxel(local_voxel_index=voxel_index_3d, voxel_size=voxel_size)
+                voxel_grid[voxel_grid_index] = node
                 voxel_count += 1
 
             # Append the point index to the list of points in the corresponding voxel
-            voxel: RegionGrowingOctreeNode = voxel_grid[voxel_index_tuple]
+            voxel: RegionGrowingOctreeNode = voxel_grid[voxel_grid_index]
             voxel.vertex_indices.append(i)
             max_vertices_in_a_voxel = max(max_vertices_in_a_voxel, len(voxel.vertex_indices))
 
-            #pr.print_stats(sort='cumtime')
+            # pr.print_stats(sort='cumtime')
         print(f"Created {voxel_count} voxels of size {voxel_size}")
         print(f"Vertices per voxel: avg {len(points) / voxel_count} , max {max_vertices_in_a_voxel}")
 
@@ -163,30 +167,30 @@ class RegionGrowingOctree:
 
         self.segments = []
 
-        A: Set[RegionGrowingOctreeNode] = set()
-        residuals = np.zeros(shape=(self.leaf_node_count,))
+        nodes_to_do: List[RegionGrowingOctreeNode] = []
+        removed_nodes = set()
 
-        residual_counter = 0
         for depth in range(0, len(self.leaf_nodes)):
-            for leaf_node in self.leaf_nodes[depth].values():
-                residuals[residual_counter] = leaf_node.residual
-                A.add(leaf_node)
+            nodes_to_do.extend(self.leaf_nodes[depth].values())
 
-        residuals_sort_indices = np.argsort(residuals)
-        residual_last_index = bisect.bisect_left(a=residuals, x=residual_threshold)
-        residuals_sort_indices = residuals_sort_indices[:residual_last_index]
+        # Sorts ascending by default, but we want descending, since we will pop at the end.
+        nodes_to_do.sort(reverse=True, key=lambda x: x.residual)
 
-        original_length = len(A)
+        original_length = len(nodes_to_do)
         progress_bar = tqdm.tqdm(total=original_length, unit="voxel")
         normal_deviation_threshold = np.cos(np.deg2rad(normal_deviation_threshold_degrees))
 
-        while len(A) > 0:
-            v_min = A.pop()
+        while len(nodes_to_do) > 0:
+            v_min = nodes_to_do.pop()
             progress_bar.update()
 
-            # Not needed because of the sorting above, but just to be sure (floating point errors?)
             if v_min.residual > residual_threshold:
                 break
+
+            if v_min in removed_nodes:
+                continue
+
+            removed_nodes.add(v_min)
 
             current_region: Region = Region(len(self.segments))
             current_region.add(v_min)
@@ -200,16 +204,18 @@ class RegionGrowingOctree:
 
                 B_c = self.get_neighboring_leaf_nodes(v_i)
                 for v_j in B_c:
-                    if v_j not in A:
+
+                    if v_j in removed_nodes:  # We will not process removed nodes.
                         continue
 
-                    A.remove(v_j)
+                    removed_nodes.add(v_j)  # Mark this node as removed (it's not actually removed, only marked!)
+                    progress_bar.update()
+
                     theta = min(abs(np.dot(v_i.normal, v_j.normal)), 1.0)
-                    # We know v_j is in A, else it will throw an error
                     if theta <= normal_deviation_threshold:
                         current_region.add(v_j)
                         v_j.region = current_region
-                        progress_bar.update()
+
                         if v_j.residual < residual_threshold:
                             current_seed.append(v_j)
 
@@ -329,7 +335,6 @@ class RegionGrowingOctree:
                                           amount_threshold=planar_amount_threshold,
                                           distance_threshold=planar_distance_threshold)
 
-
             # Step B.1a, generates a list of all boundary voxels on the boundary of R0 i, called Vb.
             # Initially all voxels in Vb are added to a set of seed voxels, S.
             # For each voxel vj in S, every unallocated neighbor v k of vj are examined.
@@ -442,9 +447,6 @@ class RegionGrowingOctree:
 
                 segment.vertex_indices.add(distance_index)
 
-
-
-
     def get_leaf_node_at_point(self, point: np.ndarray) -> Optional[RegionGrowingOctreeNode]:
         for depth in range(len(self.leaf_nodes) - 1, 1, -1):
             if len(self.leaf_nodes[depth]) == 0:
@@ -457,5 +459,3 @@ class RegionGrowingOctree:
 
             return self.leaf_nodes[depth][candidate_index]
         return None
-
-

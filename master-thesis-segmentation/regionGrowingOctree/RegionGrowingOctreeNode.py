@@ -1,8 +1,7 @@
 from typing import List, Optional, Dict
 
 import numpy as np
-
-from regionGrowingOctree.RegionGrowingOctree import RegionGrowingOctree
+import pymorton
 
 
 class RegionGrowingOctreeNode:
@@ -22,7 +21,8 @@ class RegionGrowingOctreeNode:
         # The index of this node globally, assuming all nodes exist at this depth.
         # Only valid at the depth of this node.
         self.global_index: np.ndarray = global_index
-        self.global_index_tuple: tuple = tuple(global_index)
+
+        self.morton_index = pymorton.interleave3(int(global_index[0]), int(global_index[1]), int(global_index[2]))
 
         self.children: List[RegionGrowingOctreeNode] = []
         self.vertex_indices: List[int] = []
@@ -46,7 +46,7 @@ class RegionGrowingOctreeNode:
         return self.position_min + np.full(shape=(3,), fill_value=self.size * 0.5)
 
     def subdivide(self,
-                  octree: RegionGrowingOctree,
+                  octree,
                   points: np.ndarray,
                   normals: np.ndarray,
                   full_threshold: int,
