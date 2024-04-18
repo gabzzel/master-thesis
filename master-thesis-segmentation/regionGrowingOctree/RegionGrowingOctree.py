@@ -416,6 +416,9 @@ class RegionGrowingOctree:
         seed_indices = np.array(list(seed_indices))
         other_indices = np.array(list(other_indices))
 
+        if len(other_indices) == 0:
+            return
+
         all_seeds_to_all_other_distances = cdist(points[seed_indices], points[other_indices])
 
         for i, seed_index in enumerate(seed_indices):
