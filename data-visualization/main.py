@@ -45,7 +45,28 @@ def show_meshes():
     meshes = [open3d.io.read_triangle_mesh(path) for path in paths]
     open3d.visualization.draw_geometries(meshes, mesh_show_back_face=True)
 
+
+def color_points_by_distances():
+    pcd_path = "E:\\etvr_datasets\\ruimte_ETVR.ply"
+    print(f"Loading point cloud {pcd_path}")
+    pcd = open3d.io.read_point_cloud(pcd_path)
+    print("Downsampling point cloud...")
+    pcd = pcd.voxel_down_sample(voxel_size=0.01)
+
+    print("Loading distances...")
+    results_path = "E:\\thesis-results\\office\\bpa-1\\1712736109.978807_run_0\\raw_results.npz"
+    distances: np.ndarray = np.load(results_path)["distances"]
+
+    print("Colouring points by distances...")
+    max_distance = distances.max()
+    colors = np.zeros(shape=(len(distances), 3))
+    colors[:, 0] = distances / max_distance
+    pcd.colors = open3d.utility.Vector3dVector(colors)
+    open3d.visualization.draw_geometries([pcd])
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    plot_results()
+    color_points_by_distances()
+    #plot_results()
     # show_meshes()
