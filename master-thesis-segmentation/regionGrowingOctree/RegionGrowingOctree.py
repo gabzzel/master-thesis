@@ -57,7 +57,7 @@ class RegionGrowingOctree:
         # with cProfile.Profile() as pr:
         points = np.asarray(self.origin_point_cloud.points)
         shifted_points = points - self.root_node.position_min
-        voxel_grid: Dict[int, RegionGrowingOctreeNode] = {}
+        voxel_grid: Dict[tuple, RegionGrowingOctreeNode] = {}
 
         # Calculate the indices of the voxels that each point belongs to
         voxel_indices = np.floor(shifted_points / voxel_size).astype(int)
@@ -68,19 +68,16 @@ class RegionGrowingOctree:
 
         # Iterate over each point to determine its voxel index
         for i in tqdm.trange(len(voxel_indices), unit="points", desc="Initial voxelization"):
-            voxel_index_3d = voxel_indices[i]
-            voxel_grid_index = pymorton.interleave3(int(voxel_index_3d[0]),
-                                                    int(voxel_indices[i][1]),
-                                                    int(voxel_indices[i][2]))
+            voxel_index_tuple = tuple(voxel_indices[i])
 
             # Create a new Voxel object if it doesn't exist already
-            if voxel_grid_index not in voxel_grid:
-                node = self._create_initial_voxel(local_voxel_index=voxel_index_3d, voxel_size=voxel_size)
-                voxel_grid[voxel_grid_index] = node
+            if voxel_index_tuple not in voxel_grid:
+                node = self._create_initial_voxel(local_voxel_index=voxel_indices[i], voxel_size=voxel_size)
+                voxel_grid[voxel_index_tuple] = node
                 voxel_count += 1
 
             # Append the point index to the list of points in the corresponding voxel
-            voxel: RegionGrowingOctreeNode = voxel_grid[voxel_grid_index]
+            voxel: RegionGrowingOctreeNode = voxel_grid[voxel_index_tuple]
             voxel.vertex_indices.append(i)
             max_vertices_in_a_voxel = max(max_vertices_in_a_voxel, len(voxel.vertex_indices))
 
@@ -103,7 +100,13 @@ class RegionGrowingOctree:
                             full_threshold: int,
                             minimum_voxel_size: float,
                             residual_threshold: float,
-                            max_depth: Optional[int] = None):
+                            max_depth: Optional[int] = None,
+                            profile: bool = False):
+
+        pr = None
+        if profile:
+            pr = cProfile.Profile()
+            pr.enable()
 
         points = np.asarray(self.origin_point_cloud.points)
         normals = np.asarray(self.origin_point_cloud.normals)
@@ -123,6 +126,10 @@ class RegionGrowingOctree:
 
             residual_sum += node.residual
             residual_counts += int(node.residual > 0)
+
+        if profile:
+            pr.disable()
+            pr.print_stats(sort='cumulative')
 
         print(f"Octree generation complete, total leaf nodes: {sum(len(i) for i in self.leaf_nodes)} ")
         print(f"Residual average: {residual_sum / residual_counts}")
@@ -158,7 +165,16 @@ class RegionGrowingOctree:
                      residual_threshold: float,
                      normal_deviation_threshold_degrees: float,
                      minimum_valid_segment_size: int,
-                     profile: bool = False):
+                     profile: bool = False,
+                     residual_threshold_is_absolute: bool = True):
+
+        if not residual_threshold_is_absolute:
+            residual_threshold = max(min(residual_threshold, 1.0), 0.0)
+            all_residuals = []
+            for i in self.leaf_nodes:
+                for node in i.values():
+                    all_residuals.append(node.residual)
+            residual_threshold = np.quantile(all_residuals, q=residual_threshold)
 
         pr: cProfile.Profile = None
         if profile:
@@ -211,8 +227,10 @@ class RegionGrowingOctree:
                     removed_nodes.add(v_j)  # Mark this node as removed (it's not actually removed, only marked!)
                     progress_bar.update()
 
-                    theta = min(abs(np.dot(v_i.normal, v_j.normal)), 1.0)
-                    if theta <= normal_deviation_threshold:
+                    # Rabbani et al. 2007: "As the direction of normal vector has a 180 degree ambiguity we have to
+                    # take the absolute value of the dot product."
+                    theta = abs(np.dot(v_i.normal, v_j.normal))
+                    if theta >= normal_deviation_threshold:
                         current_region.add(v_j)
                         v_j.region = current_region
 
@@ -274,27 +292,6 @@ class RegionGrowingOctree:
         if buffer == 1:
             self.one_offsets = offsets
         return offsets
-
-    def show_point_cloud_with_segment_color(self):
-        segment_colors = {}
-        rng = np.random.default_rng()
-        for segment in self.segments:
-            segment_colors[segment] = rng.random(size=(3,))
-
-        original_points = np.asarray(self.origin_point_cloud.points)
-        points = []
-        colors = []
-        progress_bar = tqdm.tqdm(total=len(self.segments), unit="segment")
-        for segment in self.segments:
-            progress_bar.update()
-            for node in segment.nodes:
-                for point_index in node.vertex_indices:
-                    points.append(original_points[point_index])
-                    colors.append(segment_colors[segment])
-
-        pcd = open3d.geometry.PointCloud(points=open3d.utility.Vector3dVector(points))
-        pcd.colors = open3d.utility.Vector3dVector(colors)
-        open3d.visualization.draw_geometries([pcd])
 
     def refine_regions(self,
                        planar_amount_threshold: float = 0.9,
@@ -450,15 +447,3 @@ class RegionGrowingOctree:
 
                 segment.vertex_indices.add(distance_index)
 
-    def get_leaf_node_at_point(self, point: np.ndarray) -> Optional[RegionGrowingOctreeNode]:
-        for depth in range(len(self.leaf_nodes) - 1, 1, -1):
-            if len(self.leaf_nodes[depth]) == 0:
-                continue
-
-            size = self.initial_voxel_size / (2 ** (depth - 1))
-            candidate_index = tuple(np.floor(point / size))
-            if candidate_index not in self.leaf_nodes[depth]:
-                continue
-
-            return self.leaf_nodes[depth][candidate_index]
-        return None

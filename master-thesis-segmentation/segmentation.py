@@ -5,6 +5,8 @@ from typing import Optional
 import numpy as np
 from sklearn.cluster import HDBSCAN
 import open3d
+
+import regionGrowingOctree.RegionGrowingOctreeVisualization
 from regionGrowingOctree import RegionGrowingOctree
 
 
@@ -80,17 +82,19 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
 
     octree.initial_voxelization(initial_voxel_size)
 
-    residual_threshold = 0.005
+    residual_threshold = 0.001
     octree.recursive_subdivide(minimum_voxel_size=0.001,
                                residual_threshold=residual_threshold,
-                               full_threshold=30,
-                               max_depth=4)
+                               full_threshold=10,
+                               max_depth=9,  # A higher max depth is not recommended
+                               profile=True)
 
     print("Growing regions...")
     octree.grow_regions(minimum_valid_segment_size=4,
-                        residual_threshold=residual_threshold,
-                        normal_deviation_threshold_degrees=30.0,
-                        profile=True)
+                        residual_threshold=0.05,
+                        normal_deviation_threshold_degrees=90.0,
+                        residual_threshold_is_absolute=False,
+                        profile=False)
 
     print("Refining...")
     octree.refine_regions(planar_amount_threshold=0.9,
@@ -101,5 +105,6 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
 
     print("Visualizing voxels...")
     # octree.visualize_voxels(maximum=2000, segments=segments)
-    octree.show_point_cloud_with_segment_color()
+    # regionGrowingOctree.RegionGrowingOctreeVisualization.visualize_segments_as_points(octree, True)
+    regionGrowingOctree.RegionGrowingOctreeVisualization.visualize_segments_with_points(octree)
     print("Done!")
