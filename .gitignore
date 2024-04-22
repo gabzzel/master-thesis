@@ -11,3 +11,5 @@
 master-thesis-reconstruction/data/dummy/stanford-dragon/dragon_recon/README
 /master-thesis-segmentation/regionGrowingOctree/__pycache__
 /master-thesis-segmentation/regionGrowingOctree/__pycache__
+*.npz
+master-thesis-reconstruction/run_configs/results.csv
