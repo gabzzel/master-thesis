@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 from open3d.cpu.pybind.geometry import KDTreeSearchParamHybrid
 
@@ -11,6 +13,7 @@ if __name__ == '__main__':
     print(f"Loaded point cloud with {len(pcd.points)} points.")
 
     print("Clustering / segmenting using HDBScan...")
+    sys.setrecursionlimit(15000)
     segmentation.hdbscan(pcd,
                          minimum_cluster_size=1000,
                          minimum_samples=None,
