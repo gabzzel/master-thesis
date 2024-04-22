@@ -6,6 +6,7 @@ import numpy as np
 import open3d
 import pymorton
 import scipy.linalg
+import queue
 import tqdm
 from open3d.cpu.pybind.geometry import PointCloud as PointCloud
 from scipy.spatial.distance import cdist
@@ -449,4 +450,3 @@ class RegionGrowingOctree:
                     continue
 
                 segment.vertex_indices.add(distance_index)
-

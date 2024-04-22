@@ -4,57 +4,53 @@ from typing import Optional
 
 import numpy as np
 from sklearn.cluster import HDBSCAN
+import fast_hdbscan
 import open3d
 
 import regionGrowingOctree.RegionGrowingOctreeVisualization
 from regionGrowingOctree import RegionGrowingOctree
 
 
-def hdbscan(pcd: open3d.geometry.PointCloud):
-    # The minimum number of samples in a group for that group to be considered a cluster;
-    # groupings smaller than this size will be left as noise.
-    min_cluster_size: int = 10
+def hdbscan(pcd: open3d.geometry.PointCloud,
+            minimum_cluster_size: int = 10,
+            minimum_samples: Optional[int] = None,
+            cluster_selection_epsilon: float = 0.0,
+            visualize: bool = True):
+    """
 
-    # The number of samples in a neighborhood for a point to be considered as a core point.
-    # This includes the point itself. When None, defaults to min_cluster_size.
-    min_samples: int = None
+    :param visualize: Whether to draw the segments to the screen using Open3D visualization.
+    :param cluster_selection_epsilon: A distance threshold. Clusters below this value will be merged. \
+        I probably need to keep this to 0 to keep to the original HDBSCAN method.
+    :param minimum_samples: The number of samples in a neighborhood for a point to be considered as a core point. \
+        This includes the point itself. When None, defaults to min_cluster_size.
+    :param pcd: The point cloud to segment.
+    :param minimum_cluster_size: The minimum number of samples in a group for that group to be considered a cluster; \
+        groupings smaller than this size will be left as noise.
+    :return:
+    """
 
-    # A distance threshold. Clusters below this value will be merged.
-    # I probably need to keep this to 0 to keep to the original HDBSCAN method.
-    cluster_selection_epsilon: float = 0.0
+    points = np.asarray(pcd.points)
 
-    # A distance scaling parameter as used in robust single linkage. See [3] for more information.
-    alpha: float = 1.0
+    model = fast_hdbscan.HDBSCAN(min_cluster_size=minimum_cluster_size,
+                                 min_samples=minimum_samples,
+                                 cluster_selection_method="eom",
+                                 allow_single_cluster=False,
+                                 cluster_selection_epsilon=cluster_selection_epsilon)
 
-    # Leaf size for trees responsible for fast nearest neighbour queries when a KDTree or a BallTree are used as
-    # core-distance algorithms. A large dataset size and small leaf_size may induce excessive memory usage.
-    # If you are running out of memory consider increasing the leaf_size parameter. Ignored for algorithm="brute".
-    leaf_size: int = 10
+    cluster_per_point = model.fit_predict(points)
 
-    # Number of jobs to run in parallel to calculate distances. None means 1 unless in a joblib.parallel_backend
-    # context. -1 means using all processors. See Glossary for more details.
-    n_jobs: int = -1
-
-    model = HDBSCAN(min_cluster_size=min_cluster_size,
-                    min_samples=min_samples,
-                    cluster_selection_epsilon=cluster_selection_epsilon,
-                    max_cluster_size=None,  # Allow large clusters
-                    metric="euclidean",
-                    metric_params=None,  # Not needed.
-                    alpha=alpha,
-                    algorithm="auto",  # uses KD-Tree if possible, else BallTree
-                    leaf_size=leaf_size,
-                    n_jobs=n_jobs,
-                    cluster_selection_method="eom",  # Use the standard Excess Of Mass metric
-                    allow_single_cluster=False,  # Having a single cluster probably means something has gone wrong...
-                    store_centers=None,  # We don't need centroids or mediods
-                    copy=True)  # Just to be safe.
-
-    X: np.ndarray = np.asarray(pcd.points)
     # if pcd.has_colors():
     #    X = np.hstack((X, np.asarray(pcd.colors)), dtype=np.float32)
 
-    return model.fit_predict(X)
+    print("Clustering done.")
+
+    if visualize:
+        unique_clusters = np.unique(cluster_per_point)
+        rng = np.random.default_rng()
+        colors_per_cluster = rng.random((len(unique_clusters), 3), dtype=np.float64)
+        colors = colors_per_cluster[cluster_per_point]
+        pcd.colors = open3d.utility.Vector3dVector(colors)
+        open3d.visualization.draw_geometries([pcd])
 
 
 def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
@@ -70,10 +66,12 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
                                 fast_refinement_planar_amount_threshold: float = 0.9,
                                 fast_refinement_planar_distance_threshold: float = 0.01,
                                 fast_refinement_distance_threshold: float = 0.02,
-                                general_refinement_buffer_size: float = 0.02):
+                                general_refinement_buffer_size: float = 0.02,
+                                visualize: bool = True):
     """
     Perform octree-based region growing on a given point cloud.
 
+    :param visualize: Whether to show the voxels using the standard Open3D visualizer
     :param general_refinement_buffer_size: The buffer around the boundary nodes of a region / segment \
         in which points will be considered during general refinement.
     :param fast_refinement_distance_threshold: The maximum distance a point can be to the plane (defined by the \
@@ -150,8 +148,9 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
                           buffer_zone_size=general_refinement_buffer_size,
                           angular_divergence_threshold_degrees=refining_normal_deviation_threshold_degrees)
 
-    print("Visualizing voxels...")
-    # octree.visualize_voxels(maximum=2000, segments=segments)
-    regionGrowingOctree.RegionGrowingOctreeVisualization.visualize_segments_as_points(octree, True)
-    regionGrowingOctree.RegionGrowingOctreeVisualization.visualize_segments_with_points(octree)
+    if visualize:
+        print("Visualizing voxels...")
+        # octree.visualize_voxels(maximum=2000, segments=segments)
+        regionGrowingOctree.RegionGrowingOctreeVisualization.visualize_segments_as_points(octree, True)
+        regionGrowingOctree.RegionGrowingOctreeVisualization.visualize_segments_with_points(octree)
     print("Done!")
