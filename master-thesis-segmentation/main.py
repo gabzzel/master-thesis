@@ -16,7 +16,26 @@ if __name__ == '__main__':
     #print(f"Downsampled point cloud to {len(pcd.points)} points.")
 
     print("Clustering...")
-    segmentation.octree_based_region_growing(pcd, initial_voxel_size=0.05, down_sample_voxel_size=None)
+    segmentation.octree_based_region_growing(pcd,
+                                             initial_voxel_size=0.1,
+                                             down_sample_voxel_size=None,
+
+                                             # Subdivision parameters
+                                             subdivision_residual_threshold=0.001,
+                                             subdivision_full_threshold=10,
+                                             subdivision_minimum_voxel_size=0.01,
+
+                                             # Region growing parameters
+                                             minimum_valid_segment_size=3,
+                                             region_growing_residual_threshold=0.99,
+                                             growing_normal_deviation_threshold_degrees=30,
+
+                                             # Region refining / refinement parameter
+                                             refining_normal_deviation_threshold_degrees=45,
+                                             general_refinement_buffer_size=0.02,
+                                             fast_refinement_planar_distance_threshold=0.01,
+                                             fast_refinement_distance_threshold=0.02,
+                                             fast_refinement_planar_amount_threshold=0.9)
 
     #cluster_per_point = segmentation.hdbscan(pcd)
     #print("Clustering done.")

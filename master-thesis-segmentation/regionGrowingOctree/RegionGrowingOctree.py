@@ -247,7 +247,7 @@ class RegionGrowingOctree:
 
         if pr is not None:
             pr.disable()
-            pr.print_stats()
+            pr.print_stats(sort="cumulative")
 
         return self.segments
 
@@ -371,12 +371,13 @@ class RegionGrowingOctree:
     def fast_refinement(self, boundary_nodes: List[RegionGrowingOctreeNode],
                         fast_refinement_distance_threshold: float,
                         points: np.ndarray,
-                        segment):
+                        segment,
+                        copy_boundary_nodes: bool = False):
 
         assert points.ndim == 2
         assert points.shape[1] == 3
 
-        S = boundary_nodes.copy()
+        S = boundary_nodes.copy() if copy_boundary_nodes else boundary_nodes
         while len(S) > 0:
             v_j = S.pop()
             B = self.get_neighboring_leaf_nodes(v_j, exclude_allocated_nodes=True)
@@ -441,8 +442,10 @@ class RegionGrowingOctree:
 
                 normal1 = normals[seed_index]
                 normal2 = normals[other_index]
-                angular_divergence = np.minimum(np.abs(np.dot(normal1, normal2)), 1.0)
-                if angular_divergence > angular_divergence_threshold:
+                angular_divergence = np.abs(np.dot(normal1, normal2))
+
+                # The divergence should be larger or equal to the threshold.
+                if angular_divergence < angular_divergence_threshold:
                     continue
 
                 segment.vertex_indices.add(distance_index)

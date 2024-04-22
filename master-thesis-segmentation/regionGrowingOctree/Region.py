@@ -71,6 +71,12 @@ class Region:
         return True
 
     def distance_to_point(self, point):
+        """
+        Calculate the distance from the plane defined by this regions centroid and normal to a given points.
+
+        :param point: The point to which the distance will be calculated.
+        :return: The distance to the point.
+        """
         vector_to_point = point - self.centroid
         distance = abs(np.dot(vector_to_point, self.normal))
         return distance

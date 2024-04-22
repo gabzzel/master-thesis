@@ -47,11 +47,9 @@ def show_meshes():
 
 
 def color_points_by_distances():
-    pcd_path = "E:\\etvr_datasets\\ruimte_ETVR.ply"
+    pcd_path = "E:\\etvr_datasets\\ruimte_ETVR_downsampled.ply"
     print(f"Loading point cloud {pcd_path}")
     pcd = open3d.io.read_point_cloud(pcd_path)
-    print("Downsampling point cloud...")
-    pcd = pcd.voxel_down_sample(voxel_size=0.01)
 
     print("Loading distances...")
     results_path = "E:\\thesis-results\\office\\bpa-1\\1712736109.978807_run_0\\raw_results.npz"
@@ -59,6 +57,7 @@ def color_points_by_distances():
 
     print("Colouring points by distances...")
     max_distance = distances.max()
+    distances = distances / max_distance
     colors = np.zeros(shape=(len(distances), 3))
     colors[:, 0] = distances / max_distance
     pcd.colors = open3d.utility.Vector3dVector(colors)
