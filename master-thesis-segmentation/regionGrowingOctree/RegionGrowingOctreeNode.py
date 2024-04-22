@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict
 
 import numpy as np
+import pymorton
 
 
 class RegionGrowingOctreeNode:
@@ -20,14 +21,23 @@ class RegionGrowingOctreeNode:
         # The index of this node globally, assuming all nodes exist at this depth.
         # Only valid at the depth of this node.
         self.global_index: np.ndarray = global_index
-        self.global_index_tuple: tuple = tuple(global_index)
+
+        self.morton_index = pymorton.interleave3(int(global_index[0]), int(global_index[1]), int(global_index[2]))
 
         self.children: List[RegionGrowingOctreeNode] = []
         self.vertex_indices: List[int] = []
 
+        # --- Geometric features ---
         self.size: float = size
         self.position_min: np.ndarray = min_position
+        self.position_max: np.ndarray = self.position_min + np.full(shape=(3,), fill_value=self.size)
+        self.center_position: np.ndarray = self.position_min + np.full(shape=(3,), fill_value=self.size * 0.5)
+
+        # --- Other features ---
+        # The normal vector of the best fitting plane.
         self.normal: np.ndarray = np.zeros(shape=(3,), dtype=np.float64)
+        # The centroid and origin of the best fitting plane (in Hesse normal form)
+        self.centroid: np.ndarray = None
         self.residual: float = 0
         self.region = None
 
@@ -35,17 +45,8 @@ class RegionGrowingOctreeNode:
     def is_leaf(self) -> bool:
         return len(self.children) == 0
 
-    @property
-    def position_max(self) -> np.ndarray:
-        return self.position_min + np.full(shape=(3,), fill_value=self.size)
-
-    @property
-    def center_position(self) -> np.ndarray:
-        return self.position_min + np.full(shape=(3,), fill_value=self.size * 0.5)
-
     def subdivide(self,
-                  leaf_nodes: List[Dict],
-                  nodes_per_depth: List[List],
+                  octree,
                   points: np.ndarray,
                   normals: np.ndarray,
                   full_threshold: int,
@@ -53,20 +54,23 @@ class RegionGrowingOctreeNode:
                   residual_threshold: float,
                   max_depth: Optional[int] = None):
 
-        self.compute_normal_and_residual(points, normals)
+        relevant_points = points[self.vertex_indices]
+        relevant_normals = normals[self.vertex_indices]
+        self.compute_normal_and_residual(points=relevant_points, normals=relevant_normals)
 
         if (max_depth is not None and self.depth >= max_depth) or \
                 self.residual < residual_threshold or \
                 len(self.vertex_indices) < full_threshold or \
                 self.size * 0.5 < minimum_voxel_size:
 
-            while len(leaf_nodes) <= self.depth:
-                leaf_nodes.append({})
+            while len(octree.leaf_nodes) <= self.depth:
+                octree.leaf_nodes.append({})
 
-            leaf_nodes[self.depth][tuple(self.global_index)] = self
+            octree.leaf_nodes[self.depth][tuple(self.global_index)] = self
+            octree.leaf_node_count += 1
             return
 
-        shifted_points = points[self.vertex_indices] - self.position_min
+        shifted_points = relevant_points - self.position_min
         new_size = self.size * 0.5
         voxel_indices = np.floor(shifted_points / new_size).astype(int)
         voxel_grid = {}
@@ -90,54 +94,49 @@ class RegionGrowingOctreeNode:
         self.vertex_indices = None
 
         # Store our children in the nodes_per_depth list.
-        if len(nodes_per_depth) <= self.depth:
-            nodes_per_depth.append(self.children.copy())
+        if len(octree.nodes_per_depth) <= self.depth:
+            octree.nodes_per_depth.append(self.children.copy())
         else:
-            nodes_per_depth[self.depth].extend(self.children)
+            octree.nodes_per_depth[self.depth].extend(self.children)
 
         for child in self.children:
-            child.subdivide(leaf_nodes=leaf_nodes, nodes_per_depth=nodes_per_depth, points=points, normals=normals,
+            child.subdivide(octree=octree, points=points, normals=normals,
                             full_threshold=full_threshold, minimum_voxel_size=minimum_voxel_size,
                             residual_threshold=residual_threshold, max_depth=max_depth)
 
     def compute_normal_and_residual(self, points, normals):
         if len(self.vertex_indices) == 0:
             self.normal = np.zeros(shape=(3,), dtype=np.float64)
+            self.centroid = np.zeros(shape=(3,), dtype=np.float64)
             self.residual = 0
             return
 
         if len(self.vertex_indices) == 1:
-            self.normal = normals[self.vertex_indices[0]]
+            self.normal = normals[0]
+            self.centroid = points[0]
             self.residual = 0
             return
 
-        relevant_normals = normals[self.vertex_indices]
-        mean_normal = np.mean(relevant_normals, axis=0)
-        centered_normals = relevant_normals - mean_normal
+        self.centroid = np.mean(points, axis=0)
+        self._compute_normal(normals)
+        self._compute_residual(points)
 
-        # Step 3: Covariance Matrix
-        cov_matrix = np.cov(centered_normals, rowvar=False)
+    def _compute_residual(self, points):
+        vectors_to_points = points - self.centroid
+        dot_products = np.absolute(np.dot(vectors_to_points, self.normal))
+        summed_squared_distances = np.sum(np.multiply(dot_products, dot_products))
+        self.residual = np.sqrt(summed_squared_distances / len(self.vertex_indices))
 
-        # Step 4: PCA
+    def _compute_normal(self, points: np.ndarray):
+        # To compute [the normal], the covariance matrix of Nbhd(xi) is formed.
+        # This is the symmetric 3 x 3 positive semi-definite matrix [...] where @ denotes the outer product vector
+        # operator.
+        cov_matrix = np.cov(points - self.centroid, rowvar=False)
         eigenvalues, eigenvectors = np.linalg.eig(cov_matrix)
 
-        # Step 5: Extract Normal Vector
-        # Find the index of the smallest eigenvalue
-        min_eigenvalue_index = np.argmin(eigenvalues)
-        self.normal = eigenvectors[:, min_eigenvalue_index]
-        self.normal /= np.linalg.norm(self.normal)
-
-        summed_squared_distances = 0
-        for i in self.vertex_indices:
-            vector_to_point = points[i] - self.center_position
-
-            # Calculate dot product of vector to point and normal vector
-            dot_product = abs(np.dot(vector_to_point, self.normal))
-
-            # Calculate squared distance
-            summed_squared_distances += (dot_product ** 2)
-
-        self.residual = np.sqrt(summed_squared_distances / len(self.vertex_indices))
+        # The normal is the eigenvector that corresponds to the smallest eigenvalue
+        self.normal = eigenvectors[:, np.argmin(eigenvalues)]
+        self.normal /= np.linalg.norm(self.normal)  # Normalize the normal
 
     def get_corner_points(self) -> np.ndarray:
         points = np.zeros(shape=(8, 3), dtype=np.float64)

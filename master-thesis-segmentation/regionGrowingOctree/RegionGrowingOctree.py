@@ -1,12 +1,17 @@
 import bisect
 import cProfile
-from typing import List, Optional, Set, Dict
+from typing import List, Optional, Dict, Set
 
 import numpy as np
 import open3d
+import pymorton
+import scipy.linalg
+import queue
 import tqdm
 from open3d.cpu.pybind.geometry import PointCloud as PointCloud
+from scipy.spatial.distance import cdist
 
+from regionGrowingOctree.Region import Region
 from regionGrowingOctree.RegionGrowingOctreeNode import RegionGrowingOctreeNode
 
 
@@ -16,15 +21,18 @@ class RegionGrowingOctree:
 
         # A list whose indices are depths, values are dictionaries that contain leaf nodes by coordinate
         self.leaf_nodes: List[Dict[tuple, RegionGrowingOctreeNode]] = []
+        self.leaf_node_count = 0
 
         # A list of nodes per depth level. Elements in this list are lists that contain all nodes at this level.
         self.nodes_per_depth: List[List[RegionGrowingOctreeNode]] = []
 
         self.origin_point_cloud = point_cloud
         self._create_root_node(root_margin)
-        self.segments: List[Region] = None
+        self.segments: List[Region] = []
+        self.initial_voxel_size: float = 0
 
         self.one_offsets = None
+        self.segment_index_per_point = np.full(shape=(len(point_cloud.points),), fill_value=-1, dtype=np.int32)
 
     def _create_root_node(self, root_margin):
         points = np.asarray(self.origin_point_cloud.points)
@@ -46,11 +54,11 @@ class RegionGrowingOctree:
         self._initial_voxelization_points(voxel_size)
 
     def _initial_voxelization_points(self, voxel_size: float):
-
-        #with cProfile.Profile() as pr:
+        self.initial_voxel_size = voxel_size
+        # with cProfile.Profile() as pr:
         points = np.asarray(self.origin_point_cloud.points)
         shifted_points = points - self.root_node.position_min
-        voxel_grid = {}
+        voxel_grid: Dict[tuple, RegionGrowingOctreeNode] = {}
 
         # Calculate the indices of the voxels that each point belongs to
         voxel_indices = np.floor(shifted_points / voxel_size).astype(int)
@@ -61,8 +69,8 @@ class RegionGrowingOctree:
 
         # Iterate over each point to determine its voxel index
         for i in tqdm.trange(len(voxel_indices), unit="points", desc="Initial voxelization"):
-
             voxel_index_tuple = tuple(voxel_indices[i])
+
             # Create a new Voxel object if it doesn't exist already
             if voxel_index_tuple not in voxel_grid:
                 node = self._create_initial_voxel(local_voxel_index=voxel_indices[i], voxel_size=voxel_size)
@@ -74,7 +82,7 @@ class RegionGrowingOctree:
             voxel.vertex_indices.append(i)
             max_vertices_in_a_voxel = max(max_vertices_in_a_voxel, len(voxel.vertex_indices))
 
-            #pr.print_stats(sort='cumtime')
+            # pr.print_stats(sort='cumtime')
         print(f"Created {voxel_count} voxels of size {voxel_size}")
         print(f"Vertices per voxel: avg {len(points) / voxel_count} , max {max_vertices_in_a_voxel}")
 
@@ -93,7 +101,13 @@ class RegionGrowingOctree:
                             full_threshold: int,
                             minimum_voxel_size: float,
                             residual_threshold: float,
-                            max_depth: Optional[int] = None):
+                            max_depth: Optional[int] = None,
+                            profile: bool = False):
+
+        pr = None
+        if profile:
+            pr = cProfile.Profile()
+            pr.enable()
 
         points = np.asarray(self.origin_point_cloud.points)
         normals = np.asarray(self.origin_point_cloud.normals)
@@ -103,8 +117,7 @@ class RegionGrowingOctree:
 
         for i in tqdm.trange(len(self.root_node.children), desc="Creating octree"):
             node = self.root_node.children[i]
-            node.subdivide(leaf_nodes=self.leaf_nodes,
-                           nodes_per_depth=self.nodes_per_depth,
+            node.subdivide(octree=self,
                            points=points,
                            normals=normals,
                            full_threshold=full_threshold,
@@ -114,6 +127,10 @@ class RegionGrowingOctree:
 
             residual_sum += node.residual
             residual_counts += int(node.residual > 0)
+
+        if profile:
+            pr.disable()
+            pr.print_stats(sort='cumulative')
 
         print(f"Octree generation complete, total leaf nodes: {sum(len(i) for i in self.leaf_nodes)} ")
         print(f"Residual average: {residual_sum / residual_counts}")
@@ -147,28 +164,52 @@ class RegionGrowingOctree:
 
     def grow_regions(self,
                      residual_threshold: float,
-                     normal_deviation_threshold_radians: float,
-                     minimum_valid_segment_size: int):
+                     normal_deviation_threshold_degrees: float,
+                     minimum_valid_segment_size: int,
+                     profile: bool = False,
+                     residual_threshold_is_absolute: bool = True):
+
+        if not residual_threshold_is_absolute:
+            residual_threshold = max(min(residual_threshold, 1.0), 0.0)
+            all_residuals = []
+            for i in self.leaf_nodes:
+                for node in i.values():
+                    all_residuals.append(node.residual)
+            residual_threshold = np.quantile(all_residuals, q=residual_threshold)
+
+        pr: cProfile.Profile = None
+        if profile:
+            pr = cProfile.Profile()
+            pr.enable()
+
         self.segments = []
 
-        A: List[RegionGrowingOctreeNode] = []
+        nodes_to_do: List[RegionGrowingOctreeNode] = []
+        removed_nodes = set()
+
         for depth in range(0, len(self.leaf_nodes)):
-            A.extend(self.leaf_nodes[depth].values())
+            nodes_to_do.extend(self.leaf_nodes[depth].values())
 
-        A.sort(reverse=False, key=lambda x: x.residual)
-        last_index = bisect.bisect_left(a=A, x=residual_threshold, key=lambda node: node.residual)
-        A = A[:last_index]
+        # Sorts ascending by default, but we want descending, since we will pop at the end.
+        nodes_to_do.sort(reverse=True, key=lambda x: x.residual)
 
-        original_length = len(A)
+        original_length = len(nodes_to_do)
         progress_bar = tqdm.tqdm(total=original_length, unit="voxel")
+        normal_deviation_threshold = np.cos(np.deg2rad(normal_deviation_threshold_degrees))
 
-        while len(A) > 0:
-            v_min = A.pop()
+        while len(nodes_to_do) > 0:
+            v_min = nodes_to_do.pop()
             progress_bar.update()
+
             if v_min.residual > residual_threshold:
                 break
 
-            current_region: Region = Region()
+            if v_min in removed_nodes:
+                continue
+
+            removed_nodes.add(v_min)
+
+            current_region: Region = Region(len(self.segments))
             current_region.add(v_min)
             v_min.region = current_region
             current_seed = [v_min]
@@ -180,21 +221,22 @@ class RegionGrowingOctree:
 
                 B_c = self.get_neighboring_leaf_nodes(v_i)
                 for v_j in B_c:
-                    theta = np.arccos(np.clip(np.dot(v_i.normal, v_j.normal), a_min=-1.0, a_max=1.0))
-                    try:
-                        v_j_index = A.index(v_j)
-                        # We know v_j is in A, else it will throw an error
-                        if theta <= normal_deviation_threshold_radians:
-                            current_region.add(v_j)
-                            v_j.region = current_region
-                            A.pop(v_j_index)
-                            progress_bar.update()
-                            if v_j.residual < residual_threshold:
-                                current_seed.append(v_j)
 
-                    # v_j is not in A
-                    except ValueError:
-                        pass
+                    if v_j in removed_nodes:  # We will not process removed nodes.
+                        continue
+
+                    removed_nodes.add(v_j)  # Mark this node as removed (it's not actually removed, only marked!)
+                    progress_bar.update()
+
+                    # Rabbani et al. 2007: "As the direction of normal vector has a 180 degree ambiguity we have to
+                    # take the absolute value of the dot product."
+                    theta = abs(np.dot(v_i.normal, v_j.normal))
+                    if theta >= normal_deviation_threshold:
+                        current_region.add(v_j)
+                        v_j.region = current_region
+
+                        if v_j.residual < residual_threshold:
+                            current_seed.append(v_j)
 
             if current_region.node_count > minimum_valid_segment_size:
                 self.segments.append(current_region)
@@ -203,11 +245,16 @@ class RegionGrowingOctree:
                     n.region = None
 
         self.segments.sort(key=lambda x: x.area)
+
+        if pr is not None:
+            pr.disable()
+            pr.print_stats(sort="cumulative")
+
         return self.segments
 
     def get_neighboring_leaf_nodes(self, target_node: RegionGrowingOctreeNode,
                                    buffer: int = 1,
-                                   exclude_allocated_nodes:bool = False) -> List[RegionGrowingOctreeNode]:
+                                   exclude_allocated_nodes: bool = False) -> List[RegionGrowingOctreeNode]:
         """
         return all voxels from that share at least a vertex, an edge or a face with the target node
         """
@@ -215,7 +262,8 @@ class RegionGrowingOctree:
 
         result: List[RegionGrowingOctreeNode] = []
 
-        for depth in range(0, len(self.leaf_nodes)):
+        # This calculation is not valid at depth 0
+        for depth in range(1, len(self.leaf_nodes)):
             for offset in offsets:
                 neighbour_coordinate = target_node.global_index + offset
                 neighbour_coordinate = tuple(np.floor(neighbour_coordinate / (2 ** (target_node.depth - depth))))
@@ -246,48 +294,35 @@ class RegionGrowingOctree:
             self.one_offsets = offsets
         return offsets
 
-    def show_point_cloud_with_segment_color(self):
-        segment_colors = {}
-        rng = np.random.default_rng()
-        for segment in self.segments:
-            segment_colors[segment] = rng.random(size=(3,))
-
-        original_points = np.asarray(self.origin_point_cloud.points)
-        points = []
-        colors = []
-        progress_bar = tqdm.tqdm(total=len(self.segments), unit="segment")
-        for segment in self.segments:
-            progress_bar.update()
-            for node in segment.nodes:
-                for point_index in node.vertex_indices:
-                    points.append(original_points[point_index])
-                    colors.append(segment_colors[segment])
-
-        pcd = open3d.geometry.PointCloud(points=open3d.utility.Vector3dVector(points))
-        pcd.colors = open3d.utility.Vector3dVector(colors)
-        open3d.visualization.draw_geometries([pcd])
-
-    def refine_regions(self, points, normals,
+    def refine_regions(self,
                        planar_amount_threshold: float = 0.9,
                        planar_distance_threshold: float = 0.001,
-                       fast_refinement_distance_threshold: float = 0.001):
+                       fast_refinement_distance_threshold: float = 0.001,
+                       buffer_zone_size: float = 0.02,
+                       angular_divergence_threshold_degrees: float = 15):
         """
         Refine the regions to get more details.
 
+        :param buffer_zone_size: The search radius around the boundaries of the region in which points will be \
+            considered during general refinement.
+        :param angular_divergence_threshold_degrees: The maximum angular divergence between points' normals \
+            for points to be added to the region / segment during general refinement, in degrees.
         :param fast_refinement_distance_threshold: The distance threshold for points (to a regions' best fitting \
             plane) to be merged with a segment / region during fast refinement
-        :param points: The points from the point cloud
-        :param normals: The normals from the point cloud
         :param planar_amount_threshold: The fraction of points in a region that need to be within distance of the \
             the best fitting plane in order to consider the region to be planar.
-        :param planar_distance_threshold: The maximum distance a point can be from the best fitting plane to be \
-            considered planar enough.
+        :param planar_distance_threshold: The maximum distance a point can be from the best fitting plane of a \
+             region / segment and still contribute to the "planar-ness" of the segment.
         :return:
         """
 
-        allocated_points = set()
+        points = np.asarray(self.origin_point_cloud.points)
+        normals = np.asarray(self.origin_point_cloud.normals)
 
-        for segment in self.segments:
+        planar_count = 0
+
+        for segment_index in tqdm.trange(len(self.segments), desc="Refining regions/segments", unit="segment"):
+            segment = self.segments[segment_index]
             boundary_nodes = self.get_boundary_nodes(segment)
 
             # 2. Find points in clusters vicinity
@@ -298,7 +333,6 @@ class RegionGrowingOctree:
                                           amount_threshold=planar_amount_threshold,
                                           distance_threshold=planar_distance_threshold)
 
-
             # Step B.1a, generates a list of all boundary voxels on the boundary of R0 i, called Vb.
             # Initially all voxels in Vb are added to a set of seed voxels, S.
             # For each voxel vj in S, every unallocated neighbor v k of vj are examined.
@@ -306,34 +340,24 @@ class RegionGrowingOctree:
             # then the point is merged into segment R0 i and vk is added into S for further iterations.
             # 4. Do fast refinement.
             if is_planar:
-                self.fast_refinement(allocated_points,
-                                     boundary_nodes,
+                self.fast_refinement(boundary_nodes,
                                      fast_refinement_distance_threshold,
                                      points,
                                      segment)
+                planar_count += 1
             # General refinement.
             else:
-                # TODO
-                pass
+                adtr = np.deg2rad(angular_divergence_threshold_degrees)
+                self.general_refinement(segment=segment,
+                                        boundary_nodes=boundary_nodes,
+                                        buffer_zone_size=buffer_zone_size,
+                                        nearest_neighbours=20,
+                                        angular_divergence_threshold_radians=adtr,
+                                        points=points,
+                                        normals=normals)
+        print(f"Completed refining. Used fast refining {planar_count}/{len(self.segments)} times")
 
-    def fast_refinement(self, allocated_points, boundary_nodes, fast_refinement_distance_threshold, points, segment):
-        S = boundary_nodes.copy()
-        while len(S) > 0:
-            v_j = S.pop()
-            B = self.get_neighboring_leaf_nodes(v_j, exclude_allocated_nodes=True)
-            for v_k in B:
-                for p_l in v_k.vertex_indices:
-                    if segment.distance_to_point(points[p_l]) > fast_refinement_distance_threshold:
-                        continue
-
-                    point_key = tuple(points[p_l])
-                    if point_key in allocated_points:
-                        continue
-
-                    allocated_points.add(point_key)
-                    segment.vertex_indices.add(p_l)
-
-    def get_boundary_nodes(self, segment):
+    def get_boundary_nodes(self, segment) -> List[RegionGrowingOctreeNode]:
         boundary_nodes = []
         # 1. Extract boundary voxels
         for node in segment.nodes:
@@ -345,65 +369,84 @@ class RegionGrowingOctree:
                 boundary_nodes.append(node)
         return boundary_nodes
 
+    def fast_refinement(self, boundary_nodes: List[RegionGrowingOctreeNode],
+                        fast_refinement_distance_threshold: float,
+                        points: np.ndarray,
+                        segment,
+                        copy_boundary_nodes: bool = False):
 
-class Region:
-    def __init__(self):
-        self.nodes: Set[RegionGrowingOctreeNode] = set()
-        self.vertex_indices = set()
-        self.area: float = 0.0
+        assert points.ndim == 2
+        assert points.shape[1] == 3
 
-        self.centroid: np.ndarray = None
-        self.normal: np.ndarray = None
+        S = boundary_nodes.copy() if copy_boundary_nodes else boundary_nodes
+        while len(S) > 0:
+            v_j = S.pop()
+            B = self.get_neighboring_leaf_nodes(v_j, exclude_allocated_nodes=True)
+            for v_k in B:
+                for p_l in v_k.vertex_indices:
+                    if segment.distance_to_point(points[p_l]) > fast_refinement_distance_threshold:
+                        continue
 
-    def union(self, other: Set[RegionGrowingOctreeNode]):
-        self.nodes.union(other)
-        for node in other:
-            self.area += node.size ** 3
-            self.vertex_indices.union(node.vertex_indices)
+                    if self.segment_index_per_point[p_l] != -1:
+                        continue
 
-    def add(self, node: RegionGrowingOctreeNode):
-        self.nodes.add(node)
-        self.area += node.size ** 3
-        self.vertex_indices.union(node.vertex_indices)
+                    self.segment_index_per_point[p_l] = segment.index
+                    segment.vertex_indices.add(p_l)
 
-    @property
-    def node_count(self):
-        return len(self.nodes)
+    def general_refinement(self,
+                           segment: Region,
+                           boundary_nodes: List[RegionGrowingOctreeNode],
+                           buffer_zone_size: float,
+                           nearest_neighbours: int,
+                           angular_divergence_threshold_radians: float,
+                           points: np.ndarray,
+                           normals: np.ndarray):
+        seed_indices = set()
+        other_indices = set()
+        angular_divergence_threshold = np.cos(angular_divergence_threshold_radians)
 
-    def is_planar(self, points, normals, amount_threshold: float = 0.9, distance_threshold:float = 0.01):
-        relevant_points = points[self.vertex_indices]
-        self.centroid = np.mean(relevant_points, axis=0)
-        relevant_normals = normals[self.vertex_indices]
-        mean_normal = np.mean(relevant_normals, axis=0)
-        centered_normals = relevant_normals - mean_normal
+        for node in boundary_nodes:
+            seed_indices = seed_indices.union(node.vertex_indices)
+            buffer = int(np.ceil(buffer_zone_size / node.size))
+            for neighbor in self.get_neighboring_leaf_nodes(node, buffer, exclude_allocated_nodes=True):
+                other_indices = other_indices.union(neighbor.vertex_indices)
 
-        # Step 3: Covariance Matrix
-        cov_matrix = np.cov(centered_normals, rowvar=False)
+        other_indices = other_indices.difference(seed_indices)  # We don't want to include the seeds.
+        seed_indices = np.array(list(seed_indices))
+        other_indices = np.array(list(other_indices))
 
-        # Step 4: PCA
-        eigenvalues, eigenvectors = np.linalg.eig(cov_matrix)
+        if len(other_indices) == 0:
+            return
 
-        # Step 5: Extract Normal Vector
-        # Find the index of the smallest eigenvalue
-        min_eigenvalue_index = np.argmin(eigenvalues)
-        self.normal = eigenvectors[:, min_eigenvalue_index]
-        self.normal /= np.linalg.norm(self.normal)
+        all_seeds_to_all_other_distances = cdist(points[seed_indices], points[other_indices])
 
-        # We need to have at least this amount of points close to the plane.
-        tolerance_count = np.floor(len(relevant_points) * (1 - amount_threshold))
+        for i, seed_index in enumerate(seed_indices):
 
-        for i in self.vertex_indices:
-            distance = self.distance_to_point(points[i])
+            # The distance to all "other" points
+            distances_seed_to_others = all_seeds_to_all_other_distances[i]
 
-            # If the distance is too large, deduct 1 from the tolerance.
-            if distance > distance_threshold:
-                tolerance_count -= 1
-                # If the tolerance is depleted, we are for sure not planar.
-                if tolerance_count <= 0:
-                    return False
-        return True
+            # The indices of the other points if they would be sorted on distance to the current seed
+            relevant_distances_sorted_indices = np.argsort(distances_seed_to_others)
 
-    def distance_to_point(self, point):
-        vector_to_point = point - self.centroid
-        distance = abs(np.dot(vector_to_point, self.normal))
-        return distance
+            for j in range(min(len(relevant_distances_sorted_indices), nearest_neighbours)):
+
+                # The index of the distance in the relevant_distances list.
+                distance_index = relevant_distances_sorted_indices[j]
+
+                # The actual distance
+                distance = distances_seed_to_others[distance_index]
+
+                if distance > buffer_zone_size:
+                    continue
+
+                other_index = other_indices[distance_index]
+
+                normal1 = normals[seed_index]
+                normal2 = normals[other_index]
+                angular_divergence = np.abs(np.dot(normal1, normal2))
+
+                # The divergence should be larger or equal to the threshold.
+                if angular_divergence < angular_divergence_threshold:
+                    continue
+
+                segment.vertex_indices.add(distance_index)
