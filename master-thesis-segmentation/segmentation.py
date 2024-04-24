@@ -1,13 +1,17 @@
 import math
-import cProfile
-from typing import Optional
+import os
+from typing import Optional, List, Union
 
-import numpy as np
-from sklearn.cluster import HDBSCAN
 import fast_hdbscan
+import numpy as np
 import open3d
+import torch
+from torch import nn, optim
+from torch.utils.data import DataLoader
 
 import regionGrowingOctree.RegionGrowingOctreeVisualization
+from pointnetPlusPlus.CustomDataset import S3DIS_Dataset_Area
+from pointnetPlusPlus.pointnetv2 import PointNet2Segmentation
 from regionGrowingOctree import RegionGrowingOctree
 
 
@@ -89,7 +93,7 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
         leaf nodes.
     :param region_growing_residual_threshold: The quantile of the residuals of the octree leaf nodes that determines \
         the actual threshold. Octree leaf nodes with a residual above the resulting threshold will not be considered \
-        for region growing.
+        as seeds (for segments) for region growing.
     :param pcd: The point cloud to do the region growing on.
     :param initial_voxel_size: Octree-based region growing first voxelizes the input before creating the octree. \
         This parameter controls the size of these initial voxels.
@@ -154,3 +158,86 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
         regionGrowingOctree.RegionGrowingOctreeVisualization.visualize_segments_as_points(octree, True)
         regionGrowingOctree.RegionGrowingOctreeVisualization.visualize_segments_with_points(octree)
     print("Done!")
+
+
+def pointnet_train(dataset_path: Union[str, os.PathLike],
+                   number_of_classes: int,
+                   batch_size: int = 64,
+                   learning_rate: float = 0.001,
+                   num_epochs: int = 10):
+    print("Starting training... ")
+    # Initialize dataset and dataloaders
+    train_dataset = S3DIS_Dataset_Area(s3dis_root_dir=dataset_path, train=True, number_of_classes=number_of_classes)
+    print("Initialized training dataset.")
+    val_dataset = S3DIS_Dataset_Area(s3dis_root_dir=dataset_path, train=False, number_of_classes=number_of_classes)
+    print("Initialized validation dataset.")
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    print("Initialized training data loader.")
+    val_loader = DataLoader(val_dataset, batch_size=batch_size)
+    print("Prepared data.")
+    # Initialize model
+    model = PointNet2Segmentation(set_abstraction_ratio_1=0.5,
+                                  set_abstraction_radius_1=0.02,
+                                  set_abstraction_ratio_2=0.5,
+                                  set_abstraction_radius_2=0.02,
+                                  dropout=0.1,
+                                  number_of_classes=number_of_classes)
+
+    # Define loss function and optimizer
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    print("Training the model...")
+    # Train the model
+    for epoch in range(num_epochs):
+        model.train()
+        for data in train_loader:
+            inputs, labels = data  # Load inputs and labels from DataLoader
+            optimizer.zero_grad()  # Zero gradients
+            outputs = model(inputs)  # Forward pass
+            loss = criterion(outputs, labels)  # Compute loss
+            loss.backward()  # Backpropagation
+            optimizer.step()  # Update model parameters
+
+        # Validate the model
+        model.eval()
+        with torch.no_grad(): # Disable gradients
+            total_loss = 0.0
+            for data in val_loader:
+                inputs, labels = data  # Load inputs and labels from DataLoader
+                outputs = model(inputs)  # Forward pass
+                loss = criterion(outputs, labels)  # Compute loss
+                total_loss += loss.item() * inputs.size(0)
+            val_loss = total_loss / len(val_dataset)
+            print(f'Epoch {epoch + 1}/{num_epochs}, Validation Loss: {val_loss:.4f}')
+
+    # Save the trained model
+    torch.save(model.state_dict(), 'pointnet_segmentation_model.pth')
+
+
+def pointnet_segment(model: PointNet2Segmentation,
+                     pcd: open3d.geometry.PointCloud,
+                     visualize: bool = True):
+
+    points = torch.tensor(pcd.points)
+
+    if pcd.has_normals():
+        normals = torch.tensor(pcd.normals)
+        points = torch.cat([points, normals])
+
+    if pcd.has_colors():
+        colors = torch.tensor(pcd.colors)
+        points = torch.cat([points, colors])
+
+    model.eval()
+    with torch.no_grad():
+        outputs = model(points)
+
+    if visualize:
+        visualization_pcd = open3d.geometry.PointCloud(pcd.points)
+        rng = np.random.default_rng()
+        label_colors = rng.random(size=(len(outputs), 3))
+        color_per_point = label_colors[np.asarray(outputs)]
+        visualization_pcd.colors = open3d.utility.Vector3dVector(color_per_point)
+        open3d.visualization.draw_geometries([visualization_pcd])
+
+    return outputs

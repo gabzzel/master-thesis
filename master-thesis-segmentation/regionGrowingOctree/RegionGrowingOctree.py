@@ -177,7 +177,7 @@ class RegionGrowingOctree:
                     all_residuals.append(node.residual)
             residual_threshold = np.quantile(all_residuals, q=residual_threshold)
 
-        pr: cProfile.Profile = None
+        pr: Optional[cProfile.Profile] = None
         if profile:
             pr = cProfile.Profile()
             pr.enable()
@@ -419,6 +419,7 @@ class RegionGrowingOctree:
             return
 
         all_seeds_to_all_other_distances = cdist(points[seed_indices], points[other_indices])
+        already_added_others = set()
 
         for i, seed_index in enumerate(seed_indices):
 
@@ -432,14 +433,17 @@ class RegionGrowingOctree:
 
                 # The index of the distance in the relevant_distances list.
                 distance_index = relevant_distances_sorted_indices[j]
+                other_index = other_indices[distance_index]
+
+                if other_index in already_added_others:
+                    continue
 
                 # The actual distance
                 distance = distances_seed_to_others[distance_index]
 
+                # We have processed all neighbours that were close enough.
                 if distance > buffer_zone_size:
-                    continue
-
-                other_index = other_indices[distance_index]
+                    break
 
                 normal1 = normals[seed_index]
                 normal2 = normals[other_index]
@@ -449,4 +453,5 @@ class RegionGrowingOctree:
                 if angular_divergence < angular_divergence_threshold:
                     continue
 
-                segment.vertex_indices.add(distance_index)
+                segment.vertex_indices.add(other_index)
+                already_added_others.add(other_index)
