@@ -1,17 +1,24 @@
+import math
 import sys
 
 import open3d
 
 import segmentation
 
-
 def segment_with_hdbscan(pcd):
+    
     sys.setrecursionlimit(15000)
+
+    # Office (downsampled 0.01, minimum cluster size 300 and minimum samples None, method EOM) = 43 GB RAM
+    # Office (downsampled 0.01, minimum cluster size 400 and minimum samples None, method EOM) = 56 GB RAM
+    # Office (downsampled 0.01, minimum cluster size 500 and minimum samples None, method EOM) = 68 GB RAM
+
     segmentation.hdbscan(pcd,
-                         minimum_cluster_size=50,
-                         minimum_samples=None,
-                         cluster_selection_epsilon=0.0,
-                         visualize=True)
+                        minimum_cluster_size=300,
+                        minimum_samples=100,
+                        cluster_selection_epsilon=0.0,
+                        method="eom",
+                        visualize=True)
 
 
 def execute():
@@ -49,7 +56,8 @@ def execute():
                                              general_refinement_buffer_size=0.02,
                                              fast_refinement_planar_distance_threshold=0.01,
                                              fast_refinement_distance_threshold=0.05,
-                                             fast_refinement_planar_amount_threshold=0.8)
+                                             fast_refinement_planar_amount_threshold=0.8,
+                                             visualize=True)
 
 
 if __name__ == '__main__':

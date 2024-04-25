@@ -1,6 +1,6 @@
 import math
 import os
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Union
 
 import fast_hdbscan
 import numpy as np
@@ -16,10 +16,12 @@ from regionGrowingOctree import RegionGrowingOctree
 
 
 def hdbscan(pcd: open3d.geometry.PointCloud,
-            minimum_cluster_size: int = 10,
-            minimum_samples: Optional[int] = None,
-            cluster_selection_epsilon: float = 0.0,
-            visualize: bool = True):
+            minimum_cluster_size: Union[int, str] = 10,
+            minimum_samples: Optional[Union[int, str]] = None,
+            cluster_selection_epsilon: Union[float, str] = 0.0,
+            method : str = "eom",
+            visualize: bool = True,
+            use_sklearn_estimator: bool = False):
     """
 
     :param visualize: Whether to draw the segments to the screen using Open3D visualization.
@@ -33,26 +35,52 @@ def hdbscan(pcd: open3d.geometry.PointCloud,
     :return:
     """
 
+    print(f"Clustering / segmenting using HDBScan (min cluster size {minimum_cluster_size}, min samples {minimum_samples}, method '{method}')")
+
     points = np.asarray(pcd.points)
+    cluster_per_point = None
+    membership_strengths = None
 
-    model = fast_hdbscan.HDBSCAN(min_cluster_size=minimum_cluster_size,
-                                 min_samples=minimum_samples,
-                                 cluster_selection_method="eom",
-                                 allow_single_cluster=False,
-                                 cluster_selection_epsilon=cluster_selection_epsilon)
+    
+    if use_sklearn_estimator:
+        model = fast_hdbscan.HDBSCAN(min_cluster_size=minimum_cluster_size,
+                                    min_samples=minimum_samples,
+                                    cluster_selection_method=method,
+                                    allow_single_cluster=False,
+                                    cluster_selection_epsilon=cluster_selection_epsilon)
+        
+        cluster_per_point = model.fit_predict(points)
+    
+    else:
+        results = fast_hdbscan.fast_hdbscan(points,
+                                            min_samples=minimum_samples,
+                                            min_cluster_size=minimum_cluster_size,
+                                            cluster_selection_method=method,
+                                            allow_single_cluster=False,
+                                            cluster_selection_epsilon=cluster_selection_epsilon,
+                                            return_trees=False)
 
-    cluster_per_point = model.fit_predict(points)
+        cluster_per_point, membership_strengths = results
+    
+    number_of_clusters = len(np.unique(cluster_per_point))
 
     # if pcd.has_colors():
     #    X = np.hstack((X, np.asarray(pcd.colors)), dtype=np.float32)
 
     print("Clustering done.")
+    print(f"Created {number_of_clusters} clusters.")
 
-    if visualize:
+    if visualize and cluster_per_point is not None:
         unique_clusters = np.unique(cluster_per_point)
         rng = np.random.default_rng()
         colors_per_cluster = rng.random((len(unique_clusters), 3), dtype=np.float64)
         colors = colors_per_cluster[cluster_per_point]
+        colors[cluster_per_point < 0] = np.zeros(shape=(3,))
+        # if membership_strengths is not None:
+        #    colors[:, 0] *= membership_strengths
+        #    colors[:, 1] *= membership_strengths
+        #    colors[:, 2] *= membership_strengths
+
         pcd.colors = open3d.utility.Vector3dVector(colors)
         open3d.visualization.draw_geometries([pcd])
 
@@ -111,7 +139,10 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
     """
 
     original_number_of_points = len(pcd.points)
+    r = 0.01 * math.sqrt(12.0) 
+
     if down_sample_voxel_size is not None and down_sample_voxel_size > 0.0:
+        r = down_sample_voxel_size * math.sqrt(12)
         ds_pcd = pcd.voxel_down_sample(voxel_size=down_sample_voxel_size)
         print(f"Downsampled point cloud from {original_number_of_points} to {len(ds_pcd.points)} points")
     else:
@@ -119,7 +150,6 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
 
     if not ds_pcd.has_normals():
         print("Computing normals...")
-        r = down_sample_voxel_size * math.sqrt(12.0)
         ds_pcd.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=r, max_nn=10))
         print("Orienting normals...")
         ds_pcd.orient_normals_consistent_tangent_plane(k=10)

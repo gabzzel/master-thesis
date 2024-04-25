@@ -1,0 +1,62 @@
+{
+  "point_cloud_path":"etvr\\office.ply",
+  "verbose": true,
+  "draw": false,
+  "copy": true,
+  "runs":
+  [
+    {
+      "down_sample_method":"voxel",
+      "down_sample_params":0.01,
+      "normal_estimation_neighbours":10,
+      "normal_estimation_radius":0.1,
+      "skip_normalizing_normals":false,
+      "orient_normals":10,
+      "surface_reconstruction_method":"a",
+      "alpha":0.101,
+      "ball_pivoting_radii":[0.001, 0.009, 0.024, 0.048, 0.1],
+      "poisson_density_quantile":0.11,
+      "poisson_octree_max_depth":12,
+      "mesh_cleaning_methods":["simple", "edge_length", "aspect_ratio"],
+      "edge_length_cleaning_portion":1,
+      "aspect_ratio_cleaning_portion":1,
+      "mesh_quality_metrics":["ar", "el", "c", "h", "ch", "m2cd"],
+      "store_preprocessed_pointcloud":false,
+      "store_mesh":true,
+      "triangle_normal_deviation_method":"adj",
+      "processes":1,
+      "chunk_size":50000,
+	  "reuse_pointcloud":true
+    },
+	  {
+      "alpha":0.105
+    },
+	  {
+      "alpha":0.11
+    },
+	  {
+      "alpha":0.115
+    },
+	  {
+      "alpha":0.12
+    },
+	  {
+      "alpha":0.125
+    },
+	  {
+      "alpha":0.13
+    },
+	  {
+      "alpha":0.135
+    },
+	  {
+      "alpha":0.14
+    },
+	  {
+      "alpha":0.145
+    },
+	  {
+      "alpha":0.15
+    }
+  ]
+}
