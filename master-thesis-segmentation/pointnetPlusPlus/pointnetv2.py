@@ -131,7 +131,7 @@ class PointNet2Segmentation(torch.nn.Module):
         _, indices = torch.topk(dist, k, dim=2, largest=False)
 
         # Compute weights based on inverse squared distances
-        weights = 1 / torch.pow(dist.gather(2, indices), 2)  # Shape: (batch_size, num_upsampled_points, k)
+        weights = 1.0 / torch.pow(dist.gather(2, indices), 2)  # Shape: (batch_size, num_upsampled_points, k)
 
         # Normalize weights
         weights = weights / torch.sum(weights, dim=2, keepdim=True)

@@ -14,3 +14,5 @@ master-thesis-reconstruction/data/dummy/stanford-dragon/dragon_recon/README
 *.npz
 master-thesis-reconstruction/run_configs/results.csv
 /master-thesis-reconstruction/data
+/master-thesis-segmentation/pointnetexternal/data
+/master-thesis-reconstruction/run_configs

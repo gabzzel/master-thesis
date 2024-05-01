@@ -203,7 +203,7 @@ def pointnet_train(dataset_path: Union[str, os.PathLike],
     print("Initialized validation dataset.")
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     print("Initialized training data loader.")
-    val_loader = DataLoader(val_dataset, batch_size=batch_size)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
     print("Prepared data.")
     # Initialize model
     model = PointNet2Segmentation(set_abstraction_ratio_1=0.5,

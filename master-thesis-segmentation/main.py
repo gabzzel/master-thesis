@@ -1,9 +1,13 @@
 import math
 import sys
+import utilities
+from pathlib import Path
 
 import open3d
+import numpy as np
 
 import segmentation
+import utilities.s3dis_reader
 
 def segment_with_hdbscan(pcd):
     
@@ -32,7 +36,12 @@ def execute():
     # print("Clustering / segmenting using HDBScan...")
     # segment_with_hdbscan()
 
-    s3dis_root = "E:\\etvr_datasets\\Stanford3dDataset_v1.2"
+    s3dis_root = "C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\data\\Stanford3dDataset_v1.2"
+    save_path = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\data\\s3dis_npy_incl_normals")
+
+    utilities.s3dis_reader.save_s3dis_rooms(s3dis_root, save_path)
+    
+    return
     segmentation.pointnet_train(s3dis_root, 13)
 
     return

@@ -91,8 +91,10 @@ dependencies:
       - sympy==1.12
       - tbb==2021.11.0
       - tenacity==8.2.3
-      - torch==2.2.2+cu118
-      - torch-scatter==2.1.2+pt22cu118
+      # - torch==2.2.2+cu118
+      # - torch-scatter==2.1.2+pt22cu118
+      - torch==2.2.2
+      - torch-scatter==2.1.2
       - traitlets==5.14.2
       - typing-extensions==4.10.0
       - urllib3==2.2.1
