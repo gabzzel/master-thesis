@@ -1114,3 +1114,47 @@ class clutter        weight: 0.011, IoU: 0.409
 2024-05-01 14:09:51,235 - Model - INFO - No existing model, starting training from scratch...
 2024-05-01 14:09:52,254 - Model - INFO - **** Epoch 1 (1/32) ****
 2024-05-01 14:09:52,255 - Model - INFO - Learning rate:0.001000
+2024-05-02 11:09:30,827 - Model - INFO - PARAMETER ...
+2024-05-02 11:09:30,827 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-02 11:09:59,963 - Model - INFO - PARAMETER ...
+2024-05-02 11:09:59,964 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-02 11:10:41,430 - Model - INFO - The number of training data is: 47474
+2024-05-02 11:10:41,430 - Model - INFO - The number of test data is: 19191
+2024-05-02 11:10:41,454 - Model - INFO - No existing model, starting training from scratch...
+2024-05-02 11:10:42,292 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-02 11:10:42,293 - Model - INFO - Learning rate:0.001000
+2024-05-02 11:11:33,801 - Model - INFO - PARAMETER ...
+2024-05-02 11:11:33,801 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-02 11:11:56,343 - Model - INFO - The number of training data is: 47623
+2024-05-02 11:11:56,343 - Model - INFO - The number of test data is: 18923
+2024-05-02 11:11:56,367 - Model - INFO - No existing model, starting training from scratch...
+2024-05-02 11:11:57,156 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-02 11:11:57,156 - Model - INFO - Learning rate:0.001000
+2024-05-02 11:17:08,543 - Model - INFO - PARAMETER ...
+2024-05-02 11:17:08,544 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-02 11:17:31,604 - Model - INFO - The number of training data is: 47623
+2024-05-02 11:17:31,605 - Model - INFO - The number of test data is: 18923
+2024-05-02 11:17:31,628 - Model - INFO - No existing model, starting training from scratch...
+2024-05-02 11:17:32,418 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-02 11:17:32,418 - Model - INFO - Learning rate:0.001000
+2024-05-02 11:19:21,216 - Model - INFO - PARAMETER ...
+2024-05-02 11:19:21,216 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-02 11:19:44,139 - Model - INFO - The number of training data is: 47623
+2024-05-02 11:19:44,139 - Model - INFO - The number of test data is: 18923
+2024-05-02 11:19:44,163 - Model - INFO - No existing model, starting training from scratch...
+2024-05-02 11:19:44,961 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-02 11:19:44,961 - Model - INFO - Learning rate:0.001000
+2024-05-02 11:24:12,565 - Model - INFO - PARAMETER ...
+2024-05-02 11:24:12,565 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-02 11:24:35,038 - Model - INFO - The number of training data is: 47623
+2024-05-02 11:24:35,038 - Model - INFO - The number of test data is: 18923
+2024-05-02 11:24:35,061 - Model - INFO - No existing model, starting training from scratch...
+2024-05-02 11:24:35,849 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-02 11:24:35,849 - Model - INFO - Learning rate:0.001000
+2024-05-02 11:26:23,994 - Model - INFO - PARAMETER ...
+2024-05-02 11:26:23,994 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-02 11:26:46,582 - Model - INFO - The number of training data is: 47623
+2024-05-02 11:26:46,583 - Model - INFO - The number of test data is: 18923
+2024-05-02 11:26:46,606 - Model - INFO - No existing model, starting training from scratch...
+2024-05-02 11:26:47,390 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-02 11:26:47,390 - Model - INFO - Learning rate:0.001000

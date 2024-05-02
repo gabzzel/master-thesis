@@ -6,7 +6,16 @@ from torch.utils.data import Dataset
 
 
 class S3DISDataset(Dataset):
-    def __init__(self, split='train', data_root='trainval_fullarea', num_point=4096, test_area=5, block_size=1.0, sample_rate=1.0, transform=None):
+    def __init__(self,
+                 split='train',
+                 data_root='trainval_fullarea',
+                 num_point=4096,
+                 test_area=5,
+                 block_size=1.0,
+                 sample_rate=1.0,
+                 transform=None,
+                 includes_normals=False):
+
         super().__init__()
         self.num_point = num_point
         self.block_size = block_size
@@ -26,9 +35,14 @@ class S3DISDataset(Dataset):
         for room_name in tqdm(rooms_split, total=len(rooms_split)):
             room_path = os.path.join(data_root, room_name)
             room_data = np.load(room_path)  # xyzrgbl, N*7
-            points, labels = room_data[:, 0:6], room_data[:, 6]  # xyzrgb, N*6; l, N
+
+            # If we have normals, we take until 9 (xyz, rgb, normals), else until 6 (xyz, rgb)
+            point_data_max_index = 6 if not includes_normals else 9
+            labels = room_data[:, point_data_max_index]
             tmp, _ = np.histogram(labels, range(14))
             labelweights += tmp
+            points, labels = room_data[:, :point_data_max_index], room_data[:, point_data_max_index]  # xyzrgb, N*6; l, N
+
             coord_min, coord_max = np.amin(points, axis=0)[:3], np.amax(points, axis=0)[:3]
             self.room_points.append(points), self.room_labels.append(labels)
             self.room_coord_min.append(coord_min), self.room_coord_max.append(coord_max)
@@ -91,6 +105,7 @@ class S3DISDataset(Dataset):
 
     def __len__(self):
         return len(self.room_idxs)
+
 
 class ScannetDatasetWholeScene():
     # prepare to give prediction on each points
@@ -180,11 +195,10 @@ class ScannetDatasetWholeScene():
     def __len__(self):
         return len(self.scene_points_list)
 
+
 if __name__ == '__main__':
     data_root = '/data/yxu/PointNonLocal/data/stanford_indoor3d/'
-    num_point, test_area, block_size, sample_rate = 4096, 5, 1.0, 0.01
-
-    point_data = S3DISDataset(split='train', data_root=data_root, num_point=num_point, test_area=test_area, block_size=block_size, sample_rate=sample_rate, transform=None)
+    point_data = S3DISDataset(split='train', data_root=data_root, num_point=4096, test_area=5, block_size=1.0, sample_rate=0.01, transform=None)
     print('point data size:', point_data.__len__())
     print('point data 0 shape:', point_data.__getitem__(0)[0].shape)
     print('point label 0 shape:', point_data.__getitem__(0)[1].shape)

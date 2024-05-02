@@ -36,10 +36,10 @@ def execute():
     # print("Clustering / segmenting using HDBScan...")
     # segment_with_hdbscan()
 
-    s3dis_root = "C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\data\\Stanford3dDataset_v1.2"
-    save_path = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\data\\s3dis_npy_incl_normals")
+    s3dis_root = "C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\data\\s3dis\\Stanford3dDataset_v1.2_Aligned_Version"
+    save_path = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\data\\s3dis\\s3dis_npy_incl_normals")
 
-    utilities.s3dis_reader.save_s3dis_rooms(s3dis_root, save_path)
+    utilities.s3dis_reader.save_s3dis_rooms(s3dis_root, save_path, one_hot=False, area_start=5)
     
     return
     segmentation.pointnet_train(s3dis_root, 13)

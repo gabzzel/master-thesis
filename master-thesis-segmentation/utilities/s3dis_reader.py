@@ -210,7 +210,9 @@ def get_s3dis_rooms(s3dis_root_dir: Union[str, os.PathLike],
 
 def save_s3dis_rooms(s3dis_root_dir: Union[str, os.PathLike],
                      save_path: Union[str, os.PathLike],
-                     one_hot: bool = True):
+                     one_hot: bool = True,
+                     area_start: int = 1,
+                     area_end: int = 6):
     """
     Get paths to S3DIS point clouds of all rooms within an area, with annotations.
 
@@ -221,39 +223,32 @@ def save_s3dis_rooms(s3dis_root_dir: Union[str, os.PathLike],
     root_path = Path(s3dis_root_dir)
     assert root_path.is_dir()
 
+    # uses the same order as pointnet++
     label_mapping = [
-        "beam",  # 0
-        "bookcase",  # 1
-        "board",  # 2
-        "ceiling",  # 3
-        "chair",  # 4
-        "clutter",  # 5
-        "column",  # 6
-        "door",  # 7
-        "floor",  # 8
-        "sofa",  # 9
-        "stairs",  # 10
-        "table",  # 11
-        "wall",  # 12
-        "window"  # 13
+        'ceiling',
+        'floor',
+        'wall',
+        'beam',
+        'column',
+        'window',
+        'door',
+        'table',
+        'chair',
+        'sofa',
+        'bookcase',
+        'board',
+        'clutter'
     ]
 
-    area_dirs = list(os.scandir(root_path))
-    for area_dir in tqdm.tqdm(area_dirs, position=0, leave=True, desc="Processing areas", miniters=1):
-        if "area" not in area_dir.name.lower():
-            continue
-
-        area_dir_path = Path(area_dir.path)
+    for area_number in tqdm.trange(area_start, area_end+1, 1, position=0, leave=True, desc="Processing areas", miniters=1):
+        area_name = f"Area_{area_number}"
+        area_dir_path = Path(s3dis_root_dir).joinpath(area_name)
         if not area_dir_path.is_dir():
             continue
 
-        rooms_dirs = list(os.scandir(area_dir.path))
+        rooms_dirs = [Path(a) for a in os.scandir(area_dir_path) if Path(a).is_dir()]
         for room_dir in tqdm.tqdm(rooms_dirs, position=1, leave=False, desc="Processing rooms", miniters=1):
-            room_dir_path = Path(room_dir.path)
-            if not room_dir_path.is_dir():
-                continue
-
-            annotations_dir_path = Path(room_dir.path).joinpath("Annotations")
+            annotations_dir_path = room_dir.joinpath("Annotations")
             if not annotations_dir_path.exists() or not annotations_dir_path.is_dir():
                 continue
 
@@ -261,17 +256,18 @@ def save_s3dis_rooms(s3dis_root_dir: Union[str, os.PathLike],
             room_colors = None
             room_labels = None
 
-            annotation_files = list(os.scandir(annotations_dir_path))
+            annotation_files = [a for a in os.scandir(annotations_dir_path) if a.path.endswith(".txt")]
 
-            for annotation_file in annotation_files:
-                if not annotation_file.path.endswith(".txt"):
-                    continue
-
+            for annotation_file in tqdm.tqdm(annotation_files, position=2, leave=False, desc="Processing objects", miniters=1):
                 object_data = np.loadtxt(annotation_file.path, delimiter=" ")
-                xyz = object_data[:, [0, 1, 2]].astype(np.float32)
-                colors = object_data[:, [3, 4, 5]].astype(np.float32) / 255.0  # Normalize the colors
 
-                label_index = label_mapping.index(annotation_file.name.split("_")[0])
+                xyz = object_data[:, [0, 1, 2]].astype(np.float32)
+                colors = object_data[:, [3, 4, 5]].astype(np.float32)
+
+                try:
+                    label_index = label_mapping.index(annotation_file.name.split("_")[0])
+                except ValueError as e:  # Can happen if we find stairs or anything else not in there
+                    continue
 
                 if one_hot:
                     labels = np.zeros(shape=(len(xyz), len(label_mapping)), dtype=np.int32)
@@ -281,7 +277,13 @@ def save_s3dis_rooms(s3dis_root_dir: Union[str, os.PathLike],
 
                 room_xyz = xyz if room_xyz is None else np.vstack((room_xyz, xyz))
                 room_colors = colors if room_colors is None else np.vstack((room_colors, colors))
-                room_labels = labels if room_labels is None else np.vstack((room_labels, labels))
+
+                if room_labels is None:
+                    room_labels = labels
+                elif room_labels.ndim == 1:
+                    room_labels = np.concatenate((room_labels, labels), axis=0)
+                else:
+                    room_labels = np.vstack((room_labels, labels))
 
             pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(room_xyz))
             pcd.estimate_normals(open3d.geometry.KDTreeSearchParamKNN(knn=10))
@@ -289,6 +291,10 @@ def save_s3dis_rooms(s3dis_root_dir: Union[str, os.PathLike],
             pcd.normalize_normals()
             room_normals = np.asarray(pcd.normals)
 
-            room_data = np.hstack((room_xyz, room_colors, room_normals, room_labels))
-            room_save_path = Path(save_path).joinpath(f"{area_dir.name}_{room_dir.name}.npy")
+            if room_labels.ndim == 1:
+                room_data = np.hstack((room_xyz, room_colors, room_normals, room_labels[:, np.newaxis]))
+            else:
+                room_data = np.hstack((room_xyz, room_colors, room_normals, room_labels))
+
+            room_save_path = Path(save_path).joinpath(f"{area_name}_{room_dir.name}.npy")
             np.save(str(room_save_path), room_data)
