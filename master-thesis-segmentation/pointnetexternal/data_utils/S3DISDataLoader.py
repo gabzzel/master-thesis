@@ -90,6 +90,7 @@ class S3DISDataset(Dataset):
         ## TEST
         selected_points[:, 2] = selected_points[:, 2] - center[2]
 
+        # Normalize the colors
         selected_points[:, 3:6] /= 255.0
         current_points[:, 0:6] = selected_points
         current_labels = labels[selected_point_idxs]

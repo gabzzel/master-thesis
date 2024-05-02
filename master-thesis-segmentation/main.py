@@ -26,23 +26,18 @@ def segment_with_hdbscan(pcd):
 
 
 def execute():
-    # use_downsampled: bool = True
-    # point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis-reconstruction\\data\\etvr\\enfsi-2023_reduced_cloud_preprocessed.ply"
-    # if not use_downsampled:
-    #     point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis-reconstruction\\data\\etvr\\enfsi-2023_reduced_cloud.pcd"
-    # print("Loading point cloud...")
-    # pcd: open3d.geometry.PointCloud = open3d.io.read_point_cloud(point_cloud_path)
-    # print(f"Loaded point cloud with {len(pcd.points)} points.")
-    # print("Clustering / segmenting using HDBScan...")
-    # segment_with_hdbscan()
+    use_downsampled: bool = True
+    point_cloud_path = "C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-reconstruction\\data\\etvr\\training_complex.pcd"
 
-    s3dis_root = "C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\data\\s3dis\\Stanford3dDataset_v1.2_Aligned_Version"
-    save_path = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\data\\s3dis\\s3dis_npy_incl_normals")
+    print("Loading point cloud...")
+    pcd: open3d.geometry.PointCloud = open3d.io.read_point_cloud(point_cloud_path)
+    pcd = pcd.voxel_down_sample(0.01)
+    print(f"Loaded point cloud with {len(pcd.points)} points.")
 
-    utilities.s3dis_reader.save_s3dis_rooms(s3dis_root, save_path, one_hot=False, area_start=5)
-    
-    return
-    segmentation.pointnet_train(s3dis_root, 13)
+    pointnet_checkpoint_path = ("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal"
+                                "\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original.pth")
+
+    segmentation.pointnetv2(pointnet_checkpoint_path, pcd)
 
     return
     print("Clustering...")

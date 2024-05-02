@@ -29,10 +29,12 @@ seg_label_to_cat = {}
 for i, cat in enumerate(seg_classes.keys()):
     seg_label_to_cat[i] = cat
 
+
 def inplace_relu(m):
     classname = m.__class__.__name__
     if classname.find('ReLU') != -1:
-        m.inplace=True
+        m.inplace = True
+
 
 def parse_args():
     parser = argparse.ArgumentParser('Model')
@@ -51,8 +53,10 @@ def parse_args():
 
     return parser.parse_args()
 
+
 def worker_init_fn(worker_id):
     return np.random.seed(worker_id + int(time.time()))
+
 
 def main(args):
     def log_string(str):
@@ -194,8 +198,10 @@ def main(args):
         loss_sum = 0
         classifier = classifier.train()
 
+        set_grad_to_none: bool = True # WARNING: disable if shows unexpected behaviour. Can have performance impact
+
         for i, (points, target) in tqdm(enumerate(trainDataLoader), total=len(trainDataLoader), smoothing=0.9):
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=set_grad_to_none)
 
             points = points.data.numpy()
             if augment_using_z_rotate:
@@ -273,12 +279,12 @@ def main(args):
                     total_iou_deno_class[l] += np.sum(((pred_val == l) | (batch_label == l)))
 
             labelweights = labelweights.astype(np.float32) / np.sum(labelweights.astype(np.float32))
-            mIoU = np.mean(np.array(total_correct_class) / (np.array(total_iou_deno_class, dtype=np.float) + 1e-6))
+            mIoU = np.mean(np.array(total_correct_class) / (np.array(total_iou_deno_class, dtype=float) + 1e-6))
             log_string('eval mean loss: %f' % (loss_sum / float(num_batches)))
             log_string('eval point avg class IoU: %f' % (mIoU))
             log_string('eval point accuracy: %f' % (total_correct / float(total_seen)))
             log_string('eval point avg class acc: %f' % (
-                np.mean(np.array(total_correct_class) / (np.array(total_seen_class, dtype=np.float) + 1e-6))))
+                np.mean(np.array(total_correct_class) / (np.array(total_seen_class, dtype=float) + 1e-6))))
 
             iou_per_class_str = '------- IoU --------\n'
             for l in range(NUM_CLASSES):

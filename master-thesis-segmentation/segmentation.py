@@ -1,17 +1,13 @@
 import math
-import os
-from typing import Optional, List, Union, Union
+from typing import Optional, Union
 
 import fast_hdbscan
 import numpy as np
 import open3d
 import torch
-from torch import nn, optim
-from torch.utils.data import DataLoader
 
+import pointnetexternal.models.pointnet2_sem_seg
 import regionGrowingOctree.RegionGrowingOctreeVisualization
-from pointnetPlusPlus.CustomDataset import S3DIS_Dataset_Area
-from pointnetPlusPlus.pointnetv2 import PointNet2Segmentation
 from regionGrowingOctree import RegionGrowingOctree
 
 
@@ -19,7 +15,7 @@ def hdbscan(pcd: open3d.geometry.PointCloud,
             minimum_cluster_size: Union[int, str] = 10,
             minimum_samples: Optional[Union[int, str]] = None,
             cluster_selection_epsilon: Union[float, str] = 0.0,
-            method : str = "eom",
+            method: str = "eom",
             visualize: bool = True,
             use_sklearn_estimator: bool = False):
     """
@@ -35,22 +31,22 @@ def hdbscan(pcd: open3d.geometry.PointCloud,
     :return:
     """
 
-    print(f"Clustering / segmenting using HDBScan (min cluster size {minimum_cluster_size}, min samples {minimum_samples}, method '{method}')")
+    print(
+        f"Clustering / segmenting using HDBScan (min cluster size {minimum_cluster_size}, min samples {minimum_samples}, method '{method}')")
 
     points = np.asarray(pcd.points)
     cluster_per_point = None
     membership_strengths = None
 
-    
     if use_sklearn_estimator:
         model = fast_hdbscan.HDBSCAN(min_cluster_size=minimum_cluster_size,
-                                    min_samples=minimum_samples,
-                                    cluster_selection_method=method,
-                                    allow_single_cluster=False,
-                                    cluster_selection_epsilon=cluster_selection_epsilon)
-        
+                                     min_samples=minimum_samples,
+                                     cluster_selection_method=method,
+                                     allow_single_cluster=False,
+                                     cluster_selection_epsilon=cluster_selection_epsilon)
+
         cluster_per_point = model.fit_predict(points)
-    
+
     else:
         results = fast_hdbscan.fast_hdbscan(points,
                                             min_samples=minimum_samples,
@@ -61,7 +57,7 @@ def hdbscan(pcd: open3d.geometry.PointCloud,
                                             return_trees=False)
 
         cluster_per_point, membership_strengths = results
-    
+
     number_of_clusters = len(np.unique(cluster_per_point))
 
     # if pcd.has_colors():
@@ -139,7 +135,7 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
     """
 
     original_number_of_points = len(pcd.points)
-    r = 0.01 * math.sqrt(12.0) 
+    r = 0.01 * math.sqrt(12.0)
 
     if down_sample_voxel_size is not None and down_sample_voxel_size > 0.0:
         r = down_sample_voxel_size * math.sqrt(12)
@@ -190,84 +186,40 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
     print("Done!")
 
 
-def pointnet_train(dataset_path: Union[str, os.PathLike],
-                   number_of_classes: int,
-                   batch_size: int = 64,
-                   learning_rate: float = 0.001,
-                   num_epochs: int = 10):
-    print("Starting training... ")
-    # Initialize dataset and dataloaders
-    train_dataset = S3DIS_Dataset_Area(s3dis_root_dir=dataset_path, train=True, number_of_classes=number_of_classes)
-    print("Initialized training dataset.")
-    val_dataset = S3DIS_Dataset_Area(s3dis_root_dir=dataset_path, train=False, number_of_classes=number_of_classes)
-    print("Initialized validation dataset.")
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    print("Initialized training data loader.")
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
-    print("Prepared data.")
-    # Initialize model
-    model = PointNet2Segmentation(set_abstraction_ratio_1=0.5,
-                                  set_abstraction_radius_1=0.02,
-                                  set_abstraction_ratio_2=0.5,
-                                  set_abstraction_radius_2=0.02,
-                                  dropout=0.1,
-                                  number_of_classes=number_of_classes)
+def pointnetv2(model_checkpoint_path: str,
+               pcd: open3d.geometry.PointCloud):
 
-    # Define loss function and optimizer
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    print("Training the model...")
-    # Train the model
-    for epoch in range(num_epochs):
-        model.train()
-        for data in train_loader:
-            inputs, labels = data  # Load inputs and labels from DataLoader
-            optimizer.zero_grad()  # Zero gradients
-            outputs = model(inputs)  # Forward pass
-            loss = criterion(outputs, labels)  # Compute loss
-            loss.backward()  # Backpropagation
-            optimizer.step()  # Update model parameters
+    number_of_classes = 13  # PointNet++ is trained on the S3DIS dataset, which has 13 classes.
+    classifier: torch.nn.Module = pointnetexternal.models.pointnet2_sem_seg.get_model(number_of_classes).cuda()
 
-        # Validate the model
-        model.eval()
-        with torch.no_grad(): # Disable gradients
-            total_loss = 0.0
-            for data in val_loader:
-                inputs, labels = data  # Load inputs and labels from DataLoader
-                outputs = model(inputs)  # Forward pass
-                loss = criterion(outputs, labels)  # Compute loss
-                total_loss += loss.item() * inputs.size(0)
-            val_loss = total_loss / len(val_dataset)
-            print(f'Epoch {epoch + 1}/{num_epochs}, Validation Loss: {val_loss:.4f}')
+    # Load the checkpoint (i.e. the saved model)
+    checkpoint = torch.load(model_checkpoint_path)
+    classifier.load_state_dict(checkpoint['model_state_dict'])
 
-    # Save the trained model
-    torch.save(model.state_dict(), 'pointnet_segmentation_model.pth')
+    # Set the model into evaluation mode
+    classifier = classifier.eval()
 
+    # Prepare the input
+    points: np.ndarray = np.asarray(pcd.points)
+    colors: np.ndarray = np.asarray(pcd.colors)
+    data = np.zeros(shape=(1, 9, len(points)))
 
-def pointnet_segment(model: PointNet2Segmentation,
-                     pcd: open3d.geometry.PointCloud,
-                     visualize: bool = True):
+    # model expects input of size B x 9 x points where B is probably batches
+    # index 0,1,2 are the xyz normalized by subtracting the centroid
+    # index 3,4,5 are the normalized RGB values
+    # index 6,7,8 are the xyz normalized by dividing by the max coordinate
+    centroid = points.mean(axis=0)
+    data[0, :3, :] = np.swapaxes(points - centroid, 0, 1)
+    data[0, 3:6, :] = np.swapaxes(colors / 255.0, 0, 1)
+    data[0, 6:9, :] = np.swapaxes(points / points.max(axis=0), 0, 1)
 
-    points = torch.tensor(pcd.points)
+    model_input: torch.Tensor = torch.from_numpy(data).float().cuda()
 
-    if pcd.has_normals():
-        normals = torch.tensor(pcd.normals)
-        points = torch.cat([points, normals])
+    # Actually do the prediction!
+    class_per_point = classifier(model_input).detach().cpu().numpy()
 
-    if pcd.has_colors():
-        colors = torch.tensor(pcd.colors)
-        points = torch.cat([points, colors])
-
-    model.eval()
-    with torch.no_grad():
-        outputs = model(points)
-
-    if visualize:
-        visualization_pcd = open3d.geometry.PointCloud(pcd.points)
-        rng = np.random.default_rng()
-        label_colors = rng.random(size=(len(outputs), 3))
-        color_per_point = label_colors[np.asarray(outputs)]
-        visualization_pcd.colors = open3d.utility.Vector3dVector(color_per_point)
-        open3d.visualization.draw_geometries([visualization_pcd])
-
-    return outputs
+    rng: np.random.Generator = np.random.default_rng()
+    random_class_colors = rng.uniform(low=0.5, high=1.0, size=(number_of_classes, 3))
+    colors_per_point: np.ndarray = random_class_colors[class_per_point]
+    visualize_pcd = open3d.geometry.PointCloud(pcd.points, open3d.utility.Vector3dVector(colors_per_point))
+    open3d.visualization.draw_geometries([visualize_pcd])
