@@ -5,6 +5,7 @@ import fast_hdbscan
 import numpy as np
 import open3d
 import torch
+import tqdm
 
 import pointnetexternal.models.pointnet2_sem_seg
 import regionGrowingOctree.RegionGrowingOctreeVisualization
@@ -188,8 +189,24 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
 
 def pointnetv2(model_checkpoint_path: str,
                pcd: open3d.geometry.PointCloud):
-
     number_of_classes = 13  # PointNet++ is trained on the S3DIS dataset, which has 13 classes.
+    classes = ['ceiling', 'floor', 'wall', 'beam', 'column', 'window', 'door', 'table', 'chair', 'sofa', 'bookcase',
+               'board', 'clutter']
+
+    class_colors = [("gray", np.array([0.5, 0.5, 0.5])),
+                    ("black", np.array([0, 0, 0])),
+                    ("red", np.array([1.0, 0.0, 0.0])),
+                    ("lime", np.array([0.0, 1.0, 0.0])),
+                    ("blue", np.array([0.0, 0.0, 1.0])),
+                    ("yellow", np.array([1.0, 1.0, 0.0])),
+                    ("olive", np.array([0.5, 0.5, 0.0])),
+                    ("green", np.array([0.0, 0.5, 0.0])),
+                    ("aqua", np.array([0.0, 1.0, 1.0])),
+                    ("teal", np.array([0.0, 0.5, 0.5])),
+                    ("fuchsia", np.array([1.0, 0.0, 1.0])),
+                    ("purple", np.array([0.5, 0.0, 0.5])),
+                    ("navy", np.array([0.0, 0.0, 0.5]))]
+
     classifier: torch.nn.Module = pointnetexternal.models.pointnet2_sem_seg.get_model(number_of_classes).cuda()
 
     # Load the checkpoint (i.e. the saved model)
@@ -213,13 +230,36 @@ def pointnetv2(model_checkpoint_path: str,
     data[0, 3:6, :] = np.swapaxes(colors / 255.0, 0, 1)
     data[0, 6:9, :] = np.swapaxes(points / points.max(axis=0), 0, 1)
 
-    model_input: torch.Tensor = torch.from_numpy(data).float().cuda()
+    batch_size = 4096
+    number_of_batches = math.ceil(len(points) / batch_size)
+    batches = np.array_split(data, number_of_batches, axis=2)
+    classifications = np.zeros(shape=(len(points),), dtype=np.int32)
+    number_of_votes: int = 3
 
-    # Actually do the prediction!
-    class_per_point = classifier(model_input).detach().cpu().numpy()
+    with torch.no_grad():
 
-    rng: np.random.Generator = np.random.default_rng()
-    random_class_colors = rng.uniform(low=0.5, high=1.0, size=(number_of_classes, 3))
-    colors_per_point: np.ndarray = random_class_colors[class_per_point]
-    visualize_pcd = open3d.geometry.PointCloud(pcd.points, open3d.utility.Vector3dVector(colors_per_point))
+        end_index: int = 0
+        for batch_index in tqdm.trange(len(batches), desc=f"Classifying batches (size {batch_size})", miniters=1):
+            batch = batches[batch_index]
+            start_index = end_index
+            end_index = end_index + batch.shape[2]
+            model_input: torch.Tensor = torch.from_numpy(batch).float().cuda()
+            votings = np.zeros(shape=(number_of_votes, batch.shape[2]), dtype=np.int32)
+
+            for vote in tqdm.trange(number_of_votes, desc="Voting...", miniters=1, unit="vote", position=1):
+                # Actually do the prediction!
+                predictions, _ = classifier(model_input)
+                class_per_point = predictions.cpu().numpy().argmax(axis=2).squeeze()
+                votings[vote] = class_per_point.astype(np.int32)
+
+            counts = np.bincount(votings)
+            classifications[start_index:end_index] = counts.argmax(axis=1)
+
+    for i in range(number_of_classes):
+        print(f"Class {classes[i]} (color {class_colors[i][0]} : {class_colors[i][1]}) occurred {np.count_nonzero(classifications == i)} times.")
+
+    numpy_class_colors = np.array([c[1] for c in class_colors])
+    colors_per_point: np.ndarray = numpy_class_colors[classifications]
+    visualize_pcd = open3d.geometry.PointCloud(pcd.points)
+    visualize_pcd.colors = open3d.utility.Vector3dVector(colors_per_point)
     open3d.visualization.draw_geometries([visualize_pcd])
