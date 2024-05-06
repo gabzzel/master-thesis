@@ -239,21 +239,23 @@ def pointnetv2(model_checkpoint_path: str,
     with torch.no_grad():
 
         end_index: int = 0
-        for batch_index in tqdm.trange(len(batches), desc=f"Classifying batches (size {batch_size})", miniters=1):
+        print(f"Classifying {number_of_batches} batches of size {batch_size}, with {number_of_votes} votes...")
+        for batch_index in tqdm.trange(len(batches), desc=f"Classifying...", miniters=1):
             batch = batches[batch_index]
             start_index = end_index
             end_index = end_index + batch.shape[2]
             model_input: torch.Tensor = torch.from_numpy(batch).float().cuda()
-            votings = np.zeros(shape=(number_of_votes, batch.shape[2]), dtype=np.int32)
+            votes = np.zeros(shape=(batch.shape[2], number_of_classes), dtype=np.int32)
 
-            for vote in tqdm.trange(number_of_votes, desc="Voting...", miniters=1, unit="vote", position=1):
+            for vote in range(number_of_votes):
                 # Actually do the prediction!
                 predictions, _ = classifier(model_input)
-                class_per_point = predictions.cpu().numpy().argmax(axis=2).squeeze()
-                votings[vote] = class_per_point.astype(np.int32)
+                class_per_point = predictions.cpu().numpy().argmax(axis=2).squeeze().astype(np.int32)
 
-            counts = np.bincount(votings)
-            classifications[start_index:end_index] = counts.argmax(axis=1)
+                for i in range(batch.shape[2]):
+                    votes[i, class_per_point[i]] += 1
+
+            classifications[start_index:end_index] = votes.argmax(axis=1)
 
     for i in range(number_of_classes):
         print(f"Class {classes[i]} (color {class_colors[i][0]} : {class_colors[i][1]}) occurred {np.count_nonzero(classifications == i)} times.")
