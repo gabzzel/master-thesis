@@ -94,7 +94,9 @@ def main(args):
     log_string('PARAMETER ...')
     log_string(args)
 
-    include_normals: bool = False
+    include_normals: bool = True
+    augment_using_z_rotate = True
+    include_colors: bool = False
 
     if include_normals:
         root = 'data/s3dis_npy_incl_normals/'
@@ -104,16 +106,20 @@ def main(args):
     NUM_CLASSES = 13
     NUM_POINT = args.npoint
     BATCH_SIZE = args.batch_size
-
-    num_workers = 4
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    num_workers = 0
 
     print(f"Loading training data ... (Workers: {num_workers})")
     TRAIN_DATASET = S3DISDataset(split='train', data_root=root, num_point=NUM_POINT, test_area=args.test_area,
-                                 block_size=1.0, sample_rate=1.0, transform=None, includes_normals=include_normals)
+                                 block_size=1.0, sample_rate=1.0, transform=None, includes_normals=include_normals,
+                                 apply_coordinate_normalization=True, apply_z_centering=not augment_using_z_rotate,
+                                 include_colors=include_colors, use_original_indexer=False)
 
     print(f"Loading test data ... (Workers: {num_workers})")
     TEST_DATASET = S3DISDataset(split='test', data_root=root, num_point=NUM_POINT, test_area=args.test_area,
-                                block_size=1.0, sample_rate=1.0, transform=None, includes_normals=include_normals)
+                                block_size=1.0, sample_rate=1.0, transform=None, includes_normals=include_normals,
+                                apply_coordinate_normalization=True, apply_z_centering=not augment_using_z_rotate,
+                                include_colors=include_colors, use_original_indexer=False)
 
     trainDataLoader = torch.utils.data.DataLoader(TRAIN_DATASET, batch_size=BATCH_SIZE, shuffle=True,
                                                   num_workers=num_workers, pin_memory=True, drop_last=True,
@@ -133,7 +139,13 @@ def main(args):
     shutil.copy('models/%s.py' % args.model, str(experiment_dir))
     shutil.copy('models/pointnet2_utils.py', str(experiment_dir))
 
-    classifier = MODEL.get_model(NUM_CLASSES).cuda()
+    # classifier = MODEL.get_model(NUM_CLASSES, include_normals, include_colors).cuda()
+    import pointnetexternal.models.pointnet2_sem_seg as pointnetv2semseg
+
+    # For some reason the in-channels are always + 3 the actual input?
+    in_channels = TRAIN_DATASET[0][0].shape[1] + 3
+
+    classifier = pointnetv2semseg.get_model(num_classes=NUM_CLASSES, in_channels=in_channels).cuda()
     criterion = MODEL.get_loss().cuda()
     classifier.apply(inplace_relu)
 
@@ -175,7 +187,7 @@ def main(args):
     MOMENTUM_ORIGINAL = 0.1
     MOMENTUM_DECCAY = 0.5
     MOMENTUM_DECCAY_STEP = args.step_size
-    augment_using_z_rotate = True
+
 
     global_epoch = 0
     best_iou = 0
@@ -203,9 +215,10 @@ def main(args):
         for i, (points, target) in tqdm(enumerate(trainDataLoader), total=len(trainDataLoader), smoothing=0.9):
             optimizer.zero_grad(set_to_none=set_grad_to_none)
 
-            points = points.data.numpy()
             if augment_using_z_rotate:
+                points = points.data.numpy()
                 points[:, :, :3] = provider.rotate_point_cloud_z(points[:, :, :3])
+
             points = torch.Tensor(points)
             points, target = points.float().cuda(), target.long().cuda()
             points = points.transpose(2, 1)

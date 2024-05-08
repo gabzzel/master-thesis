@@ -1288,3 +1288,726 @@ class clutter        weight: 0.012, IoU: 0.382
 2024-05-02 15:44:32,731 - Model - INFO - Learning rate:0.001000
 2024-05-02 15:54:28,473 - Model - INFO - PARAMETER ...
 2024-05-02 15:54:28,474 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-06 14:44:07,506 - Model - INFO - PARAMETER ...
+2024-05-06 14:44:07,507 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-06 14:44:37,344 - Model - INFO - The number of training data is: 47623
+2024-05-06 14:44:37,344 - Model - INFO - The number of test data is: 18923
+2024-05-06 14:44:47,922 - Model - INFO - PARAMETER ...
+2024-05-06 14:44:47,922 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-06 14:45:10,382 - Model - INFO - The number of training data is: 47623
+2024-05-06 14:45:10,382 - Model - INFO - The number of test data is: 18923
+2024-05-06 14:45:10,506 - Model - INFO - No existing model, starting training from scratch...
+2024-05-06 14:45:12,506 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-06 14:45:12,506 - Model - INFO - Learning rate:0.001000
+2024-05-06 14:52:06,519 - Model - INFO - PARAMETER ...
+2024-05-06 14:52:06,520 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-06 14:52:28,677 - Model - INFO - The number of training data is: 47623
+2024-05-06 14:52:28,677 - Model - INFO - The number of test data is: 18923
+2024-05-06 14:52:28,788 - Model - INFO - No existing model, starting training from scratch...
+2024-05-06 14:52:30,513 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-06 14:52:30,513 - Model - INFO - Learning rate:0.001000
+2024-05-06 14:53:29,181 - Model - INFO - PARAMETER ...
+2024-05-06 14:53:29,181 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-06 14:53:51,155 - Model - INFO - The number of training data is: 47623
+2024-05-06 14:53:51,155 - Model - INFO - The number of test data is: 18923
+2024-05-06 14:53:51,264 - Model - INFO - No existing model, starting training from scratch...
+2024-05-06 14:53:52,994 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-06 14:53:52,994 - Model - INFO - Learning rate:0.001000
+2024-05-06 14:55:45,147 - Model - INFO - PARAMETER ...
+2024-05-06 14:55:45,147 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-06 14:56:16,276 - Model - INFO - The number of training data is: 47474
+2024-05-06 14:56:16,277 - Model - INFO - The number of test data is: 19191
+2024-05-06 14:56:16,387 - Model - INFO - No existing model, starting training from scratch...
+2024-05-06 14:56:18,124 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-06 14:56:18,124 - Model - INFO - Learning rate:0.001000
+2024-05-06 14:59:11,113 - Model - INFO - PARAMETER ...
+2024-05-06 14:59:11,113 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-06 14:59:26,351 - Model - INFO - PARAMETER ...
+2024-05-06 14:59:26,351 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-06 14:59:49,740 - Model - INFO - The number of training data is: 47474
+2024-05-06 14:59:49,740 - Model - INFO - The number of test data is: 19191
+2024-05-06 14:59:49,821 - Model - INFO - No existing model, starting training from scratch...
+2024-05-06 14:59:50,729 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-06 14:59:50,729 - Model - INFO - Learning rate:0.001000
+2024-05-06 15:27:56,405 - Model - INFO - Training mean loss: 0.975747
+2024-05-06 15:27:56,405 - Model - INFO - Training accuracy: 0.721298
+2024-05-06 15:27:56,405 - Model - INFO - Save model...
+2024-05-06 15:27:56,406 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-06 15:27:56,490 - Model - INFO - Saving model....
+2024-05-06 15:27:56,780 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-06 15:39:27,939 - Model - INFO - eval mean loss: 0.951225
+2024-05-06 15:39:27,939 - Model - INFO - eval point avg class IoU: 0.366606
+2024-05-06 15:39:27,939 - Model - INFO - eval point accuracy: 0.720515
+2024-05-06 15:39:27,940 - Model - INFO - eval point avg class acc: 0.507276
+2024-05-06 15:39:27,940 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.806 
+class floor          weight: 0.201, IoU: 0.866 
+class wall           weight: 0.168, IoU: 0.630 
+class beam           weight: 0.278, IoU: 0.001 
+class column         weight: 0.000, IoU: 0.113 
+class window         weight: 0.019, IoU: 0.355 
+class door           weight: 0.033, IoU: 0.164 
+class table          weight: 0.030, IoU: 0.460 
+class chair          weight: 0.039, IoU: 0.320 
+class sofa           weight: 0.018, IoU: 0.140 
+class bookcase       weight: 0.003, IoU: 0.536 
+class board          weight: 0.108, IoU: 0.154 
+class clutter        weight: 0.011, IoU: 0.220 
+
+2024-05-06 15:39:27,940 - Model - INFO - Eval mean loss: 0.951225
+2024-05-06 15:39:27,940 - Model - INFO - Eval accuracy: 0.720515
+2024-05-06 15:39:27,940 - Model - INFO - Save model...
+2024-05-06 15:39:27,940 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-06 15:39:27,982 - Model - INFO - Saving model....
+2024-05-06 15:39:27,983 - Model - INFO - Best mIoU: 0.366606
+2024-05-06 15:39:27,983 - Model - INFO - **** Epoch 2 (2/32) ****
+2024-05-06 15:39:27,983 - Model - INFO - Learning rate:0.001000
+2024-05-06 16:07:43,057 - Model - INFO - Training mean loss: 0.682638
+2024-05-06 16:07:43,058 - Model - INFO - Training accuracy: 0.795880
+2024-05-06 16:07:43,464 - Model - INFO - ---- EPOCH 002 EVALUATION ----
+2024-05-06 16:11:45,679 - Model - INFO - PARAMETER ...
+2024-05-06 16:11:45,679 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-06 16:12:09,588 - Model - INFO - The number of training data is: 47474
+2024-05-06 16:12:09,588 - Model - INFO - The number of test data is: 19191
+2024-05-06 16:12:09,684 - Model - INFO - Use pretrain model
+2024-05-06 16:12:10,733 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-06 16:12:10,733 - Model - INFO - Learning rate:0.001000
+2024-05-06 16:13:14,419 - Model - INFO - PARAMETER ...
+2024-05-06 16:13:14,420 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-06 16:13:38,264 - Model - INFO - The number of training data is: 47474
+2024-05-06 16:13:38,264 - Model - INFO - The number of test data is: 19191
+2024-05-06 16:13:38,355 - Model - INFO - Use pretrain model
+2024-05-06 16:13:39,394 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-06 16:13:39,394 - Model - INFO - Learning rate:0.001000
+2024-05-06 17:07:11,827 - Model - INFO - Training mean loss: 0.684146
+2024-05-06 17:07:11,827 - Model - INFO - Training accuracy: 0.795024
+2024-05-06 17:07:11,827 - Model - INFO - Save model...
+2024-05-06 17:07:11,827 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-06 17:07:11,896 - Model - INFO - Saving model....
+2024-05-06 17:07:12,171 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-06 17:26:02,877 - Model - INFO - eval mean loss: 0.863241
+2024-05-06 17:26:02,877 - Model - INFO - eval point avg class IoU: 0.424289
+2024-05-06 17:26:02,878 - Model - INFO - eval point accuracy: 0.760087
+2024-05-06 17:26:02,878 - Model - INFO - eval point avg class acc: 0.580084
+2024-05-06 17:26:02,878 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.093, IoU: 0.825 
+class floor          weight: 0.200, IoU: 0.873 
+class wall           weight: 0.167, IoU: 0.697 
+class beam           weight: 0.281, IoU: 0.001 
+class column         weight: 0.000, IoU: 0.135 
+class window         weight: 0.017, IoU: 0.445 
+class door           weight: 0.033, IoU: 0.231 
+class table          weight: 0.030, IoU: 0.493 
+class chair          weight: 0.038, IoU: 0.533 
+class sofa           weight: 0.019, IoU: 0.163 
+class bookcase       weight: 0.003, IoU: 0.527 
+class board          weight: 0.108, IoU: 0.281 
+class clutter        weight: 0.012, IoU: 0.313 
+
+2024-05-06 17:26:02,878 - Model - INFO - Eval mean loss: 0.863241
+2024-05-06 17:26:02,878 - Model - INFO - Eval accuracy: 0.760087
+2024-05-06 17:26:02,879 - Model - INFO - Save model...
+2024-05-06 17:26:02,879 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-06 17:26:02,934 - Model - INFO - Saving model....
+2024-05-06 17:26:02,934 - Model - INFO - Best mIoU: 0.424289
+2024-05-06 17:26:03,419 - Model - INFO - PARAMETER ...
+2024-05-06 17:26:03,419 - Model - INFO - PARAMETER ...
+2024-05-06 17:26:03,419 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-06 17:26:03,419 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-06 17:26:27,371 - Model - INFO - The number of training data is: 47474
+2024-05-06 17:26:27,371 - Model - INFO - The number of training data is: 47474
+2024-05-06 17:26:27,371 - Model - INFO - The number of test data is: 19191
+2024-05-06 17:26:27,371 - Model - INFO - The number of test data is: 19191
+2024-05-06 17:26:27,521 - Model - INFO - Use pretrain model
+2024-05-06 17:26:27,521 - Model - INFO - Use pretrain model
+2024-05-06 17:26:27,522 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-06 17:26:27,522 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-06 17:26:27,522 - Model - INFO - Learning rate:0.001000
+2024-05-06 17:26:27,522 - Model - INFO - Learning rate:0.001000
+2024-05-06 19:03:03,919 - Model - INFO - Training mean loss: 0.573903
+2024-05-06 19:03:03,919 - Model - INFO - Training mean loss: 0.573903
+2024-05-06 19:03:03,926 - Model - INFO - Training accuracy: 0.826159
+2024-05-06 19:03:03,926 - Model - INFO - Training accuracy: 0.826159
+2024-05-06 19:03:03,926 - Model - INFO - Save model...
+2024-05-06 19:03:03,926 - Model - INFO - Save model...
+2024-05-06 19:03:03,927 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-06 19:03:03,927 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-06 19:03:04,075 - Model - INFO - Saving model....
+2024-05-06 19:03:04,075 - Model - INFO - Saving model....
+2024-05-06 19:03:06,210 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-06 19:03:06,210 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-06 20:23:11,141 - Model - INFO - eval mean loss: 0.885015
+2024-05-06 20:23:11,141 - Model - INFO - eval mean loss: 0.885015
+2024-05-06 20:23:11,143 - Model - INFO - eval point avg class IoU: 0.449608
+2024-05-06 20:23:11,143 - Model - INFO - eval point avg class IoU: 0.449608
+2024-05-06 20:23:11,143 - Model - INFO - eval point accuracy: 0.768516
+2024-05-06 20:23:11,143 - Model - INFO - eval point accuracy: 0.768516
+2024-05-06 20:23:11,143 - Model - INFO - eval point avg class acc: 0.582000
+2024-05-06 20:23:11,143 - Model - INFO - eval point avg class acc: 0.582000
+2024-05-06 20:23:11,145 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.838 
+class floor          weight: 0.200, IoU: 0.884 
+class wall           weight: 0.166, IoU: 0.681 
+class beam           weight: 0.280, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.109 
+class window         weight: 0.020, IoU: 0.392 
+class door           weight: 0.034, IoU: 0.244 
+class table          weight: 0.031, IoU: 0.597 
+class chair          weight: 0.039, IoU: 0.589 
+class sofa           weight: 0.019, IoU: 0.222 
+class bookcase       weight: 0.003, IoU: 0.561 
+class board          weight: 0.106, IoU: 0.373 
+class clutter        weight: 0.011, IoU: 0.355 
+
+2024-05-06 20:23:11,145 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.838 
+class floor          weight: 0.200, IoU: 0.884 
+class wall           weight: 0.166, IoU: 0.681 
+class beam           weight: 0.280, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.109 
+class window         weight: 0.020, IoU: 0.392 
+class door           weight: 0.034, IoU: 0.244 
+class table          weight: 0.031, IoU: 0.597 
+class chair          weight: 0.039, IoU: 0.589 
+class sofa           weight: 0.019, IoU: 0.222 
+class bookcase       weight: 0.003, IoU: 0.561 
+class board          weight: 0.106, IoU: 0.373 
+class clutter        weight: 0.011, IoU: 0.355 
+
+2024-05-06 20:23:11,146 - Model - INFO - Eval mean loss: 0.885015
+2024-05-06 20:23:11,146 - Model - INFO - Eval mean loss: 0.885015
+2024-05-06 20:23:11,146 - Model - INFO - Eval accuracy: 0.768516
+2024-05-06 20:23:11,146 - Model - INFO - Eval accuracy: 0.768516
+2024-05-06 20:23:11,146 - Model - INFO - Save model...
+2024-05-06 20:23:11,146 - Model - INFO - Save model...
+2024-05-06 20:23:11,146 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-06 20:23:11,146 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-06 20:23:11,286 - Model - INFO - Saving model....
+2024-05-06 20:23:11,286 - Model - INFO - Saving model....
+2024-05-06 20:23:11,287 - Model - INFO - Best mIoU: 0.449608
+2024-05-06 20:23:11,287 - Model - INFO - Best mIoU: 0.449608
+2024-05-07 08:12:53,986 - Model - INFO - PARAMETER ...
+2024-05-07 08:12:53,987 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=2, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-07 08:27:59,449 - Model - INFO - PARAMETER ...
+2024-05-07 08:27:59,450 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=2, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-07 08:28:30,990 - Model - INFO - The number of training data is: 47474
+2024-05-07 08:28:30,990 - Model - INFO - The number of test data is: 19191
+2024-05-07 08:28:31,104 - Model - INFO - Use pretrain model
+2024-05-07 08:28:32,377 - Model - INFO - **** Epoch 1 (1/2) ****
+2024-05-07 08:28:32,378 - Model - INFO - Learning rate:0.001000
+2024-05-07 09:22:35,917 - Model - INFO - Training mean loss: 0.515415
+2024-05-07 09:22:35,917 - Model - INFO - Training accuracy: 0.842792
+2024-05-07 09:22:35,917 - Model - INFO - Save model...
+2024-05-07 09:22:35,917 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-07 09:22:35,987 - Model - INFO - Saving model....
+2024-05-07 09:22:36,255 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-07 09:41:49,686 - Model - INFO - eval mean loss: 0.807088
+2024-05-07 09:41:49,686 - Model - INFO - eval point avg class IoU: 0.462093
+2024-05-07 09:41:49,686 - Model - INFO - eval point accuracy: 0.779617
+2024-05-07 09:41:49,686 - Model - INFO - eval point avg class acc: 0.607018
+2024-05-07 09:41:49,687 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.092, IoU: 0.826 
+class floor          weight: 0.199, IoU: 0.895 
+class wall           weight: 0.166, IoU: 0.707 
+class beam           weight: 0.281, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.182 
+class window         weight: 0.019, IoU: 0.475 
+class door           weight: 0.033, IoU: 0.349 
+class table          weight: 0.031, IoU: 0.543 
+class chair          weight: 0.039, IoU: 0.574 
+class sofa           weight: 0.019, IoU: 0.216 
+class bookcase       weight: 0.003, IoU: 0.595 
+class board          weight: 0.107, IoU: 0.307 
+class clutter        weight: 0.011, IoU: 0.339 
+
+2024-05-07 09:41:49,687 - Model - INFO - Eval mean loss: 0.807088
+2024-05-07 09:41:49,687 - Model - INFO - Eval accuracy: 0.779617
+2024-05-07 09:41:49,687 - Model - INFO - Save model...
+2024-05-07 09:41:49,687 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-07 09:41:49,743 - Model - INFO - Saving model....
+2024-05-07 09:41:49,743 - Model - INFO - Best mIoU: 0.462093
+2024-05-07 09:41:49,743 - Model - INFO - **** Epoch 2 (2/2) ****
+2024-05-07 09:41:49,744 - Model - INFO - Learning rate:0.001000
+2024-05-07 10:35:55,281 - Model - INFO - Training mean loss: 0.472574
+2024-05-07 10:35:55,282 - Model - INFO - Training accuracy: 0.854135
+2024-05-07 10:35:55,576 - Model - INFO - ---- EPOCH 002 EVALUATION ----
+2024-05-07 10:55:10,996 - Model - INFO - eval mean loss: 0.826466
+2024-05-07 10:55:10,996 - Model - INFO - eval point avg class IoU: 0.461764
+2024-05-07 10:55:10,997 - Model - INFO - eval point accuracy: 0.763305
+2024-05-07 10:55:10,997 - Model - INFO - eval point avg class acc: 0.622352
+2024-05-07 10:55:10,997 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.836 
+class floor          weight: 0.199, IoU: 0.870 
+class wall           weight: 0.166, IoU: 0.658 
+class beam           weight: 0.281, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.184 
+class window         weight: 0.018, IoU: 0.465 
+class door           weight: 0.035, IoU: 0.372 
+class table          weight: 0.030, IoU: 0.505 
+class chair          weight: 0.038, IoU: 0.568 
+class sofa           weight: 0.019, IoU: 0.318 
+class bookcase       weight: 0.003, IoU: 0.610 
+class board          weight: 0.108, IoU: 0.290 
+class clutter        weight: 0.012, IoU: 0.329 
+
+2024-05-07 10:55:10,997 - Model - INFO - Eval mean loss: 0.826466
+2024-05-07 10:55:10,997 - Model - INFO - Eval accuracy: 0.763305
+2024-05-07 10:55:10,998 - Model - INFO - Best mIoU: 0.462093
+2024-05-07 10:55:11,478 - Model - INFO - PARAMETER ...
+2024-05-07 10:55:11,478 - Model - INFO - PARAMETER ...
+2024-05-07 10:55:11,478 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=2, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-07 10:55:11,478 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=2, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-07 10:55:36,464 - Model - INFO - The number of training data is: 47474
+2024-05-07 10:55:36,464 - Model - INFO - The number of training data is: 47474
+2024-05-07 10:55:36,464 - Model - INFO - The number of test data is: 19191
+2024-05-07 10:55:36,464 - Model - INFO - The number of test data is: 19191
+2024-05-07 10:55:36,636 - Model - INFO - Use pretrain model
+2024-05-07 10:55:36,636 - Model - INFO - Use pretrain model
+2024-05-07 10:55:36,636 - Model - INFO - **** Epoch 1 (1/2) ****
+2024-05-07 10:55:36,636 - Model - INFO - **** Epoch 1 (1/2) ****
+2024-05-07 10:55:36,637 - Model - INFO - Learning rate:0.001000
+2024-05-07 10:55:36,637 - Model - INFO - Learning rate:0.001000
+2024-05-07 12:33:50,951 - Model - INFO - Training mean loss: 0.473853
+2024-05-07 12:33:50,951 - Model - INFO - Training mean loss: 0.473853
+2024-05-07 12:33:50,960 - Model - INFO - Training accuracy: 0.853847
+2024-05-07 12:33:50,960 - Model - INFO - Training accuracy: 0.853847
+2024-05-07 12:33:50,960 - Model - INFO - Save model...
+2024-05-07 12:33:50,960 - Model - INFO - Save model...
+2024-05-07 12:33:50,961 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-07 12:33:50,961 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-07 12:33:51,138 - Model - INFO - Saving model....
+2024-05-07 12:33:51,138 - Model - INFO - Saving model....
+2024-05-07 12:33:52,418 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-07 12:33:52,418 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-07 13:09:31,641 - Model - INFO - PARAMETER ...
+2024-05-07 13:09:31,641 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-07 13:10:02,923 - Model - INFO - The number of training data is: 47474
+2024-05-07 13:10:02,923 - Model - INFO - The number of test data is: 19191
+2024-05-07 13:10:03,033 - Model - INFO - Use pretrain model
+2024-05-07 13:10:04,278 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-07 13:10:04,278 - Model - INFO - Learning rate:0.001000
+2024-05-07 14:04:10,708 - Model - INFO - Training mean loss: 0.475329
+2024-05-07 14:04:10,708 - Model - INFO - Training accuracy: 0.853140
+2024-05-07 14:04:10,709 - Model - INFO - Save model...
+2024-05-07 14:04:10,709 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-07 14:04:10,779 - Model - INFO - Saving model....
+2024-05-07 14:04:11,057 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-07 14:23:25,477 - Model - INFO - eval mean loss: 0.782606
+2024-05-07 14:23:25,477 - Model - INFO - eval point avg class IoU: 0.475944
+2024-05-07 14:23:25,477 - Model - INFO - eval point accuracy: 0.789743
+2024-05-07 14:23:25,477 - Model - INFO - eval point avg class acc: 0.590417
+2024-05-07 14:23:25,477 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.863 
+class floor          weight: 0.199, IoU: 0.897 
+class wall           weight: 0.166, IoU: 0.701 
+class beam           weight: 0.279, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.162 
+class window         weight: 0.019, IoU: 0.466 
+class door           weight: 0.034, IoU: 0.359 
+class table          weight: 0.031, IoU: 0.552 
+class chair          weight: 0.038, IoU: 0.608 
+class sofa           weight: 0.019, IoU: 0.220 
+class bookcase       weight: 0.003, IoU: 0.605 
+class board          weight: 0.109, IoU: 0.366 
+class clutter        weight: 0.012, IoU: 0.387 
+
+2024-05-07 14:23:25,478 - Model - INFO - Eval mean loss: 0.782606
+2024-05-07 14:23:25,478 - Model - INFO - Eval accuracy: 0.789743
+2024-05-07 14:23:25,478 - Model - INFO - Save model...
+2024-05-07 14:23:25,478 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-07 14:23:25,533 - Model - INFO - Saving model....
+2024-05-07 14:23:25,534 - Model - INFO - Best mIoU: 0.475944
+2024-05-07 14:23:26,267 - Model - INFO - PARAMETER ...
+2024-05-07 14:23:26,267 - Model - INFO - PARAMETER ...
+2024-05-07 14:23:26,267 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-07 14:23:26,267 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-07 14:23:51,229 - Model - INFO - The number of training data is: 47474
+2024-05-07 14:23:51,229 - Model - INFO - The number of training data is: 47474
+2024-05-07 14:23:51,229 - Model - INFO - The number of test data is: 19191
+2024-05-07 14:23:51,229 - Model - INFO - The number of test data is: 19191
+2024-05-07 14:23:51,428 - Model - INFO - Use pretrain model
+2024-05-07 14:23:51,428 - Model - INFO - Use pretrain model
+2024-05-07 14:23:51,429 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-07 14:23:51,429 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-07 14:23:51,429 - Model - INFO - Learning rate:0.001000
+2024-05-07 14:23:51,429 - Model - INFO - Learning rate:0.001000
+2024-05-07 15:58:55,400 - Model - INFO - Training mean loss: 0.446750
+2024-05-07 15:58:55,400 - Model - INFO - Training mean loss: 0.446750
+2024-05-07 15:58:55,411 - Model - INFO - Training accuracy: 0.861627
+2024-05-07 15:58:55,411 - Model - INFO - Training accuracy: 0.861627
+2024-05-07 15:58:55,411 - Model - INFO - Save model...
+2024-05-07 15:58:55,411 - Model - INFO - Save model...
+2024-05-07 15:58:55,413 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-07 15:58:55,413 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-07 15:58:55,571 - Model - INFO - Saving model....
+2024-05-07 15:58:55,571 - Model - INFO - Saving model....
+2024-05-07 15:58:56,480 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-07 15:58:56,480 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-07 17:18:38,114 - Model - INFO - eval mean loss: 0.779638
+2024-05-07 17:18:38,114 - Model - INFO - eval mean loss: 0.779638
+2024-05-07 17:18:38,121 - Model - INFO - eval point avg class IoU: 0.476569
+2024-05-07 17:18:38,121 - Model - INFO - eval point avg class IoU: 0.476569
+2024-05-07 17:18:38,122 - Model - INFO - eval point accuracy: 0.780096
+2024-05-07 17:18:38,122 - Model - INFO - eval point accuracy: 0.780096
+2024-05-07 17:18:38,122 - Model - INFO - eval point avg class acc: 0.620422
+2024-05-07 17:18:38,122 - Model - INFO - eval point avg class acc: 0.620422
+2024-05-07 17:18:38,125 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.827 
+class floor          weight: 0.199, IoU: 0.872 
+class wall           weight: 0.167, IoU: 0.703 
+class beam           weight: 0.282, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.183 
+class window         weight: 0.018, IoU: 0.484 
+class door           weight: 0.034, IoU: 0.382 
+class table          weight: 0.030, IoU: 0.498 
+class chair          weight: 0.039, IoU: 0.682 
+class sofa           weight: 0.019, IoU: 0.258 
+class bookcase       weight: 0.003, IoU: 0.596 
+class board          weight: 0.107, IoU: 0.339 
+class clutter        weight: 0.012, IoU: 0.371 
+
+2024-05-07 17:18:38,125 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.827 
+class floor          weight: 0.199, IoU: 0.872 
+class wall           weight: 0.167, IoU: 0.703 
+class beam           weight: 0.282, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.183 
+class window         weight: 0.018, IoU: 0.484 
+class door           weight: 0.034, IoU: 0.382 
+class table          weight: 0.030, IoU: 0.498 
+class chair          weight: 0.039, IoU: 0.682 
+class sofa           weight: 0.019, IoU: 0.258 
+class bookcase       weight: 0.003, IoU: 0.596 
+class board          weight: 0.107, IoU: 0.339 
+class clutter        weight: 0.012, IoU: 0.371 
+
+2024-05-07 17:18:38,126 - Model - INFO - Eval mean loss: 0.779638
+2024-05-07 17:18:38,126 - Model - INFO - Eval mean loss: 0.779638
+2024-05-07 17:18:38,126 - Model - INFO - Eval accuracy: 0.780096
+2024-05-07 17:18:38,126 - Model - INFO - Eval accuracy: 0.780096
+2024-05-07 17:18:38,127 - Model - INFO - Save model...
+2024-05-07 17:18:38,127 - Model - INFO - Save model...
+2024-05-07 17:18:38,128 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-07 17:18:38,128 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-07 17:18:38,278 - Model - INFO - Saving model....
+2024-05-07 17:18:38,278 - Model - INFO - Saving model....
+2024-05-07 17:18:38,279 - Model - INFO - Best mIoU: 0.476569
+2024-05-07 17:18:38,279 - Model - INFO - Best mIoU: 0.476569
+2024-05-08 07:49:50,829 - Model - INFO - PARAMETER ...
+2024-05-08 07:49:50,829 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 07:53:01,261 - Model - INFO - PARAMETER ...
+2024-05-08 07:53:01,262 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 07:53:33,217 - Model - INFO - The number of training data is: 47474
+2024-05-08 07:53:33,217 - Model - INFO - The number of test data is: 19191
+2024-05-08 07:53:33,332 - Model - INFO - Use pretrain model
+2024-05-08 07:53:34,594 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-08 07:53:34,594 - Model - INFO - Learning rate:0.001000
+2024-05-08 08:47:53,672 - Model - INFO - Training mean loss: 0.424640
+2024-05-08 08:47:53,672 - Model - INFO - Training accuracy: 0.867043
+2024-05-08 08:47:53,672 - Model - INFO - Save model...
+2024-05-08 08:47:53,672 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-08 08:47:53,742 - Model - INFO - Saving model....
+2024-05-08 08:47:54,020 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-08 09:07:09,306 - Model - INFO - eval mean loss: 0.911237
+2024-05-08 09:07:09,306 - Model - INFO - eval point avg class IoU: 0.458171
+2024-05-08 09:07:09,306 - Model - INFO - eval point accuracy: 0.766574
+2024-05-08 09:07:09,306 - Model - INFO - eval point avg class acc: 0.581875
+2024-05-08 09:07:09,306 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.855 
+class floor          weight: 0.201, IoU: 0.847 
+class wall           weight: 0.168, IoU: 0.678 
+class beam           weight: 0.278, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.133 
+class window         weight: 0.018, IoU: 0.466 
+class door           weight: 0.034, IoU: 0.334 
+class table          weight: 0.029, IoU: 0.501 
+class chair          weight: 0.038, IoU: 0.624 
+class sofa           weight: 0.019, IoU: 0.196 
+class bookcase       weight: 0.003, IoU: 0.589 
+class board          weight: 0.109, IoU: 0.364 
+class clutter        weight: 0.012, IoU: 0.370 
+
+2024-05-08 09:07:09,307 - Model - INFO - Eval mean loss: 0.911237
+2024-05-08 09:07:09,307 - Model - INFO - Eval accuracy: 0.766574
+2024-05-08 09:07:09,307 - Model - INFO - Save model...
+2024-05-08 09:07:09,307 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-08 09:07:09,364 - Model - INFO - Saving model....
+2024-05-08 09:07:09,364 - Model - INFO - Best mIoU: 0.458171
+2024-05-08 09:07:09,844 - Model - INFO - PARAMETER ...
+2024-05-08 09:07:09,844 - Model - INFO - PARAMETER ...
+2024-05-08 09:07:09,844 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 09:07:09,844 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 09:07:35,262 - Model - INFO - The number of training data is: 47474
+2024-05-08 09:07:35,262 - Model - INFO - The number of training data is: 47474
+2024-05-08 09:07:35,262 - Model - INFO - The number of test data is: 19191
+2024-05-08 09:07:35,262 - Model - INFO - The number of test data is: 19191
+2024-05-08 09:07:35,428 - Model - INFO - Use pretrain model
+2024-05-08 09:07:35,428 - Model - INFO - Use pretrain model
+2024-05-08 09:07:35,429 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-08 09:07:35,429 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-08 09:07:35,429 - Model - INFO - Learning rate:0.001000
+2024-05-08 09:07:35,429 - Model - INFO - Learning rate:0.001000
+2024-05-08 10:10:08,675 - Model - INFO - PARAMETER ...
+2024-05-08 10:10:08,675 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 10:10:22,679 - Model - INFO - The number of training data is: 22301
+2024-05-08 10:10:22,680 - Model - INFO - The number of test data is: 18923
+2024-05-08 10:10:22,771 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 10:10:24,021 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-08 10:10:24,022 - Model - INFO - Learning rate:0.001000
+2024-05-08 10:36:24,170 - Model - INFO - Training mean loss: 1.111863
+2024-05-08 10:36:24,171 - Model - INFO - Training accuracy: 0.695407
+2024-05-08 10:36:24,171 - Model - INFO - Save model...
+2024-05-08 10:36:24,171 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-08 10:36:24,240 - Model - INFO - Saving model....
+2024-05-08 10:36:24,384 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-08 10:53:34,065 - Model - INFO - eval mean loss: 1.079479
+2024-05-08 10:53:34,065 - Model - INFO - eval point avg class IoU: 0.337610
+2024-05-08 10:53:34,065 - Model - INFO - eval point accuracy: 0.690195
+2024-05-08 10:53:34,065 - Model - INFO - eval point avg class acc: 0.440261
+2024-05-08 10:53:34,066 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.838 
+class floor          weight: 0.201, IoU: 0.884 
+class wall           weight: 0.167, IoU: 0.570 
+class beam           weight: 0.278, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.000 
+class window         weight: 0.017, IoU: 0.402 
+class door           weight: 0.033, IoU: 0.061 
+class table          weight: 0.029, IoU: 0.451 
+class chair          weight: 0.039, IoU: 0.347 
+class sofa           weight: 0.020, IoU: 0.064 
+class bookcase       weight: 0.003, IoU: 0.386 
+class board          weight: 0.109, IoU: 0.148 
+class clutter        weight: 0.011, IoU: 0.238 
+
+2024-05-08 10:53:34,066 - Model - INFO - Eval mean loss: 1.079479
+2024-05-08 10:53:34,066 - Model - INFO - Eval accuracy: 0.690195
+2024-05-08 10:53:34,066 - Model - INFO - Save model...
+2024-05-08 10:53:34,066 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-08 10:53:34,122 - Model - INFO - Saving model....
+2024-05-08 10:53:34,122 - Model - INFO - Best mIoU: 0.337610
+2024-05-08 10:53:34,347 - Model - INFO - PARAMETER ...
+2024-05-08 10:53:34,347 - Model - INFO - PARAMETER ...
+2024-05-08 10:53:34,347 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 10:53:34,347 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 10:53:48,748 - Model - INFO - The number of training data is: 22301
+2024-05-08 10:53:48,748 - Model - INFO - The number of training data is: 22301
+2024-05-08 10:53:48,748 - Model - INFO - The number of test data is: 18923
+2024-05-08 10:53:48,748 - Model - INFO - The number of test data is: 18923
+2024-05-08 10:53:48,919 - Model - INFO - Use pretrain model
+2024-05-08 10:53:48,919 - Model - INFO - Use pretrain model
+2024-05-08 10:53:48,919 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-08 10:53:48,919 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-08 10:53:48,920 - Model - INFO - Learning rate:0.001000
+2024-05-08 10:53:48,920 - Model - INFO - Learning rate:0.001000
+2024-05-08 11:27:51,285 - Model - INFO - Training mean loss: 0.671582
+2024-05-08 11:27:51,285 - Model - INFO - Training mean loss: 0.671582
+2024-05-08 11:27:51,286 - Model - INFO - Training accuracy: 0.804164
+2024-05-08 11:27:51,286 - Model - INFO - Training accuracy: 0.804164
+2024-05-08 11:27:51,286 - Model - INFO - Save model...
+2024-05-08 11:27:51,286 - Model - INFO - Save model...
+2024-05-08 11:27:51,286 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-08 11:27:51,286 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-08 11:27:51,362 - Model - INFO - Saving model....
+2024-05-08 11:27:51,362 - Model - INFO - Saving model....
+2024-05-08 11:27:51,514 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-08 11:27:51,514 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-08 11:28:38,068 - Model - INFO - PARAMETER ...
+2024-05-08 11:28:38,068 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 11:28:42,549 - Model - INFO - The number of training data is: 4456
+2024-05-08 11:28:42,549 - Model - INFO - The number of test data is: 8366
+2024-05-08 11:28:42,641 - Model - INFO - Use pretrain model
+2024-05-08 11:28:43,707 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-08 11:28:43,708 - Model - INFO - Learning rate:0.001000
+2024-05-08 11:33:16,646 - Model - INFO - Training mean loss: 0.657795
+2024-05-08 11:33:16,646 - Model - INFO - Training accuracy: 0.793650
+2024-05-08 11:33:16,646 - Model - INFO - Save model...
+2024-05-08 11:33:16,647 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-08 11:33:16,716 - Model - INFO - Saving model....
+2024-05-08 11:33:16,748 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-08 11:41:17,453 - Model - INFO - eval mean loss: 1.081141
+2024-05-08 11:41:17,453 - Model - INFO - eval point avg class IoU: 0.302972
+2024-05-08 11:41:17,453 - Model - INFO - eval point accuracy: 0.705175
+2024-05-08 11:41:17,453 - Model - INFO - eval point avg class acc: 0.462317
+2024-05-08 11:41:17,453 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.055, IoU: 0.840 
+class floor          weight: 0.213, IoU: 0.676 
+class wall           weight: 0.210, IoU: 0.677 
+class beam           weight: 0.341, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.006 
+class window         weight: 0.015, IoU: 0.288 
+class door           weight: 0.035, IoU: 0.174 
+class table          weight: 0.031, IoU: 0.313 
+class chair          weight: 0.021, IoU: 0.161 
+class sofa           weight: 0.016, IoU: 0.052 
+class bookcase       weight: 0.004, IoU: 0.377 
+class board          weight: 0.050, IoU: 0.176 
+class clutter        weight: 0.009, IoU: 0.199 
+
+2024-05-08 11:41:17,454 - Model - INFO - Eval mean loss: 1.081141
+2024-05-08 11:41:17,454 - Model - INFO - Eval accuracy: 0.705175
+2024-05-08 11:41:17,454 - Model - INFO - Save model...
+2024-05-08 11:41:17,454 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-08 11:41:17,510 - Model - INFO - Saving model....
+2024-05-08 11:41:17,510 - Model - INFO - Best mIoU: 0.302972
+2024-05-08 11:41:17,577 - Model - INFO - PARAMETER ...
+2024-05-08 11:41:17,577 - Model - INFO - PARAMETER ...
+2024-05-08 11:41:17,577 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 11:41:17,577 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=1, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 11:41:21,989 - Model - INFO - The number of training data is: 4456
+2024-05-08 11:41:21,989 - Model - INFO - The number of training data is: 4456
+2024-05-08 11:41:21,989 - Model - INFO - The number of test data is: 8366
+2024-05-08 11:41:21,989 - Model - INFO - The number of test data is: 8366
+2024-05-08 11:41:22,128 - Model - INFO - Use pretrain model
+2024-05-08 11:41:22,128 - Model - INFO - Use pretrain model
+2024-05-08 11:41:22,129 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-08 11:41:22,129 - Model - INFO - **** Epoch 1 (1/1) ****
+2024-05-08 11:41:22,129 - Model - INFO - Learning rate:0.001000
+2024-05-08 11:41:22,129 - Model - INFO - Learning rate:0.001000
+2024-05-08 11:46:35,495 - Model - INFO - Training mean loss: 0.498549
+2024-05-08 11:46:35,495 - Model - INFO - Training mean loss: 0.498549
+2024-05-08 11:46:35,495 - Model - INFO - Training accuracy: 0.834829
+2024-05-08 11:46:35,495 - Model - INFO - Training accuracy: 0.834829
+2024-05-08 11:46:35,495 - Model - INFO - Save model...
+2024-05-08 11:46:35,495 - Model - INFO - Save model...
+2024-05-08 11:46:35,495 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-08 11:46:35,495 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-08 11:46:35,555 - Model - INFO - Saving model....
+2024-05-08 11:46:35,555 - Model - INFO - Saving model....
+2024-05-08 11:46:35,588 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-08 11:46:35,588 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-08 11:56:42,752 - Model - INFO - eval mean loss: 1.090440
+2024-05-08 11:56:42,752 - Model - INFO - eval mean loss: 1.090440
+2024-05-08 11:56:42,752 - Model - INFO - eval point avg class IoU: 0.342802
+2024-05-08 11:56:42,752 - Model - INFO - eval point avg class IoU: 0.342802
+2024-05-08 11:56:42,752 - Model - INFO - eval point accuracy: 0.732835
+2024-05-08 11:56:42,752 - Model - INFO - eval point accuracy: 0.732835
+2024-05-08 11:56:42,753 - Model - INFO - eval point avg class acc: 0.462923
+2024-05-08 11:56:42,753 - Model - INFO - eval point avg class acc: 0.462923
+2024-05-08 11:56:42,753 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.054, IoU: 0.862 
+class floor          weight: 0.211, IoU: 0.720 
+class wall           weight: 0.209, IoU: 0.713 
+class beam           weight: 0.338, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.002 
+class window         weight: 0.014, IoU: 0.277 
+class door           weight: 0.039, IoU: 0.234 
+class table          weight: 0.034, IoU: 0.423 
+class chair          weight: 0.019, IoU: 0.324 
+class sofa           weight: 0.015, IoU: 0.094 
+class bookcase       weight: 0.003, IoU: 0.369 
+class board          weight: 0.054, IoU: 0.240 
+class clutter        weight: 0.009, IoU: 0.197 
+
+2024-05-08 11:56:42,753 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.054, IoU: 0.862 
+class floor          weight: 0.211, IoU: 0.720 
+class wall           weight: 0.209, IoU: 0.713 
+class beam           weight: 0.338, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.002 
+class window         weight: 0.014, IoU: 0.277 
+class door           weight: 0.039, IoU: 0.234 
+class table          weight: 0.034, IoU: 0.423 
+class chair          weight: 0.019, IoU: 0.324 
+class sofa           weight: 0.015, IoU: 0.094 
+class bookcase       weight: 0.003, IoU: 0.369 
+class board          weight: 0.054, IoU: 0.240 
+class clutter        weight: 0.009, IoU: 0.197 
+
+2024-05-08 11:56:42,753 - Model - INFO - Eval mean loss: 1.090440
+2024-05-08 11:56:42,753 - Model - INFO - Eval mean loss: 1.090440
+2024-05-08 11:56:42,753 - Model - INFO - Eval accuracy: 0.732835
+2024-05-08 11:56:42,753 - Model - INFO - Eval accuracy: 0.732835
+2024-05-08 11:56:42,753 - Model - INFO - Save model...
+2024-05-08 11:56:42,753 - Model - INFO - Save model...
+2024-05-08 11:56:42,753 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-08 11:56:42,753 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-08 11:56:42,804 - Model - INFO - Saving model....
+2024-05-08 11:56:42,804 - Model - INFO - Saving model....
+2024-05-08 11:56:42,804 - Model - INFO - Best mIoU: 0.342802
+2024-05-08 11:56:42,804 - Model - INFO - Best mIoU: 0.342802
+2024-05-08 14:55:16,803 - Model - INFO - PARAMETER ...
+2024-05-08 14:55:16,803 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 14:55:31,282 - Model - INFO - The number of training data is: 47474
+2024-05-08 14:55:31,282 - Model - INFO - The number of test data is: 19191
+2024-05-08 14:55:31,317 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 14:55:33,284 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-08 14:55:33,284 - Model - INFO - Learning rate:0.001000
+2024-05-08 14:56:53,203 - Model - INFO - PARAMETER ...
+2024-05-08 14:56:53,203 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 14:57:02,888 - Model - INFO - The number of training data is: 47474
+2024-05-08 14:57:02,888 - Model - INFO - The number of test data is: 19191
+2024-05-08 14:57:02,913 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 14:57:03,715 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-08 14:57:03,715 - Model - INFO - Learning rate:0.001000
+2024-05-08 15:01:23,133 - Model - INFO - PARAMETER ...
+2024-05-08 15:01:23,133 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:01:32,820 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:01:32,820 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:01:32,846 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 15:02:31,403 - Model - INFO - PARAMETER ...
+2024-05-08 15:02:31,404 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:04:17,192 - Model - INFO - PARAMETER ...
+2024-05-08 15:04:17,193 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:04:26,919 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:04:26,919 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:04:26,944 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 15:06:41,843 - Model - INFO - PARAMETER ...
+2024-05-08 15:06:41,843 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:07:17,758 - Model - INFO - PARAMETER ...
+2024-05-08 15:07:17,759 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:08:35,080 - Model - INFO - PARAMETER ...
+2024-05-08 15:08:35,080 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:09:37,009 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:09:37,009 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:09:37,034 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 15:09:41,923 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-08 15:09:41,923 - Model - INFO - Learning rate:0.001000
+2024-05-08 15:16:16,078 - Model - INFO - PARAMETER ...
+2024-05-08 15:16:16,078 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:16:40,387 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:16:40,388 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:17:46,786 - Model - INFO - PARAMETER ...
+2024-05-08 15:17:46,786 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:18:11,048 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:18:11,048 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:18:23,087 - Model - INFO - PARAMETER ...
+2024-05-08 15:18:23,088 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:18:47,391 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:18:47,392 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:19:34,655 - Model - INFO - PARAMETER ...
+2024-05-08 15:19:34,655 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:19:58,942 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:19:58,943 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:19:58,986 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 15:20:00,716 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-08 15:20:00,716 - Model - INFO - Learning rate:0.001000
+2024-05-08 15:20:50,155 - Model - INFO - PARAMETER ...
+2024-05-08 15:20:50,155 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:21:13,800 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:21:13,800 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:21:13,835 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 15:21:14,587 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-08 15:21:14,587 - Model - INFO - Learning rate:0.001000
+2024-05-08 15:22:47,766 - Model - INFO - PARAMETER ...
+2024-05-08 15:22:47,766 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:23:11,610 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:23:11,610 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:23:11,657 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 15:23:13,343 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-08 15:23:13,343 - Model - INFO - Learning rate:0.001000
+2024-05-08 15:29:21,406 - Model - INFO - PARAMETER ...
+2024-05-08 15:29:21,406 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:29:45,274 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:29:45,274 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:29:45,319 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 15:29:46,098 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-08 15:29:46,098 - Model - INFO - Learning rate:0.001000
+2024-05-08 15:34:24,027 - Model - INFO - PARAMETER ...
+2024-05-08 15:34:24,027 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:34:48,652 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:34:48,653 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:34:48,706 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 15:34:50,489 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-08 15:34:50,489 - Model - INFO - Learning rate:0.001000
+2024-05-08 15:35:43,718 - Model - INFO - PARAMETER ...
+2024-05-08 15:35:43,719 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)

@@ -219,44 +219,43 @@ def pointnetv2(model_checkpoint_path: str,
     # Prepare the input
     points: np.ndarray = np.asarray(pcd.points)
     colors: np.ndarray = np.asarray(pcd.colors)
-    data = np.zeros(shape=(1, 9, len(points)))
+    data = np.hstack((points, colors))
+
+    npoint = 4096
+    batches, batches_indices = convert_to_batches(data, point_amount=npoint, block_size=1, stride=0.5)
+    print(f"Created {len(batches)} batches.")
 
     # model expects input of size B x 9 x points where B is probably batches
     # index 0,1,2 are the xyz normalized by subtracting the centroid
     # index 3,4,5 are the normalized RGB values
     # index 6,7,8 are the xyz normalized by dividing by the max coordinate
-    centroid = points.mean(axis=0)
-    data[0, :3, :] = np.swapaxes(points - centroid, 0, 1)
-    data[0, 3:6, :] = np.swapaxes(colors / 255.0, 0, 1)
-    data[0, 6:9, :] = np.swapaxes(points / points.max(axis=0), 0, 1)
-
-    batch_size = 4096
-    number_of_batches = math.ceil(len(points) / batch_size)
-    batches = np.array_split(data, number_of_batches, axis=2)
-    classifications = np.zeros(shape=(len(points),), dtype=np.int32)
-    number_of_votes: int = 3
+    # centroid = points.mean(axis=0)
+    # data[0, :3, :] = np.swapaxes(points - centroid, 0, 1)
+    # data[0, 3:6, :] = np.swapaxes(colors / 255.0, 0, 1)
+    # data[0, 6:9, :] = np.swapaxes(points / points.max(axis=0), 0, 1)
+    # number_of_batches = math.ceil(len(points) / batch_size)
+    # batches = np.array_split(data, number_of_batches, axis=2)
+    number_of_votes: int = 1
+    votes = np.zeros(shape=(len(points), number_of_classes), dtype=np.int32)
 
     with torch.no_grad():
-
-        end_index: int = 0
-        print(f"Classifying {number_of_batches} batches of size {batch_size}, with {number_of_votes} votes...")
+        print(f"Classifying {len(batches)} batches with {number_of_votes} votes...")
         for batch_index in tqdm.trange(len(batches), desc=f"Classifying...", miniters=1):
             batch = batches[batch_index]
-            start_index = end_index
-            end_index = end_index + batch.shape[2]
+            batch = np.swapaxes(batch, 2, 1)
+            # batch = np.reshape(batch, newshape=(1, batch.shape[0], batch.shape[1]))
+            indices = batches_indices[batch_index]
             model_input: torch.Tensor = torch.from_numpy(batch).float().cuda()
-            votes = np.zeros(shape=(batch.shape[2], number_of_classes), dtype=np.int32)
-
             for vote in range(number_of_votes):
                 # Actually do the prediction!
                 predictions, _ = classifier(model_input)
                 class_per_point = predictions.cpu().numpy().argmax(axis=2).squeeze().astype(np.int32)
 
-                for i in range(batch.shape[2]):
-                    votes[i, class_per_point[i]] += 1
+                for i in range(indices.shape[0]):
+                    for j in range(indices.shape[1]):
+                        votes[indices[i, j], class_per_point[i, j]] += 1
 
-            classifications[start_index:end_index] = votes.argmax(axis=1)
-
+    classifications = votes.argmax(axis=1)
     for i in range(number_of_classes):
         print(f"Class {classes[i]} (color {class_colors[i][0]} : {class_colors[i][1]}) occurred {np.count_nonzero(classifications == i)} times.")
 
@@ -265,3 +264,96 @@ def pointnetv2(model_checkpoint_path: str,
     visualize_pcd = open3d.geometry.PointCloud(pcd.points)
     visualize_pcd.colors = open3d.utility.Vector3dVector(colors_per_point)
     open3d.visualization.draw_geometries([visualize_pcd])
+
+
+def convert_to_batches(data,
+                       block_size: float = 0.5,
+                       stride: float = 0.1,
+                       padding: float = 0.001,
+                       point_amount: int = 4096,
+                       batch_size: int = 32):
+
+    """
+    Convert point cloud data into batches that can be fed into the pointnet++ network.
+
+    Parameters:
+        data (np.ndarray): point cloud data to be converted to batches. Must be of shape (n_points, 6).
+        block_size (float): the size of the 'blocks' that will be used to group points in the batches. Only applies
+            to x and y dimensions. For example, of value of 1.0 will group points in 'pillars' of 1x1 meters.
+        padding (float): the amount of padding to be added to each block to avoid missing points on the edge.
+        stride (float): the stride size of the blocks, convolution style. This makes sure the blocks overlap and
+            points are in multiple blocks / batches.
+        point_amount (int): the minimum amount of points in per batch entry. If there are more points in the block than
+            the points amount, the batch element will just be larger. If there are fewer points in the block than the
+            point amount, random choice with replacement will be used to fill the gaps.
+    """
+
+    minimum_coordinates: np.ndarray = np.amin(data, axis=0)[:3]
+    maximum_coordinates: np.ndarray = np.amax(data, axis=0)[:3]
+    grid_x = int(np.ceil(float(maximum_coordinates[0] - minimum_coordinates[0] - block_size) / stride) + 1)
+    grid_y = int(np.ceil(float(maximum_coordinates[1] - minimum_coordinates[1] - block_size) / stride) + 1)
+
+    blocks_data = None
+    indices = None
+
+    print(f"Dividing point cloud into batches using (XY) blocks of size {block_size} and stride {stride}")
+    for index_y in tqdm.trange(0, grid_y, desc="Dividing into blocks..."):
+        for index_x in range(0, grid_x):
+            s_x: float = minimum_coordinates[0] + index_x * stride
+            e_x: float = min(s_x + block_size, maximum_coordinates[0])
+            s_x = e_x - block_size
+            s_y: float = minimum_coordinates[1] + index_y * stride
+            e_y: float = min(s_y + block_size, maximum_coordinates[1])
+            s_y = e_y - block_size
+
+            point_idxs: np.ndarray = np.where((data[:, 0] >= s_x - padding) &
+                                              (data[:, 0] <= e_x + padding) &
+                                              (data[:, 1] >= s_y - padding) &
+                                              (data[:, 1] <= e_y + padding))[0]
+
+            if point_idxs.size == 0:
+                continue
+
+            # The amount of arrays that we need to accommodate this block, i.e. the amount of arrays we need
+            # to fit all the points in the block such that each array is of size 'point_amount x C'
+            num_batch: int = int(np.ceil(point_idxs.size / point_amount))
+
+            # The amount of total points we need in order to neatly fill each array in the batch
+            point_size: int = int(num_batch * point_amount)
+
+            # Whether we need to reuse points in order to neatly fill each array
+            replace: bool = point_size - point_idxs.size > point_idxs.size
+
+            # The repeated indices such that we neatly fill the arrays and every array is of size 'point amount x C'
+            point_idxs_repeat = np.random.choice(point_idxs, point_size - point_idxs.size, replace=replace)
+            point_idxs = np.concatenate((point_idxs, point_idxs_repeat))
+
+            # Shuffle the indices and create the data
+            np.random.shuffle(point_idxs)
+            block_data = data[point_idxs, :]
+            normalized_xyz = np.zeros((point_size, 3))
+            normalized_xyz[:, 0] = block_data[:, 0] / maximum_coordinates[0]
+            normalized_xyz[:, 1] = block_data[:, 1] / maximum_coordinates[1]
+            normalized_xyz[:, 2] = block_data[:, 2] / maximum_coordinates[2]
+            block_data[:, 0] = block_data[:, 0] - (s_x + block_size / 2.0)
+            block_data[:, 1] = block_data[:, 1] - (s_y + block_size / 2.0)
+            block_data[:, 3:6] /= 255.0
+            block_data = np.concatenate((block_data, normalized_xyz), axis=1)
+
+            blocks_data = np.vstack((blocks_data, block_data)) if blocks_data is not None else block_data
+            indices = np.hstack((indices, point_idxs)) if indices is not None else point_idxs
+
+    # All the blocks, neatly in a multiple of point amount
+    blocks_data = blocks_data.reshape((-1, point_amount, blocks_data.shape[1]))
+    indices = indices.reshape((-1, point_amount))
+
+    number_of_batches = int(np.ceil(blocks_data.shape[0] / block_size))
+    batches = []
+    batches_indices = []
+    for i in tqdm.trange(number_of_batches, desc="Generating batches out of the blocks..."):
+        start_index = i * batch_size
+        end_index = min(start_index + batch_size, blocks_data.shape[0])
+        batches.append(blocks_data[start_index:end_index])
+        batches_indices.append(indices[start_index:end_index])
+
+    return batches, batches_indices
