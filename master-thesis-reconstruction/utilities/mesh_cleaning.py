@@ -32,6 +32,7 @@ def run_mesh_cleaning(mesh: open3d.geometry.TriangleMesh,
 
     start_time = time.time()
     if not config.mesh_cleaning_methods:
+        results.cleaning_time = 0.0
         return None
 
     results.number_of_vertices_original = len(mesh.vertices)
