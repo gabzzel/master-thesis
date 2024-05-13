@@ -101,3 +101,23 @@ class clutter       , IoU: 0.416
 2024-04-29 14:15:56,151 - Model - INFO - Mean IoU of Area_5_conferenceRoom_1: 0.5585
 2024-04-29 14:19:31,505 - Model - INFO - Mean IoU of Area_5_conferenceRoom_2: 0.5381
 2024-04-29 14:22:06,214 - Model - INFO - Mean IoU of Area_5_conferenceRoom_3: 0.5830
+2024-05-08 12:03:44,535 - Model - INFO - PARAMETER ...
+2024-05-08 12:03:44,535 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='pointnet2_sem_seg', visual=False, test_area=5, num_votes=3)
+2024-05-08 12:03:58,900 - Model - INFO - PARAMETER ...
+2024-05-08 12:03:58,900 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='pointnet2_sem_seg', visual=False, test_area=5, num_votes=3)
+2024-05-08 12:04:05,586 - Model - INFO - The number of test data is: 67
+2024-05-08 12:04:05,846 - Model - INFO - ---- EVALUATION WHOLE SCENE----
+2024-05-08 12:05:43,223 - Model - INFO - PARAMETER ...
+2024-05-08 12:05:43,223 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='pointnet2_sem_seg', visual=False, test_area=5, num_votes=3)
+2024-05-08 12:06:30,196 - Model - INFO - PARAMETER ...
+2024-05-08 12:06:30,196 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='pointnet2_sem_seg', visual=False, test_area=5, num_votes=3)
+2024-05-08 12:07:22,969 - Model - INFO - The number of test data is: 67
+2024-05-08 12:07:23,213 - Model - INFO - ---- EVALUATION WHOLE SCENE----
+2024-05-08 12:47:55,673 - Model - INFO - PARAMETER ...
+2024-05-08 12:47:55,673 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='pointnet2_sem_seg', visual=False, test_area=5, num_votes=3)
+2024-05-08 12:48:01,791 - Model - INFO - The number of test data is: 67
+2024-05-08 12:48:02,035 - Model - INFO - ---- EVALUATION WHOLE SCENE----
+2024-05-08 13:04:39,067 - Model - INFO - PARAMETER ...
+2024-05-08 13:04:39,068 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='pointnet2_sem_seg', visual=False, test_area=5, num_votes=3)
+2024-05-08 13:04:45,214 - Model - INFO - The number of test data is: 67
+2024-05-08 13:04:45,454 - Model - INFO - ---- EVALUATION WHOLE SCENE----
