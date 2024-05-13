@@ -2011,3 +2011,1880 @@ class clutter        weight: 0.009, IoU: 0.197
 2024-05-08 15:34:50,489 - Model - INFO - Learning rate:0.001000
 2024-05-08 15:35:43,718 - Model - INFO - PARAMETER ...
 2024-05-08 15:35:43,719 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:40:26,469 - Model - INFO - PARAMETER ...
+2024-05-08 15:40:26,469 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:42:14,121 - Model - INFO - PARAMETER ...
+2024-05-08 15:42:14,121 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:42:38,238 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:42:38,238 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:42:38,291 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 15:42:40,047 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-08 15:42:40,047 - Model - INFO - Learning rate:0.001000
+2024-05-08 15:44:32,783 - Model - INFO - PARAMETER ...
+2024-05-08 15:44:32,783 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:44:56,680 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:44:56,680 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:44:56,732 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 15:44:58,485 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-08 15:44:58,485 - Model - INFO - Learning rate:0.001000
+2024-05-08 15:47:18,366 - Model - INFO - PARAMETER ...
+2024-05-08 15:47:18,366 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:47:42,548 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:47:42,548 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:47:42,589 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 15:47:43,367 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-08 15:47:43,367 - Model - INFO - Learning rate:0.001000
+2024-05-08 15:50:15,725 - Model - INFO - PARAMETER ...
+2024-05-08 15:50:15,725 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:50:40,089 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:50:40,089 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:50:40,129 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 15:50:40,913 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-08 15:50:40,914 - Model - INFO - Learning rate:0.001000
+2024-05-08 15:54:22,214 - Model - INFO - PARAMETER ...
+2024-05-08 15:54:22,214 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 15:54:45,905 - Model - INFO - The number of training data is: 47474
+2024-05-08 15:54:45,905 - Model - INFO - The number of test data is: 19191
+2024-05-08 15:54:45,948 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 15:54:46,722 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-08 15:54:46,722 - Model - INFO - Learning rate:0.001000
+2024-05-08 16:02:42,939 - Model - INFO - PARAMETER ...
+2024-05-08 16:02:42,939 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=32, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 16:03:06,731 - Model - INFO - The number of training data is: 47623
+2024-05-08 16:03:06,731 - Model - INFO - The number of test data is: 18923
+2024-05-08 16:03:06,773 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 16:03:07,568 - Model - INFO - **** Epoch 1 (1/32) ****
+2024-05-08 16:03:07,568 - Model - INFO - Learning rate:0.001000
+2024-05-08 16:04:44,456 - Model - INFO - PARAMETER ...
+2024-05-08 16:04:44,456 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=64, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-08 16:05:06,625 - Model - INFO - The number of training data is: 47623
+2024-05-08 16:05:06,626 - Model - INFO - The number of test data is: 18923
+2024-05-08 16:05:06,663 - Model - INFO - No existing model, starting training from scratch...
+2024-05-08 16:05:07,442 - Model - INFO - **** Epoch 1 (1/64) ****
+2024-05-08 16:05:07,442 - Model - INFO - Learning rate:0.001000
+2024-05-08 16:33:26,953 - Model - INFO - Training mean loss: 0.921120
+2024-05-08 16:33:26,953 - Model - INFO - Training accuracy: 0.733655
+2024-05-08 16:33:26,953 - Model - INFO - Save model...
+2024-05-08 16:33:26,953 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-08 16:33:26,999 - Model - INFO - Saving model....
+2024-05-08 16:33:27,249 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-08 16:44:32,760 - Model - INFO - eval mean loss: 0.889618
+2024-05-08 16:44:32,760 - Model - INFO - eval point avg class IoU: 0.379895
+2024-05-08 16:44:32,760 - Model - INFO - eval point accuracy: 0.763169
+2024-05-08 16:44:32,760 - Model - INFO - eval point avg class acc: 0.483018
+2024-05-08 16:44:32,761 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.877 
+class floor          weight: 0.200, IoU: 0.934 
+class wall           weight: 0.167, IoU: 0.692 
+class beam           weight: 0.275, IoU: 0.001 
+class column         weight: 0.000, IoU: 0.001 
+class window         weight: 0.018, IoU: 0.262 
+class door           weight: 0.033, IoU: 0.026 
+class table          weight: 0.031, IoU: 0.558 
+class chair          weight: 0.039, IoU: 0.414 
+class sofa           weight: 0.019, IoU: 0.080 
+class bookcase       weight: 0.003, IoU: 0.552 
+class board          weight: 0.111, IoU: 0.236 
+class clutter        weight: 0.012, IoU: 0.307 
+
+2024-05-08 16:44:32,761 - Model - INFO - Eval mean loss: 0.889618
+2024-05-08 16:44:32,761 - Model - INFO - Eval accuracy: 0.763169
+2024-05-08 16:44:32,761 - Model - INFO - Save model...
+2024-05-08 16:44:32,761 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-08 16:44:32,807 - Model - INFO - Saving model....
+2024-05-08 16:44:32,807 - Model - INFO - Best mIoU: 0.379895
+2024-05-08 16:44:32,807 - Model - INFO - **** Epoch 2 (2/64) ****
+2024-05-08 16:44:32,807 - Model - INFO - Learning rate:0.001000
+2024-05-08 17:12:53,063 - Model - INFO - Training mean loss: 0.556059
+2024-05-08 17:12:53,063 - Model - INFO - Training accuracy: 0.829109
+2024-05-08 17:12:53,317 - Model - INFO - ---- EPOCH 002 EVALUATION ----
+2024-05-08 17:23:55,885 - Model - INFO - eval mean loss: 1.016189
+2024-05-08 17:23:55,885 - Model - INFO - eval point avg class IoU: 0.361252
+2024-05-08 17:23:55,885 - Model - INFO - eval point accuracy: 0.752153
+2024-05-08 17:23:55,886 - Model - INFO - eval point avg class acc: 0.427680
+2024-05-08 17:23:55,886 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.856 
+class floor          weight: 0.200, IoU: 0.945 
+class wall           weight: 0.166, IoU: 0.654 
+class beam           weight: 0.276, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.021 
+class window         weight: 0.019, IoU: 0.106 
+class door           weight: 0.034, IoU: 0.018 
+class table          weight: 0.031, IoU: 0.263 
+class chair          weight: 0.039, IoU: 0.278 
+class sofa           weight: 0.019, IoU: 0.170 
+class bookcase       weight: 0.003, IoU: 0.586 
+class board          weight: 0.112, IoU: 0.513 
+class clutter        weight: 0.011, IoU: 0.286 
+
+2024-05-08 17:23:55,886 - Model - INFO - Eval mean loss: 1.016189
+2024-05-08 17:23:55,886 - Model - INFO - Eval accuracy: 0.752153
+2024-05-08 17:23:55,886 - Model - INFO - Best mIoU: 0.379895
+2024-05-08 17:23:55,886 - Model - INFO - **** Epoch 3 (3/64) ****
+2024-05-08 17:23:55,886 - Model - INFO - Learning rate:0.001000
+2024-05-08 17:52:16,489 - Model - INFO - Training mean loss: 0.465420
+2024-05-08 17:52:16,489 - Model - INFO - Training accuracy: 0.853690
+2024-05-08 17:52:16,747 - Model - INFO - ---- EPOCH 003 EVALUATION ----
+2024-05-08 18:03:21,130 - Model - INFO - eval mean loss: 0.800919
+2024-05-08 18:03:21,130 - Model - INFO - eval point avg class IoU: 0.479688
+2024-05-08 18:03:21,130 - Model - INFO - eval point accuracy: 0.789975
+2024-05-08 18:03:21,130 - Model - INFO - eval point avg class acc: 0.594978
+2024-05-08 18:03:21,130 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.879 
+class floor          weight: 0.200, IoU: 0.960 
+class wall           weight: 0.165, IoU: 0.695 
+class beam           weight: 0.278, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.118 
+class window         weight: 0.019, IoU: 0.541 
+class door           weight: 0.034, IoU: 0.047 
+class table          weight: 0.030, IoU: 0.640 
+class chair          weight: 0.039, IoU: 0.571 
+class sofa           weight: 0.019, IoU: 0.286 
+class bookcase       weight: 0.003, IoU: 0.561 
+class board          weight: 0.110, IoU: 0.582 
+class clutter        weight: 0.011, IoU: 0.356 
+
+2024-05-08 18:03:21,130 - Model - INFO - Eval mean loss: 0.800919
+2024-05-08 18:03:21,130 - Model - INFO - Eval accuracy: 0.789975
+2024-05-08 18:03:21,130 - Model - INFO - Save model...
+2024-05-08 18:03:21,131 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-08 18:03:21,175 - Model - INFO - Saving model....
+2024-05-08 18:03:21,175 - Model - INFO - Best mIoU: 0.479688
+2024-05-08 18:03:21,175 - Model - INFO - **** Epoch 4 (4/64) ****
+2024-05-08 18:03:21,175 - Model - INFO - Learning rate:0.001000
+2024-05-08 18:31:38,458 - Model - INFO - Training mean loss: 0.411827
+2024-05-08 18:31:38,458 - Model - INFO - Training accuracy: 0.868583
+2024-05-08 18:31:38,712 - Model - INFO - ---- EPOCH 004 EVALUATION ----
+2024-05-08 18:42:44,033 - Model - INFO - eval mean loss: 0.808034
+2024-05-08 18:42:44,033 - Model - INFO - eval point avg class IoU: 0.475359
+2024-05-08 18:42:44,033 - Model - INFO - eval point accuracy: 0.798692
+2024-05-08 18:42:44,033 - Model - INFO - eval point avg class acc: 0.591093
+2024-05-08 18:42:44,033 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.092, IoU: 0.893 
+class floor          weight: 0.201, IoU: 0.951 
+class wall           weight: 0.166, IoU: 0.714 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.093 
+class window         weight: 0.018, IoU: 0.575 
+class door           weight: 0.034, IoU: 0.050 
+class table          weight: 0.030, IoU: 0.638 
+class chair          weight: 0.040, IoU: 0.615 
+class sofa           weight: 0.019, IoU: 0.292 
+class bookcase       weight: 0.003, IoU: 0.530 
+class board          weight: 0.106, IoU: 0.450 
+class clutter        weight: 0.012, IoU: 0.377 
+
+2024-05-08 18:42:44,034 - Model - INFO - Eval mean loss: 0.808034
+2024-05-08 18:42:44,034 - Model - INFO - Eval accuracy: 0.798692
+2024-05-08 18:42:44,034 - Model - INFO - Best mIoU: 0.479688
+2024-05-08 18:42:44,034 - Model - INFO - **** Epoch 5 (5/64) ****
+2024-05-08 18:42:44,034 - Model - INFO - Learning rate:0.001000
+2024-05-08 19:11:02,989 - Model - INFO - Training mean loss: 0.381422
+2024-05-08 19:11:02,989 - Model - INFO - Training accuracy: 0.878011
+2024-05-08 19:11:03,259 - Model - INFO - ---- EPOCH 005 EVALUATION ----
+2024-05-08 19:22:08,115 - Model - INFO - eval mean loss: 0.823879
+2024-05-08 19:22:08,115 - Model - INFO - eval point avg class IoU: 0.459815
+2024-05-08 19:22:08,115 - Model - INFO - eval point accuracy: 0.774241
+2024-05-08 19:22:08,115 - Model - INFO - eval point avg class acc: 0.580064
+2024-05-08 19:22:08,115 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.902 
+class floor          weight: 0.201, IoU: 0.948 
+class wall           weight: 0.167, IoU: 0.662 
+class beam           weight: 0.278, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.133 
+class window         weight: 0.019, IoU: 0.552 
+class door           weight: 0.032, IoU: 0.038 
+class table          weight: 0.031, IoU: 0.614 
+class chair          weight: 0.039, IoU: 0.552 
+class sofa           weight: 0.019, IoU: 0.217 
+class bookcase       weight: 0.003, IoU: 0.548 
+class board          weight: 0.107, IoU: 0.423 
+class clutter        weight: 0.012, IoU: 0.391 
+
+2024-05-08 19:22:08,115 - Model - INFO - Eval mean loss: 0.823879
+2024-05-08 19:22:08,116 - Model - INFO - Eval accuracy: 0.774241
+2024-05-08 19:22:08,116 - Model - INFO - Best mIoU: 0.479688
+2024-05-08 19:22:08,116 - Model - INFO - **** Epoch 6 (6/64) ****
+2024-05-08 19:22:08,116 - Model - INFO - Learning rate:0.001000
+2024-05-08 19:50:29,494 - Model - INFO - Training mean loss: 0.357670
+2024-05-08 19:50:29,494 - Model - INFO - Training accuracy: 0.883939
+2024-05-08 19:50:29,494 - Model - INFO - Save model...
+2024-05-08 19:50:29,494 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-08 19:50:29,540 - Model - INFO - Saving model....
+2024-05-08 19:50:29,798 - Model - INFO - ---- EPOCH 006 EVALUATION ----
+2024-05-08 20:01:34,921 - Model - INFO - eval mean loss: 0.807340
+2024-05-08 20:01:34,921 - Model - INFO - eval point avg class IoU: 0.459675
+2024-05-08 20:01:34,921 - Model - INFO - eval point accuracy: 0.806147
+2024-05-08 20:01:34,921 - Model - INFO - eval point avg class acc: 0.589518
+2024-05-08 20:01:34,921 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.886 
+class floor          weight: 0.201, IoU: 0.963 
+class wall           weight: 0.167, IoU: 0.723 
+class beam           weight: 0.278, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.045 
+class window         weight: 0.018, IoU: 0.585 
+class door           weight: 0.034, IoU: 0.080 
+class table          weight: 0.030, IoU: 0.641 
+class chair          weight: 0.039, IoU: 0.390 
+class sofa           weight: 0.019, IoU: 0.148 
+class bookcase       weight: 0.003, IoU: 0.589 
+class board          weight: 0.110, IoU: 0.537 
+class clutter        weight: 0.011, IoU: 0.388 
+
+2024-05-08 20:01:34,922 - Model - INFO - Eval mean loss: 0.807340
+2024-05-08 20:01:34,922 - Model - INFO - Eval accuracy: 0.806147
+2024-05-08 20:01:34,922 - Model - INFO - Best mIoU: 0.479688
+2024-05-08 20:01:34,922 - Model - INFO - **** Epoch 7 (7/64) ****
+2024-05-08 20:01:34,922 - Model - INFO - Learning rate:0.001000
+2024-05-08 20:29:53,754 - Model - INFO - Training mean loss: 0.337696
+2024-05-08 20:29:53,754 - Model - INFO - Training accuracy: 0.890056
+2024-05-08 20:29:53,994 - Model - INFO - ---- EPOCH 007 EVALUATION ----
+2024-05-08 20:41:01,060 - Model - INFO - eval mean loss: 0.883968
+2024-05-08 20:41:01,060 - Model - INFO - eval point avg class IoU: 0.471478
+2024-05-08 20:41:01,060 - Model - INFO - eval point accuracy: 0.803704
+2024-05-08 20:41:01,060 - Model - INFO - eval point avg class acc: 0.585171
+2024-05-08 20:41:01,060 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.089, IoU: 0.887 
+class floor          weight: 0.203, IoU: 0.963 
+class wall           weight: 0.168, IoU: 0.711 
+class beam           weight: 0.274, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.039 
+class window         weight: 0.019, IoU: 0.491 
+class door           weight: 0.034, IoU: 0.041 
+class table          weight: 0.030, IoU: 0.618 
+class chair          weight: 0.039, IoU: 0.687 
+class sofa           weight: 0.019, IoU: 0.206 
+class bookcase       weight: 0.003, IoU: 0.619 
+class board          weight: 0.109, IoU: 0.483 
+class clutter        weight: 0.012, IoU: 0.383 
+
+2024-05-08 20:41:01,060 - Model - INFO - Eval mean loss: 0.883968
+2024-05-08 20:41:01,060 - Model - INFO - Eval accuracy: 0.803704
+2024-05-08 20:41:01,060 - Model - INFO - Best mIoU: 0.479688
+2024-05-08 20:41:01,060 - Model - INFO - **** Epoch 8 (8/64) ****
+2024-05-08 20:41:01,060 - Model - INFO - Learning rate:0.001000
+2024-05-08 21:09:23,650 - Model - INFO - Training mean loss: 0.323438
+2024-05-08 21:09:23,650 - Model - INFO - Training accuracy: 0.893962
+2024-05-08 21:09:23,904 - Model - INFO - ---- EPOCH 008 EVALUATION ----
+2024-05-08 21:20:27,192 - Model - INFO - eval mean loss: 0.815276
+2024-05-08 21:20:27,192 - Model - INFO - eval point avg class IoU: 0.491735
+2024-05-08 21:20:27,192 - Model - INFO - eval point accuracy: 0.813033
+2024-05-08 21:20:27,192 - Model - INFO - eval point avg class acc: 0.608607
+2024-05-08 21:20:27,192 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.893 
+class floor          weight: 0.201, IoU: 0.966 
+class wall           weight: 0.166, IoU: 0.716 
+class beam           weight: 0.276, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.083 
+class window         weight: 0.018, IoU: 0.525 
+class door           weight: 0.033, IoU: 0.086 
+class table          weight: 0.031, IoU: 0.659 
+class chair          weight: 0.040, IoU: 0.685 
+class sofa           weight: 0.019, IoU: 0.233 
+class bookcase       weight: 0.003, IoU: 0.612 
+class board          weight: 0.110, IoU: 0.517 
+class clutter        weight: 0.012, IoU: 0.417 
+
+2024-05-08 21:20:27,192 - Model - INFO - Eval mean loss: 0.815276
+2024-05-08 21:20:27,192 - Model - INFO - Eval accuracy: 0.813033
+2024-05-08 21:20:27,192 - Model - INFO - Save model...
+2024-05-08 21:20:27,192 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-08 21:20:27,237 - Model - INFO - Saving model....
+2024-05-08 21:20:27,238 - Model - INFO - Best mIoU: 0.491735
+2024-05-08 21:20:27,238 - Model - INFO - **** Epoch 9 (9/64) ****
+2024-05-08 21:20:27,238 - Model - INFO - Learning rate:0.001000
+2024-05-08 21:48:50,507 - Model - INFO - Training mean loss: 0.317308
+2024-05-08 21:48:50,508 - Model - INFO - Training accuracy: 0.896239
+2024-05-08 21:48:50,761 - Model - INFO - ---- EPOCH 009 EVALUATION ----
+2024-05-08 21:59:54,604 - Model - INFO - eval mean loss: 0.776183
+2024-05-08 21:59:54,605 - Model - INFO - eval point avg class IoU: 0.483958
+2024-05-08 21:59:54,605 - Model - INFO - eval point accuracy: 0.806101
+2024-05-08 21:59:54,605 - Model - INFO - eval point avg class acc: 0.605690
+2024-05-08 21:59:54,605 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.092, IoU: 0.890 
+class floor          weight: 0.201, IoU: 0.963 
+class wall           weight: 0.166, IoU: 0.736 
+class beam           weight: 0.279, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.092 
+class window         weight: 0.018, IoU: 0.511 
+class door           weight: 0.031, IoU: 0.108 
+class table          weight: 0.030, IoU: 0.635 
+class chair          weight: 0.040, IoU: 0.599 
+class sofa           weight: 0.019, IoU: 0.289 
+class bookcase       weight: 0.003, IoU: 0.596 
+class board          weight: 0.109, IoU: 0.503 
+class clutter        weight: 0.012, IoU: 0.369 
+
+2024-05-08 21:59:54,605 - Model - INFO - Eval mean loss: 0.776183
+2024-05-08 21:59:54,605 - Model - INFO - Eval accuracy: 0.806101
+2024-05-08 21:59:54,606 - Model - INFO - Best mIoU: 0.491735
+2024-05-08 21:59:54,606 - Model - INFO - **** Epoch 10 (10/64) ****
+2024-05-08 21:59:54,606 - Model - INFO - Learning rate:0.001000
+2024-05-08 22:28:16,894 - Model - INFO - Training mean loss: 0.306573
+2024-05-08 22:28:16,895 - Model - INFO - Training accuracy: 0.899007
+2024-05-08 22:28:17,151 - Model - INFO - ---- EPOCH 010 EVALUATION ----
+2024-05-08 22:39:23,876 - Model - INFO - eval mean loss: 0.770025
+2024-05-08 22:39:23,876 - Model - INFO - eval point avg class IoU: 0.504625
+2024-05-08 22:39:23,876 - Model - INFO - eval point accuracy: 0.804485
+2024-05-08 22:39:23,876 - Model - INFO - eval point avg class acc: 0.625305
+2024-05-08 22:39:23,876 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.885 
+class floor          weight: 0.201, IoU: 0.961 
+class wall           weight: 0.167, IoU: 0.698 
+class beam           weight: 0.274, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.180 
+class window         weight: 0.018, IoU: 0.569 
+class door           weight: 0.034, IoU: 0.053 
+class table          weight: 0.030, IoU: 0.686 
+class chair          weight: 0.040, IoU: 0.671 
+class sofa           weight: 0.019, IoU: 0.325 
+class bookcase       weight: 0.003, IoU: 0.613 
+class board          weight: 0.110, IoU: 0.513 
+class clutter        weight: 0.012, IoU: 0.406 
+
+2024-05-08 22:39:23,877 - Model - INFO - Eval mean loss: 0.770025
+2024-05-08 22:39:23,877 - Model - INFO - Eval accuracy: 0.804485
+2024-05-08 22:39:23,877 - Model - INFO - Save model...
+2024-05-08 22:39:23,877 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-08 22:39:23,931 - Model - INFO - Saving model....
+2024-05-08 22:39:23,931 - Model - INFO - Best mIoU: 0.504625
+2024-05-08 22:39:23,931 - Model - INFO - **** Epoch 11 (11/64) ****
+2024-05-08 22:39:23,931 - Model - INFO - Learning rate:0.000700
+2024-05-08 23:07:47,339 - Model - INFO - Training mean loss: 0.262932
+2024-05-08 23:07:47,340 - Model - INFO - Training accuracy: 0.911410
+2024-05-08 23:07:47,340 - Model - INFO - Save model...
+2024-05-08 23:07:47,340 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-08 23:07:47,387 - Model - INFO - Saving model....
+2024-05-08 23:07:47,643 - Model - INFO - ---- EPOCH 011 EVALUATION ----
+2024-05-08 23:18:55,208 - Model - INFO - eval mean loss: 0.890227
+2024-05-08 23:18:55,208 - Model - INFO - eval point avg class IoU: 0.493784
+2024-05-08 23:18:55,208 - Model - INFO - eval point accuracy: 0.808780
+2024-05-08 23:18:55,208 - Model - INFO - eval point avg class acc: 0.597861
+2024-05-08 23:18:55,208 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.892 
+class floor          weight: 0.200, IoU: 0.967 
+class wall           weight: 0.167, IoU: 0.737 
+class beam           weight: 0.280, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.031 
+class window         weight: 0.017, IoU: 0.509 
+class door           weight: 0.033, IoU: 0.104 
+class table          weight: 0.030, IoU: 0.653 
+class chair          weight: 0.039, IoU: 0.687 
+class sofa           weight: 0.020, IoU: 0.364 
+class bookcase       weight: 0.003, IoU: 0.527 
+class board          weight: 0.108, IoU: 0.578 
+class clutter        weight: 0.012, IoU: 0.371 
+
+2024-05-08 23:18:55,208 - Model - INFO - Eval mean loss: 0.890227
+2024-05-08 23:18:55,208 - Model - INFO - Eval accuracy: 0.808780
+2024-05-08 23:18:55,208 - Model - INFO - Best mIoU: 0.504625
+2024-05-08 23:18:55,208 - Model - INFO - **** Epoch 12 (12/64) ****
+2024-05-08 23:18:55,208 - Model - INFO - Learning rate:0.000700
+2024-05-08 23:47:19,085 - Model - INFO - Training mean loss: 0.258974
+2024-05-08 23:47:19,085 - Model - INFO - Training accuracy: 0.912657
+2024-05-08 23:47:19,347 - Model - INFO - ---- EPOCH 012 EVALUATION ----
+2024-05-08 23:58:23,071 - Model - INFO - eval mean loss: 0.892091
+2024-05-08 23:58:23,072 - Model - INFO - eval point avg class IoU: 0.486130
+2024-05-08 23:58:23,072 - Model - INFO - eval point accuracy: 0.822402
+2024-05-08 23:58:23,072 - Model - INFO - eval point avg class acc: 0.585665
+2024-05-08 23:58:23,072 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.891 
+class floor          weight: 0.201, IoU: 0.967 
+class wall           weight: 0.167, IoU: 0.731 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.052 
+class window         weight: 0.018, IoU: 0.451 
+class door           weight: 0.033, IoU: 0.062 
+class table          weight: 0.030, IoU: 0.667 
+class chair          weight: 0.040, IoU: 0.697 
+class sofa           weight: 0.019, IoU: 0.216 
+class bookcase       weight: 0.003, IoU: 0.639 
+class board          weight: 0.110, IoU: 0.523 
+class clutter        weight: 0.012, IoU: 0.425 
+
+2024-05-08 23:58:23,072 - Model - INFO - Eval mean loss: 0.892091
+2024-05-08 23:58:23,072 - Model - INFO - Eval accuracy: 0.822402
+2024-05-08 23:58:23,072 - Model - INFO - Best mIoU: 0.504625
+2024-05-08 23:58:23,072 - Model - INFO - **** Epoch 13 (13/64) ****
+2024-05-08 23:58:23,072 - Model - INFO - Learning rate:0.000700
+2024-05-09 00:26:46,326 - Model - INFO - Training mean loss: 0.254772
+2024-05-09 00:26:46,327 - Model - INFO - Training accuracy: 0.914102
+2024-05-09 00:26:46,660 - Model - INFO - ---- EPOCH 013 EVALUATION ----
+2024-05-09 00:37:51,836 - Model - INFO - eval mean loss: 0.878405
+2024-05-09 00:37:51,837 - Model - INFO - eval point avg class IoU: 0.453662
+2024-05-09 00:37:51,837 - Model - INFO - eval point accuracy: 0.789073
+2024-05-09 00:37:51,837 - Model - INFO - eval point avg class acc: 0.539827
+2024-05-09 00:37:51,837 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.876 
+class floor          weight: 0.200, IoU: 0.852 
+class wall           weight: 0.166, IoU: 0.713 
+class beam           weight: 0.278, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.022 
+class window         weight: 0.018, IoU: 0.455 
+class door           weight: 0.033, IoU: 0.117 
+class table          weight: 0.030, IoU: 0.539 
+class chair          weight: 0.040, IoU: 0.650 
+class sofa           weight: 0.019, IoU: 0.134 
+class bookcase       weight: 0.003, IoU: 0.587 
+class board          weight: 0.111, IoU: 0.549 
+class clutter        weight: 0.012, IoU: 0.403 
+
+2024-05-09 00:37:51,837 - Model - INFO - Eval mean loss: 0.878405
+2024-05-09 00:37:51,837 - Model - INFO - Eval accuracy: 0.789073
+2024-05-09 00:37:51,837 - Model - INFO - Best mIoU: 0.504625
+2024-05-09 00:37:51,837 - Model - INFO - **** Epoch 14 (14/64) ****
+2024-05-09 00:37:51,837 - Model - INFO - Learning rate:0.000700
+2024-05-09 01:06:16,430 - Model - INFO - Training mean loss: 0.250049
+2024-05-09 01:06:16,431 - Model - INFO - Training accuracy: 0.915359
+2024-05-09 01:06:16,692 - Model - INFO - ---- EPOCH 014 EVALUATION ----
+2024-05-09 01:17:19,548 - Model - INFO - eval mean loss: 0.812897
+2024-05-09 01:17:19,548 - Model - INFO - eval point avg class IoU: 0.495595
+2024-05-09 01:17:19,548 - Model - INFO - eval point accuracy: 0.814874
+2024-05-09 01:17:19,548 - Model - INFO - eval point avg class acc: 0.612768
+2024-05-09 01:17:19,549 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.092, IoU: 0.879 
+class floor          weight: 0.202, IoU: 0.968 
+class wall           weight: 0.166, IoU: 0.728 
+class beam           weight: 0.276, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.088 
+class window         weight: 0.017, IoU: 0.551 
+class door           weight: 0.033, IoU: 0.058 
+class table          weight: 0.031, IoU: 0.652 
+class chair          weight: 0.041, IoU: 0.691 
+class sofa           weight: 0.019, IoU: 0.359 
+class bookcase       weight: 0.003, IoU: 0.592 
+class board          weight: 0.109, IoU: 0.473 
+class clutter        weight: 0.012, IoU: 0.403 
+
+2024-05-09 01:17:19,549 - Model - INFO - Eval mean loss: 0.812897
+2024-05-09 01:17:19,549 - Model - INFO - Eval accuracy: 0.814874
+2024-05-09 01:17:19,549 - Model - INFO - Best mIoU: 0.504625
+2024-05-09 01:17:19,549 - Model - INFO - **** Epoch 15 (15/64) ****
+2024-05-09 01:17:19,549 - Model - INFO - Learning rate:0.000700
+2024-05-09 01:45:43,339 - Model - INFO - Training mean loss: 0.249940
+2024-05-09 01:45:43,339 - Model - INFO - Training accuracy: 0.915375
+2024-05-09 01:45:43,609 - Model - INFO - ---- EPOCH 015 EVALUATION ----
+2024-05-09 01:56:48,385 - Model - INFO - eval mean loss: 0.854086
+2024-05-09 01:56:48,385 - Model - INFO - eval point avg class IoU: 0.491890
+2024-05-09 01:56:48,385 - Model - INFO - eval point accuracy: 0.812609
+2024-05-09 01:56:48,385 - Model - INFO - eval point avg class acc: 0.608843
+2024-05-09 01:56:48,385 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.890 
+class floor          weight: 0.201, IoU: 0.964 
+class wall           weight: 0.167, IoU: 0.720 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.099 
+class window         weight: 0.018, IoU: 0.520 
+class door           weight: 0.035, IoU: 0.068 
+class table          weight: 0.031, IoU: 0.672 
+class chair          weight: 0.039, IoU: 0.695 
+class sofa           weight: 0.020, IoU: 0.310 
+class bookcase       weight: 0.003, IoU: 0.607 
+class board          weight: 0.108, IoU: 0.427 
+class clutter        weight: 0.012, IoU: 0.421 
+
+2024-05-09 01:56:48,385 - Model - INFO - Eval mean loss: 0.854086
+2024-05-09 01:56:48,385 - Model - INFO - Eval accuracy: 0.812609
+2024-05-09 01:56:48,386 - Model - INFO - Best mIoU: 0.504625
+2024-05-09 01:56:48,386 - Model - INFO - **** Epoch 16 (16/64) ****
+2024-05-09 01:56:48,386 - Model - INFO - Learning rate:0.000700
+2024-05-09 02:25:16,435 - Model - INFO - Training mean loss: 0.242295
+2024-05-09 02:25:16,435 - Model - INFO - Training accuracy: 0.917549
+2024-05-09 02:25:16,435 - Model - INFO - Save model...
+2024-05-09 02:25:16,435 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-09 02:25:16,482 - Model - INFO - Saving model....
+2024-05-09 02:25:16,741 - Model - INFO - ---- EPOCH 016 EVALUATION ----
+2024-05-09 02:36:23,563 - Model - INFO - eval mean loss: 0.959448
+2024-05-09 02:36:23,563 - Model - INFO - eval point avg class IoU: 0.476329
+2024-05-09 02:36:23,563 - Model - INFO - eval point accuracy: 0.805171
+2024-05-09 02:36:23,563 - Model - INFO - eval point avg class acc: 0.572724
+2024-05-09 02:36:23,563 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.092, IoU: 0.885 
+class floor          weight: 0.199, IoU: 0.966 
+class wall           weight: 0.166, IoU: 0.738 
+class beam           weight: 0.280, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.045 
+class window         weight: 0.018, IoU: 0.541 
+class door           weight: 0.034, IoU: 0.037 
+class table          weight: 0.030, IoU: 0.623 
+class chair          weight: 0.039, IoU: 0.631 
+class sofa           weight: 0.019, IoU: 0.237 
+class bookcase       weight: 0.003, IoU: 0.547 
+class board          weight: 0.108, IoU: 0.567 
+class clutter        weight: 0.012, IoU: 0.376 
+
+2024-05-09 02:36:23,563 - Model - INFO - Eval mean loss: 0.959448
+2024-05-09 02:36:23,563 - Model - INFO - Eval accuracy: 0.805171
+2024-05-09 02:36:23,563 - Model - INFO - Best mIoU: 0.504625
+2024-05-09 02:36:23,563 - Model - INFO - **** Epoch 17 (17/64) ****
+2024-05-09 02:36:23,563 - Model - INFO - Learning rate:0.000700
+2024-05-09 03:04:43,198 - Model - INFO - Training mean loss: 0.240097
+2024-05-09 03:04:43,198 - Model - INFO - Training accuracy: 0.918196
+2024-05-09 03:04:43,472 - Model - INFO - ---- EPOCH 017 EVALUATION ----
+2024-05-09 03:15:48,682 - Model - INFO - eval mean loss: 0.831422
+2024-05-09 03:15:48,682 - Model - INFO - eval point avg class IoU: 0.505674
+2024-05-09 03:15:48,682 - Model - INFO - eval point accuracy: 0.821313
+2024-05-09 03:15:48,682 - Model - INFO - eval point avg class acc: 0.617299
+2024-05-09 03:15:48,682 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.899 
+class floor          weight: 0.202, IoU: 0.962 
+class wall           weight: 0.167, IoU: 0.739 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.121 
+class window         weight: 0.019, IoU: 0.522 
+class door           weight: 0.034, IoU: 0.150 
+class table          weight: 0.029, IoU: 0.621 
+class chair          weight: 0.039, IoU: 0.673 
+class sofa           weight: 0.019, IoU: 0.280 
+class bookcase       weight: 0.003, IoU: 0.624 
+class board          weight: 0.110, IoU: 0.567 
+class clutter        weight: 0.012, IoU: 0.415 
+
+2024-05-09 03:15:48,682 - Model - INFO - Eval mean loss: 0.831422
+2024-05-09 03:15:48,682 - Model - INFO - Eval accuracy: 0.821313
+2024-05-09 03:15:48,682 - Model - INFO - Save model...
+2024-05-09 03:15:48,682 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-09 03:15:48,727 - Model - INFO - Saving model....
+2024-05-09 03:15:48,728 - Model - INFO - Best mIoU: 0.505674
+2024-05-09 03:15:48,728 - Model - INFO - **** Epoch 18 (18/64) ****
+2024-05-09 03:15:48,728 - Model - INFO - Learning rate:0.000700
+2024-05-09 03:44:09,552 - Model - INFO - Training mean loss: 0.238942
+2024-05-09 03:44:09,553 - Model - INFO - Training accuracy: 0.918348
+2024-05-09 03:44:09,809 - Model - INFO - ---- EPOCH 018 EVALUATION ----
+2024-05-09 03:55:12,660 - Model - INFO - eval mean loss: 0.847487
+2024-05-09 03:55:12,660 - Model - INFO - eval point avg class IoU: 0.486398
+2024-05-09 03:55:12,660 - Model - INFO - eval point accuracy: 0.813779
+2024-05-09 03:55:12,660 - Model - INFO - eval point avg class acc: 0.583403
+2024-05-09 03:55:12,660 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.898 
+class floor          weight: 0.201, IoU: 0.964 
+class wall           weight: 0.166, IoU: 0.728 
+class beam           weight: 0.274, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.057 
+class window         weight: 0.019, IoU: 0.461 
+class door           weight: 0.033, IoU: 0.098 
+class table          weight: 0.031, IoU: 0.644 
+class chair          weight: 0.039, IoU: 0.659 
+class sofa           weight: 0.019, IoU: 0.227 
+class bookcase       weight: 0.003, IoU: 0.602 
+class board          weight: 0.112, IoU: 0.582 
+class clutter        weight: 0.012, IoU: 0.402 
+
+2024-05-09 03:55:12,660 - Model - INFO - Eval mean loss: 0.847487
+2024-05-09 03:55:12,660 - Model - INFO - Eval accuracy: 0.813779
+2024-05-09 03:55:12,661 - Model - INFO - Best mIoU: 0.505674
+2024-05-09 03:55:12,661 - Model - INFO - **** Epoch 19 (19/64) ****
+2024-05-09 03:55:12,661 - Model - INFO - Learning rate:0.000700
+2024-05-09 04:23:43,308 - Model - INFO - Training mean loss: 0.242680
+2024-05-09 04:23:43,308 - Model - INFO - Training accuracy: 0.917572
+2024-05-09 04:23:43,566 - Model - INFO - ---- EPOCH 019 EVALUATION ----
+2024-05-09 04:34:50,596 - Model - INFO - eval mean loss: 0.811021
+2024-05-09 04:34:50,596 - Model - INFO - eval point avg class IoU: 0.493225
+2024-05-09 04:34:50,597 - Model - INFO - eval point accuracy: 0.809957
+2024-05-09 04:34:50,597 - Model - INFO - eval point avg class acc: 0.609519
+2024-05-09 04:34:50,597 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.089, IoU: 0.887 
+class floor          weight: 0.201, IoU: 0.960 
+class wall           weight: 0.166, IoU: 0.707 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.163 
+class window         weight: 0.018, IoU: 0.529 
+class door           weight: 0.034, IoU: 0.095 
+class table          weight: 0.030, IoU: 0.641 
+class chair          weight: 0.038, IoU: 0.654 
+class sofa           weight: 0.019, IoU: 0.302 
+class bookcase       weight: 0.003, IoU: 0.643 
+class board          weight: 0.111, IoU: 0.410 
+class clutter        weight: 0.012, IoU: 0.421 
+
+2024-05-09 04:34:50,597 - Model - INFO - Eval mean loss: 0.811021
+2024-05-09 04:34:50,597 - Model - INFO - Eval accuracy: 0.809957
+2024-05-09 04:34:50,597 - Model - INFO - Best mIoU: 0.505674
+2024-05-09 04:34:50,597 - Model - INFO - **** Epoch 20 (20/64) ****
+2024-05-09 04:34:50,597 - Model - INFO - Learning rate:0.000700
+2024-05-09 05:03:11,355 - Model - INFO - Training mean loss: 0.236093
+2024-05-09 05:03:11,355 - Model - INFO - Training accuracy: 0.919362
+2024-05-09 05:03:11,620 - Model - INFO - ---- EPOCH 020 EVALUATION ----
+2024-05-09 05:14:17,967 - Model - INFO - eval mean loss: 1.279536
+2024-05-09 05:14:17,967 - Model - INFO - eval point avg class IoU: 0.357880
+2024-05-09 05:14:17,967 - Model - INFO - eval point accuracy: 0.619025
+2024-05-09 05:14:17,967 - Model - INFO - eval point avg class acc: 0.481015
+2024-05-09 05:14:17,967 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.516 
+class floor          weight: 0.201, IoU: 0.454 
+class wall           weight: 0.167, IoU: 0.687 
+class beam           weight: 0.274, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.038 
+class window         weight: 0.019, IoU: 0.517 
+class door           weight: 0.034, IoU: 0.056 
+class table          weight: 0.030, IoU: 0.249 
+class chair          weight: 0.040, IoU: 0.604 
+class sofa           weight: 0.019, IoU: 0.275 
+class bookcase       weight: 0.003, IoU: 0.521 
+class board          weight: 0.110, IoU: 0.480 
+class clutter        weight: 0.012, IoU: 0.255 
+
+2024-05-09 05:14:17,967 - Model - INFO - Eval mean loss: 1.279536
+2024-05-09 05:14:17,967 - Model - INFO - Eval accuracy: 0.619025
+2024-05-09 05:14:17,967 - Model - INFO - Best mIoU: 0.505674
+2024-05-09 05:14:17,967 - Model - INFO - **** Epoch 21 (21/64) ****
+2024-05-09 05:14:17,967 - Model - INFO - Learning rate:0.000490
+2024-05-09 05:42:45,503 - Model - INFO - Training mean loss: 0.209282
+2024-05-09 05:42:45,503 - Model - INFO - Training accuracy: 0.927096
+2024-05-09 05:42:45,503 - Model - INFO - Save model...
+2024-05-09 05:42:45,503 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-09 05:42:45,550 - Model - INFO - Saving model....
+2024-05-09 05:42:45,805 - Model - INFO - ---- EPOCH 021 EVALUATION ----
+2024-05-09 05:53:51,051 - Model - INFO - eval mean loss: 0.798681
+2024-05-09 05:53:51,051 - Model - INFO - eval point avg class IoU: 0.488310
+2024-05-09 05:53:51,051 - Model - INFO - eval point accuracy: 0.792355
+2024-05-09 05:53:51,051 - Model - INFO - eval point avg class acc: 0.583018
+2024-05-09 05:53:51,051 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.878 
+class floor          weight: 0.202, IoU: 0.953 
+class wall           weight: 0.167, IoU: 0.681 
+class beam           weight: 0.276, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.140 
+class window         weight: 0.018, IoU: 0.454 
+class door           weight: 0.033, IoU: 0.039 
+class table          weight: 0.030, IoU: 0.658 
+class chair          weight: 0.040, IoU: 0.689 
+class sofa           weight: 0.019, IoU: 0.240 
+class bookcase       weight: 0.003, IoU: 0.610 
+class board          weight: 0.109, IoU: 0.613 
+class clutter        weight: 0.011, IoU: 0.392 
+
+2024-05-09 05:53:51,051 - Model - INFO - Eval mean loss: 0.798681
+2024-05-09 05:53:51,051 - Model - INFO - Eval accuracy: 0.792355
+2024-05-09 05:53:51,051 - Model - INFO - Best mIoU: 0.505674
+2024-05-09 05:53:51,051 - Model - INFO - **** Epoch 22 (22/64) ****
+2024-05-09 05:53:51,051 - Model - INFO - Learning rate:0.000490
+2024-05-09 06:22:12,657 - Model - INFO - Training mean loss: 0.204598
+2024-05-09 06:22:12,658 - Model - INFO - Training accuracy: 0.928374
+2024-05-09 06:22:12,911 - Model - INFO - ---- EPOCH 022 EVALUATION ----
+2024-05-09 06:33:19,708 - Model - INFO - eval mean loss: 0.909279
+2024-05-09 06:33:19,708 - Model - INFO - eval point avg class IoU: 0.493954
+2024-05-09 06:33:19,708 - Model - INFO - eval point accuracy: 0.808250
+2024-05-09 06:33:19,709 - Model - INFO - eval point avg class acc: 0.595820
+2024-05-09 06:33:19,709 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.881 
+class floor          weight: 0.201, IoU: 0.945 
+class wall           weight: 0.167, IoU: 0.714 
+class beam           weight: 0.274, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.096 
+class window         weight: 0.019, IoU: 0.544 
+class door           weight: 0.033, IoU: 0.066 
+class table          weight: 0.032, IoU: 0.631 
+class chair          weight: 0.040, IoU: 0.654 
+class sofa           weight: 0.019, IoU: 0.315 
+class bookcase       weight: 0.003, IoU: 0.626 
+class board          weight: 0.109, IoU: 0.547 
+class clutter        weight: 0.012, IoU: 0.403 
+
+2024-05-09 06:33:19,709 - Model - INFO - Eval mean loss: 0.909279
+2024-05-09 06:33:19,709 - Model - INFO - Eval accuracy: 0.808250
+2024-05-09 06:33:19,709 - Model - INFO - Best mIoU: 0.505674
+2024-05-09 06:33:19,709 - Model - INFO - **** Epoch 23 (23/64) ****
+2024-05-09 06:33:19,709 - Model - INFO - Learning rate:0.000490
+2024-05-09 07:01:40,712 - Model - INFO - Training mean loss: 0.205424
+2024-05-09 07:01:40,712 - Model - INFO - Training accuracy: 0.928380
+2024-05-09 07:01:40,974 - Model - INFO - ---- EPOCH 023 EVALUATION ----
+2024-05-09 07:12:48,627 - Model - INFO - eval mean loss: 0.781069
+2024-05-09 07:12:48,627 - Model - INFO - eval point avg class IoU: 0.502184
+2024-05-09 07:12:48,627 - Model - INFO - eval point accuracy: 0.810541
+2024-05-09 07:12:48,627 - Model - INFO - eval point avg class acc: 0.602652
+2024-05-09 07:12:48,627 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.887 
+class floor          weight: 0.203, IoU: 0.949 
+class wall           weight: 0.169, IoU: 0.733 
+class beam           weight: 0.273, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.114 
+class window         weight: 0.017, IoU: 0.555 
+class door           weight: 0.032, IoU: 0.073 
+class table          weight: 0.031, IoU: 0.615 
+class chair          weight: 0.040, IoU: 0.701 
+class sofa           weight: 0.019, IoU: 0.320 
+class bookcase       weight: 0.003, IoU: 0.600 
+class board          weight: 0.110, IoU: 0.577 
+class clutter        weight: 0.011, IoU: 0.405 
+
+2024-05-09 07:12:48,627 - Model - INFO - Eval mean loss: 0.781069
+2024-05-09 07:12:48,627 - Model - INFO - Eval accuracy: 0.810541
+2024-05-09 07:12:48,627 - Model - INFO - Best mIoU: 0.505674
+2024-05-09 07:12:48,628 - Model - INFO - **** Epoch 24 (24/64) ****
+2024-05-09 07:12:48,628 - Model - INFO - Learning rate:0.000490
+2024-05-09 07:41:09,944 - Model - INFO - Training mean loss: 0.200889
+2024-05-09 07:41:09,945 - Model - INFO - Training accuracy: 0.929664
+2024-05-09 07:41:10,212 - Model - INFO - ---- EPOCH 024 EVALUATION ----
+2024-05-09 07:52:14,918 - Model - INFO - eval mean loss: 0.978020
+2024-05-09 07:52:14,918 - Model - INFO - eval point avg class IoU: 0.488974
+2024-05-09 07:52:14,918 - Model - INFO - eval point accuracy: 0.816335
+2024-05-09 07:52:14,918 - Model - INFO - eval point avg class acc: 0.584750
+2024-05-09 07:52:14,918 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.092, IoU: 0.886 
+class floor          weight: 0.199, IoU: 0.953 
+class wall           weight: 0.166, IoU: 0.720 
+class beam           weight: 0.276, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.071 
+class window         weight: 0.018, IoU: 0.465 
+class door           weight: 0.034, IoU: 0.082 
+class table          weight: 0.030, IoU: 0.638 
+class chair          weight: 0.039, IoU: 0.667 
+class sofa           weight: 0.019, IoU: 0.275 
+class bookcase       weight: 0.003, IoU: 0.661 
+class board          weight: 0.112, IoU: 0.524 
+class clutter        weight: 0.012, IoU: 0.414 
+
+2024-05-09 07:52:14,918 - Model - INFO - Eval mean loss: 0.978020
+2024-05-09 07:52:14,918 - Model - INFO - Eval accuracy: 0.816335
+2024-05-09 07:52:14,918 - Model - INFO - Best mIoU: 0.505674
+2024-05-09 07:52:14,918 - Model - INFO - **** Epoch 25 (25/64) ****
+2024-05-09 07:52:14,918 - Model - INFO - Learning rate:0.000490
+2024-05-09 08:20:36,408 - Model - INFO - Training mean loss: 0.201631
+2024-05-09 08:20:36,408 - Model - INFO - Training accuracy: 0.929496
+2024-05-09 08:20:36,669 - Model - INFO - ---- EPOCH 025 EVALUATION ----
+2024-05-09 08:31:44,142 - Model - INFO - eval mean loss: 0.970358
+2024-05-09 08:31:44,142 - Model - INFO - eval point avg class IoU: 0.486968
+2024-05-09 08:31:44,142 - Model - INFO - eval point accuracy: 0.813276
+2024-05-09 08:31:44,142 - Model - INFO - eval point avg class acc: 0.588152
+2024-05-09 08:31:44,143 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.892 
+class floor          weight: 0.202, IoU: 0.954 
+class wall           weight: 0.166, IoU: 0.730 
+class beam           weight: 0.276, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.091 
+class window         weight: 0.018, IoU: 0.514 
+class door           weight: 0.032, IoU: 0.057 
+class table          weight: 0.031, IoU: 0.660 
+class chair          weight: 0.039, IoU: 0.646 
+class sofa           weight: 0.019, IoU: 0.190 
+class bookcase       weight: 0.003, IoU: 0.627 
+class board          weight: 0.113, IoU: 0.591 
+class clutter        weight: 0.012, IoU: 0.377 
+
+2024-05-09 08:31:44,143 - Model - INFO - Eval mean loss: 0.970358
+2024-05-09 08:31:44,143 - Model - INFO - Eval accuracy: 0.813276
+2024-05-09 08:31:44,143 - Model - INFO - Best mIoU: 0.505674
+2024-05-09 08:31:44,143 - Model - INFO - **** Epoch 26 (26/64) ****
+2024-05-09 08:31:44,143 - Model - INFO - Learning rate:0.000490
+2024-05-09 09:00:09,154 - Model - INFO - Training mean loss: 0.199452
+2024-05-09 09:00:09,154 - Model - INFO - Training accuracy: 0.930018
+2024-05-09 09:00:09,154 - Model - INFO - Save model...
+2024-05-09 09:00:09,154 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-09 09:00:09,203 - Model - INFO - Saving model....
+2024-05-09 09:00:09,469 - Model - INFO - ---- EPOCH 026 EVALUATION ----
+2024-05-09 09:11:16,181 - Model - INFO - eval mean loss: 0.851105
+2024-05-09 09:11:16,181 - Model - INFO - eval point avg class IoU: 0.510017
+2024-05-09 09:11:16,181 - Model - INFO - eval point accuracy: 0.813124
+2024-05-09 09:11:16,181 - Model - INFO - eval point avg class acc: 0.612871
+2024-05-09 09:11:16,181 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.888 
+class floor          weight: 0.201, IoU: 0.967 
+class wall           weight: 0.166, IoU: 0.712 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.149 
+class window         weight: 0.019, IoU: 0.477 
+class door           weight: 0.034, IoU: 0.130 
+class table          weight: 0.031, IoU: 0.682 
+class chair          weight: 0.039, IoU: 0.715 
+class sofa           weight: 0.019, IoU: 0.294 
+class bookcase       weight: 0.003, IoU: 0.626 
+class board          weight: 0.109, IoU: 0.576 
+class clutter        weight: 0.012, IoU: 0.413 
+
+2024-05-09 09:11:16,182 - Model - INFO - Eval mean loss: 0.851105
+2024-05-09 09:11:16,182 - Model - INFO - Eval accuracy: 0.813124
+2024-05-09 09:11:16,182 - Model - INFO - Save model...
+2024-05-09 09:11:16,182 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-09 09:11:16,233 - Model - INFO - Saving model....
+2024-05-09 09:11:16,233 - Model - INFO - Best mIoU: 0.510017
+2024-05-09 09:11:16,233 - Model - INFO - **** Epoch 27 (27/64) ****
+2024-05-09 09:11:16,233 - Model - INFO - Learning rate:0.000490
+2024-05-09 09:39:39,315 - Model - INFO - Training mean loss: 0.201747
+2024-05-09 09:39:39,315 - Model - INFO - Training accuracy: 0.929622
+2024-05-09 09:39:39,601 - Model - INFO - ---- EPOCH 027 EVALUATION ----
+2024-05-09 09:50:45,358 - Model - INFO - eval mean loss: 0.895124
+2024-05-09 09:50:45,359 - Model - INFO - eval point avg class IoU: 0.493193
+2024-05-09 09:50:45,359 - Model - INFO - eval point accuracy: 0.805041
+2024-05-09 09:50:45,359 - Model - INFO - eval point avg class acc: 0.585585
+2024-05-09 09:50:45,359 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.888 
+class floor          weight: 0.201, IoU: 0.958 
+class wall           weight: 0.166, IoU: 0.705 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.099 
+class window         weight: 0.018, IoU: 0.515 
+class door           weight: 0.033, IoU: 0.100 
+class table          weight: 0.030, IoU: 0.656 
+class chair          weight: 0.040, IoU: 0.682 
+class sofa           weight: 0.019, IoU: 0.238 
+class bookcase       weight: 0.003, IoU: 0.597 
+class board          weight: 0.109, IoU: 0.573 
+class clutter        weight: 0.012, IoU: 0.400 
+
+2024-05-09 09:50:45,359 - Model - INFO - Eval mean loss: 0.895124
+2024-05-09 09:50:45,360 - Model - INFO - Eval accuracy: 0.805041
+2024-05-09 09:50:45,360 - Model - INFO - Best mIoU: 0.510017
+2024-05-09 09:50:45,360 - Model - INFO - **** Epoch 28 (28/64) ****
+2024-05-09 09:50:45,360 - Model - INFO - Learning rate:0.000490
+2024-05-09 10:19:12,097 - Model - INFO - Training mean loss: 0.200930
+2024-05-09 10:19:12,098 - Model - INFO - Training accuracy: 0.929825
+2024-05-09 10:19:12,362 - Model - INFO - ---- EPOCH 028 EVALUATION ----
+2024-05-09 10:30:17,669 - Model - INFO - eval mean loss: 0.795493
+2024-05-09 10:30:17,670 - Model - INFO - eval point avg class IoU: 0.504126
+2024-05-09 10:30:17,670 - Model - INFO - eval point accuracy: 0.818937
+2024-05-09 10:30:17,670 - Model - INFO - eval point avg class acc: 0.600338
+2024-05-09 10:30:17,670 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.880 
+class floor          weight: 0.200, IoU: 0.964 
+class wall           weight: 0.166, IoU: 0.731 
+class beam           weight: 0.275, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.071 
+class window         weight: 0.019, IoU: 0.547 
+class door           weight: 0.036, IoU: 0.142 
+class table          weight: 0.030, IoU: 0.626 
+class chair          weight: 0.040, IoU: 0.659 
+class sofa           weight: 0.019, IoU: 0.293 
+class bookcase       weight: 0.003, IoU: 0.635 
+class board          weight: 0.108, IoU: 0.594 
+class clutter        weight: 0.011, IoU: 0.411 
+
+2024-05-09 10:30:17,670 - Model - INFO - Eval mean loss: 0.795493
+2024-05-09 10:30:17,670 - Model - INFO - Eval accuracy: 0.818937
+2024-05-09 10:30:17,670 - Model - INFO - Best mIoU: 0.510017
+2024-05-09 10:30:17,670 - Model - INFO - **** Epoch 29 (29/64) ****
+2024-05-09 10:30:17,670 - Model - INFO - Learning rate:0.000490
+2024-05-09 10:58:43,274 - Model - INFO - Training mean loss: 0.194529
+2024-05-09 10:58:43,275 - Model - INFO - Training accuracy: 0.931646
+2024-05-09 10:58:43,566 - Model - INFO - ---- EPOCH 029 EVALUATION ----
+2024-05-09 11:09:50,003 - Model - INFO - eval mean loss: 0.888882
+2024-05-09 11:09:50,003 - Model - INFO - eval point avg class IoU: 0.490042
+2024-05-09 11:09:50,003 - Model - INFO - eval point accuracy: 0.815914
+2024-05-09 11:09:50,004 - Model - INFO - eval point avg class acc: 0.597008
+2024-05-09 11:09:50,004 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.089, IoU: 0.885 
+class floor          weight: 0.200, IoU: 0.958 
+class wall           weight: 0.165, IoU: 0.735 
+class beam           weight: 0.279, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.057 
+class window         weight: 0.018, IoU: 0.516 
+class door           weight: 0.032, IoU: 0.102 
+class table          weight: 0.030, IoU: 0.656 
+class chair          weight: 0.039, IoU: 0.673 
+class sofa           weight: 0.019, IoU: 0.262 
+class bookcase       weight: 0.003, IoU: 0.640 
+class board          weight: 0.112, IoU: 0.466 
+class clutter        weight: 0.011, IoU: 0.421 
+
+2024-05-09 11:09:50,004 - Model - INFO - Eval mean loss: 0.888882
+2024-05-09 11:09:50,004 - Model - INFO - Eval accuracy: 0.815914
+2024-05-09 11:09:50,004 - Model - INFO - Best mIoU: 0.510017
+2024-05-09 11:09:50,004 - Model - INFO - **** Epoch 30 (30/64) ****
+2024-05-09 11:09:50,004 - Model - INFO - Learning rate:0.000490
+2024-05-09 11:38:14,563 - Model - INFO - Training mean loss: 0.195455
+2024-05-09 11:38:14,564 - Model - INFO - Training accuracy: 0.931549
+2024-05-09 11:38:14,846 - Model - INFO - ---- EPOCH 030 EVALUATION ----
+2024-05-09 11:49:20,509 - Model - INFO - eval mean loss: 0.963967
+2024-05-09 11:49:20,509 - Model - INFO - eval point avg class IoU: 0.503351
+2024-05-09 11:49:20,509 - Model - INFO - eval point accuracy: 0.813270
+2024-05-09 11:49:20,509 - Model - INFO - eval point avg class acc: 0.586119
+2024-05-09 11:49:20,509 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.899 
+class floor          weight: 0.201, IoU: 0.961 
+class wall           weight: 0.167, IoU: 0.725 
+class beam           weight: 0.278, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.081 
+class window         weight: 0.017, IoU: 0.482 
+class door           weight: 0.031, IoU: 0.092 
+class table          weight: 0.030, IoU: 0.628 
+class chair          weight: 0.039, IoU: 0.721 
+class sofa           weight: 0.019, IoU: 0.325 
+class bookcase       weight: 0.003, IoU: 0.603 
+class board          weight: 0.110, IoU: 0.629 
+class clutter        weight: 0.012, IoU: 0.398 
+
+2024-05-09 11:49:20,510 - Model - INFO - Eval mean loss: 0.963967
+2024-05-09 11:49:20,510 - Model - INFO - Eval accuracy: 0.813270
+2024-05-09 11:49:20,510 - Model - INFO - Best mIoU: 0.510017
+2024-05-09 11:49:20,510 - Model - INFO - **** Epoch 31 (31/64) ****
+2024-05-09 11:49:20,510 - Model - INFO - Learning rate:0.000343
+2024-05-09 12:17:44,930 - Model - INFO - Training mean loss: 0.175743
+2024-05-09 12:17:44,931 - Model - INFO - Training accuracy: 0.937330
+2024-05-09 12:17:44,931 - Model - INFO - Save model...
+2024-05-09 12:17:44,931 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-09 12:17:44,978 - Model - INFO - Saving model....
+2024-05-09 12:17:45,250 - Model - INFO - ---- EPOCH 031 EVALUATION ----
+2024-05-09 12:28:50,968 - Model - INFO - eval mean loss: 0.896655
+2024-05-09 12:28:50,968 - Model - INFO - eval point avg class IoU: 0.484525
+2024-05-09 12:28:50,968 - Model - INFO - eval point accuracy: 0.804326
+2024-05-09 12:28:50,968 - Model - INFO - eval point avg class acc: 0.600164
+2024-05-09 12:28:50,968 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.889 
+class floor          weight: 0.201, IoU: 0.954 
+class wall           weight: 0.166, IoU: 0.705 
+class beam           weight: 0.274, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.114 
+class window         weight: 0.018, IoU: 0.534 
+class door           weight: 0.034, IoU: 0.035 
+class table          weight: 0.031, IoU: 0.645 
+class chair          weight: 0.039, IoU: 0.683 
+class sofa           weight: 0.020, IoU: 0.301 
+class bookcase       weight: 0.003, IoU: 0.599 
+class board          weight: 0.111, IoU: 0.445 
+class clutter        weight: 0.012, IoU: 0.395 
+
+2024-05-09 12:28:50,968 - Model - INFO - Eval mean loss: 0.896655
+2024-05-09 12:28:50,968 - Model - INFO - Eval accuracy: 0.804326
+2024-05-09 12:28:50,968 - Model - INFO - Best mIoU: 0.510017
+2024-05-09 12:28:50,968 - Model - INFO - **** Epoch 32 (32/64) ****
+2024-05-09 12:28:50,968 - Model - INFO - Learning rate:0.000343
+2024-05-09 12:57:14,461 - Model - INFO - Training mean loss: 0.175653
+2024-05-09 12:57:14,461 - Model - INFO - Training accuracy: 0.937421
+2024-05-09 12:57:14,747 - Model - INFO - ---- EPOCH 032 EVALUATION ----
+2024-05-09 13:08:20,470 - Model - INFO - eval mean loss: 0.929763
+2024-05-09 13:08:20,470 - Model - INFO - eval point avg class IoU: 0.502653
+2024-05-09 13:08:20,470 - Model - INFO - eval point accuracy: 0.813516
+2024-05-09 13:08:20,470 - Model - INFO - eval point avg class acc: 0.600477
+2024-05-09 13:08:20,470 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.884 
+class floor          weight: 0.202, IoU: 0.957 
+class wall           weight: 0.167, IoU: 0.714 
+class beam           weight: 0.274, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.080 
+class window         weight: 0.018, IoU: 0.521 
+class door           weight: 0.032, IoU: 0.074 
+class table          weight: 0.031, IoU: 0.663 
+class chair          weight: 0.039, IoU: 0.703 
+class sofa           weight: 0.019, IoU: 0.286 
+class bookcase       weight: 0.003, IoU: 0.642 
+class board          weight: 0.113, IoU: 0.580 
+class clutter        weight: 0.011, IoU: 0.430 
+
+2024-05-09 13:08:20,471 - Model - INFO - Eval mean loss: 0.929763
+2024-05-09 13:08:20,471 - Model - INFO - Eval accuracy: 0.813516
+2024-05-09 13:08:20,471 - Model - INFO - Best mIoU: 0.510017
+2024-05-09 13:08:20,471 - Model - INFO - **** Epoch 33 (33/64) ****
+2024-05-09 13:08:20,471 - Model - INFO - Learning rate:0.000343
+2024-05-09 13:36:45,049 - Model - INFO - Training mean loss: 0.173350
+2024-05-09 13:36:45,049 - Model - INFO - Training accuracy: 0.937562
+2024-05-09 13:36:45,308 - Model - INFO - ---- EPOCH 033 EVALUATION ----
+2024-05-09 13:47:51,440 - Model - INFO - eval mean loss: 1.002799
+2024-05-09 13:47:51,441 - Model - INFO - eval point avg class IoU: 0.502555
+2024-05-09 13:47:51,441 - Model - INFO - eval point accuracy: 0.811915
+2024-05-09 13:47:51,441 - Model - INFO - eval point avg class acc: 0.597939
+2024-05-09 13:47:51,441 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.089, IoU: 0.891 
+class floor          weight: 0.199, IoU: 0.952 
+class wall           weight: 0.166, IoU: 0.710 
+class beam           weight: 0.279, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.038 
+class window         weight: 0.018, IoU: 0.573 
+class door           weight: 0.034, IoU: 0.031 
+class table          weight: 0.032, IoU: 0.645 
+class chair          weight: 0.039, IoU: 0.708 
+class sofa           weight: 0.018, IoU: 0.337 
+class bookcase       weight: 0.003, IoU: 0.649 
+class board          weight: 0.110, IoU: 0.592 
+class clutter        weight: 0.012, IoU: 0.407 
+
+2024-05-09 13:47:51,441 - Model - INFO - Eval mean loss: 1.002799
+2024-05-09 13:47:51,441 - Model - INFO - Eval accuracy: 0.811915
+2024-05-09 13:47:51,441 - Model - INFO - Best mIoU: 0.510017
+2024-05-09 13:47:51,441 - Model - INFO - **** Epoch 34 (34/64) ****
+2024-05-09 13:47:51,441 - Model - INFO - Learning rate:0.000343
+2024-05-09 14:16:14,710 - Model - INFO - Training mean loss: 0.171637
+2024-05-09 14:16:14,710 - Model - INFO - Training accuracy: 0.938544
+2024-05-09 14:16:14,973 - Model - INFO - ---- EPOCH 034 EVALUATION ----
+2024-05-09 14:27:20,279 - Model - INFO - eval mean loss: 0.857293
+2024-05-09 14:27:20,279 - Model - INFO - eval point avg class IoU: 0.502267
+2024-05-09 14:27:20,279 - Model - INFO - eval point accuracy: 0.814652
+2024-05-09 14:27:20,279 - Model - INFO - eval point avg class acc: 0.592680
+2024-05-09 14:27:20,279 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.092, IoU: 0.899 
+class floor          weight: 0.201, IoU: 0.958 
+class wall           weight: 0.168, IoU: 0.716 
+class beam           weight: 0.276, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.100 
+class window         weight: 0.017, IoU: 0.560 
+class door           weight: 0.032, IoU: 0.087 
+class table          weight: 0.032, IoU: 0.656 
+class chair          weight: 0.040, IoU: 0.677 
+class sofa           weight: 0.019, IoU: 0.235 
+class bookcase       weight: 0.003, IoU: 0.612 
+class board          weight: 0.108, IoU: 0.601 
+class clutter        weight: 0.012, IoU: 0.429 
+
+2024-05-09 14:27:20,280 - Model - INFO - Eval mean loss: 0.857293
+2024-05-09 14:27:20,280 - Model - INFO - Eval accuracy: 0.814652
+2024-05-09 14:27:20,280 - Model - INFO - Best mIoU: 0.510017
+2024-05-09 14:27:20,280 - Model - INFO - **** Epoch 35 (35/64) ****
+2024-05-09 14:27:20,280 - Model - INFO - Learning rate:0.000343
+2024-05-09 14:55:43,196 - Model - INFO - Training mean loss: 0.172189
+2024-05-09 14:55:43,196 - Model - INFO - Training accuracy: 0.938446
+2024-05-09 14:55:43,469 - Model - INFO - ---- EPOCH 035 EVALUATION ----
+2024-05-09 15:06:50,770 - Model - INFO - eval mean loss: 0.892244
+2024-05-09 15:06:50,770 - Model - INFO - eval point avg class IoU: 0.507284
+2024-05-09 15:06:50,770 - Model - INFO - eval point accuracy: 0.821542
+2024-05-09 15:06:50,770 - Model - INFO - eval point avg class acc: 0.611377
+2024-05-09 15:06:50,770 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.899 
+class floor          weight: 0.201, IoU: 0.958 
+class wall           weight: 0.168, IoU: 0.723 
+class beam           weight: 0.274, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.071 
+class window         weight: 0.019, IoU: 0.515 
+class door           weight: 0.033, IoU: 0.083 
+class table          weight: 0.031, IoU: 0.657 
+class chair          weight: 0.039, IoU: 0.695 
+class sofa           weight: 0.019, IoU: 0.337 
+class bookcase       weight: 0.003, IoU: 0.631 
+class board          weight: 0.111, IoU: 0.596 
+class clutter        weight: 0.012, IoU: 0.430 
+
+2024-05-09 15:06:50,770 - Model - INFO - Eval mean loss: 0.892244
+2024-05-09 15:06:50,770 - Model - INFO - Eval accuracy: 0.821542
+2024-05-09 15:06:50,771 - Model - INFO - Best mIoU: 0.510017
+2024-05-09 15:06:50,771 - Model - INFO - **** Epoch 36 (36/64) ****
+2024-05-09 15:06:50,771 - Model - INFO - Learning rate:0.000343
+2024-05-09 15:35:16,443 - Model - INFO - Training mean loss: 0.172247
+2024-05-09 15:35:16,444 - Model - INFO - Training accuracy: 0.938436
+2024-05-09 15:35:16,444 - Model - INFO - Save model...
+2024-05-09 15:35:16,444 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-09 15:35:16,490 - Model - INFO - Saving model....
+2024-05-09 15:35:16,748 - Model - INFO - ---- EPOCH 036 EVALUATION ----
+2024-05-09 15:46:23,368 - Model - INFO - eval mean loss: 0.827364
+2024-05-09 15:46:23,368 - Model - INFO - eval point avg class IoU: 0.520199
+2024-05-09 15:46:23,368 - Model - INFO - eval point accuracy: 0.815320
+2024-05-09 15:46:23,368 - Model - INFO - eval point avg class acc: 0.620459
+2024-05-09 15:46:23,369 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.092, IoU: 0.905 
+class floor          weight: 0.200, IoU: 0.954 
+class wall           weight: 0.166, IoU: 0.712 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.149 
+class window         weight: 0.019, IoU: 0.537 
+class door           weight: 0.034, IoU: 0.124 
+class table          weight: 0.030, IoU: 0.643 
+class chair          weight: 0.039, IoU: 0.727 
+class sofa           weight: 0.019, IoU: 0.311 
+class bookcase       weight: 0.003, IoU: 0.618 
+class board          weight: 0.108, IoU: 0.628 
+class clutter        weight: 0.012, IoU: 0.454 
+
+2024-05-09 15:46:23,369 - Model - INFO - Eval mean loss: 0.827364
+2024-05-09 15:46:23,369 - Model - INFO - Eval accuracy: 0.815320
+2024-05-09 15:46:23,369 - Model - INFO - Save model...
+2024-05-09 15:46:23,369 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-09 15:46:23,414 - Model - INFO - Saving model....
+2024-05-09 15:46:23,414 - Model - INFO - Best mIoU: 0.520199
+2024-05-09 15:46:23,414 - Model - INFO - **** Epoch 37 (37/64) ****
+2024-05-09 15:46:23,414 - Model - INFO - Learning rate:0.000343
+2024-05-09 16:14:48,779 - Model - INFO - Training mean loss: 0.171371
+2024-05-09 16:14:48,779 - Model - INFO - Training accuracy: 0.938610
+2024-05-09 16:14:49,042 - Model - INFO - ---- EPOCH 037 EVALUATION ----
+2024-05-09 16:25:55,946 - Model - INFO - eval mean loss: 0.912411
+2024-05-09 16:25:55,946 - Model - INFO - eval point avg class IoU: 0.483325
+2024-05-09 16:25:55,946 - Model - INFO - eval point accuracy: 0.806598
+2024-05-09 16:25:55,946 - Model - INFO - eval point avg class acc: 0.593450
+2024-05-09 16:25:55,946 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.093, IoU: 0.892 
+class floor          weight: 0.200, IoU: 0.957 
+class wall           weight: 0.167, IoU: 0.732 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.082 
+class window         weight: 0.018, IoU: 0.477 
+class door           weight: 0.035, IoU: 0.057 
+class table          weight: 0.029, IoU: 0.678 
+class chair          weight: 0.039, IoU: 0.711 
+class sofa           weight: 0.019, IoU: 0.245 
+class bookcase       weight: 0.003, IoU: 0.606 
+class board          weight: 0.108, IoU: 0.464 
+class clutter        weight: 0.012, IoU: 0.384 
+
+2024-05-09 16:25:55,946 - Model - INFO - Eval mean loss: 0.912411
+2024-05-09 16:25:55,946 - Model - INFO - Eval accuracy: 0.806598
+2024-05-09 16:25:55,946 - Model - INFO - Best mIoU: 0.520199
+2024-05-09 16:25:55,947 - Model - INFO - **** Epoch 38 (38/64) ****
+2024-05-09 16:25:55,947 - Model - INFO - Learning rate:0.000343
+2024-05-09 16:54:20,422 - Model - INFO - Training mean loss: 0.169704
+2024-05-09 16:54:20,422 - Model - INFO - Training accuracy: 0.939295
+2024-05-09 16:54:20,681 - Model - INFO - ---- EPOCH 038 EVALUATION ----
+2024-05-09 17:05:28,850 - Model - INFO - eval mean loss: 0.926395
+2024-05-09 17:05:28,850 - Model - INFO - eval point avg class IoU: 0.500337
+2024-05-09 17:05:28,850 - Model - INFO - eval point accuracy: 0.813974
+2024-05-09 17:05:28,851 - Model - INFO - eval point avg class acc: 0.600499
+2024-05-09 17:05:28,851 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.894 
+class floor          weight: 0.201, IoU: 0.963 
+class wall           weight: 0.167, IoU: 0.729 
+class beam           weight: 0.274, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.063 
+class window         weight: 0.019, IoU: 0.542 
+class door           weight: 0.034, IoU: 0.114 
+class table          weight: 0.031, IoU: 0.650 
+class chair          weight: 0.039, IoU: 0.697 
+class sofa           weight: 0.019, IoU: 0.302 
+class bookcase       weight: 0.003, IoU: 0.612 
+class board          weight: 0.110, IoU: 0.537 
+class clutter        weight: 0.012, IoU: 0.403 
+
+2024-05-09 17:05:28,851 - Model - INFO - Eval mean loss: 0.926395
+2024-05-09 17:05:28,851 - Model - INFO - Eval accuracy: 0.813974
+2024-05-09 17:05:28,851 - Model - INFO - Best mIoU: 0.520199
+2024-05-09 17:05:28,851 - Model - INFO - **** Epoch 39 (39/64) ****
+2024-05-09 17:05:28,851 - Model - INFO - Learning rate:0.000343
+2024-05-09 17:33:54,068 - Model - INFO - Training mean loss: 0.170524
+2024-05-09 17:33:54,068 - Model - INFO - Training accuracy: 0.938852
+2024-05-09 17:33:54,322 - Model - INFO - ---- EPOCH 039 EVALUATION ----
+2024-05-09 17:45:01,314 - Model - INFO - eval mean loss: 0.973349
+2024-05-09 17:45:01,314 - Model - INFO - eval point avg class IoU: 0.495794
+2024-05-09 17:45:01,314 - Model - INFO - eval point accuracy: 0.817408
+2024-05-09 17:45:01,314 - Model - INFO - eval point avg class acc: 0.586781
+2024-05-09 17:45:01,315 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.884 
+class floor          weight: 0.201, IoU: 0.963 
+class wall           weight: 0.165, IoU: 0.732 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.033 
+class window         weight: 0.018, IoU: 0.541 
+class door           weight: 0.032, IoU: 0.074 
+class table          weight: 0.031, IoU: 0.670 
+class chair          weight: 0.040, IoU: 0.707 
+class sofa           weight: 0.019, IoU: 0.241 
+class bookcase       weight: 0.003, IoU: 0.640 
+class board          weight: 0.110, IoU: 0.569 
+class clutter        weight: 0.012, IoU: 0.391 
+
+2024-05-09 17:45:01,315 - Model - INFO - Eval mean loss: 0.973349
+2024-05-09 17:45:01,315 - Model - INFO - Eval accuracy: 0.817408
+2024-05-09 17:45:01,315 - Model - INFO - Best mIoU: 0.520199
+2024-05-09 17:45:01,315 - Model - INFO - **** Epoch 40 (40/64) ****
+2024-05-09 17:45:01,315 - Model - INFO - Learning rate:0.000343
+2024-05-09 18:13:26,809 - Model - INFO - Training mean loss: 0.171138
+2024-05-09 18:13:26,810 - Model - INFO - Training accuracy: 0.938754
+2024-05-09 18:13:27,074 - Model - INFO - ---- EPOCH 040 EVALUATION ----
+2024-05-09 18:24:35,668 - Model - INFO - eval mean loss: 0.975682
+2024-05-09 18:24:35,668 - Model - INFO - eval point avg class IoU: 0.505659
+2024-05-09 18:24:35,668 - Model - INFO - eval point accuracy: 0.811733
+2024-05-09 18:24:35,668 - Model - INFO - eval point avg class acc: 0.597773
+2024-05-09 18:24:35,669 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.896 
+class floor          weight: 0.201, IoU: 0.961 
+class wall           weight: 0.166, IoU: 0.701 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.092 
+class window         weight: 0.019, IoU: 0.466 
+class door           weight: 0.032, IoU: 0.096 
+class table          weight: 0.032, IoU: 0.665 
+class chair          weight: 0.039, IoU: 0.714 
+class sofa           weight: 0.019, IoU: 0.341 
+class bookcase       weight: 0.003, IoU: 0.626 
+class board          weight: 0.109, IoU: 0.600 
+class clutter        weight: 0.012, IoU: 0.416 
+
+2024-05-09 18:24:35,669 - Model - INFO - Eval mean loss: 0.975682
+2024-05-09 18:24:35,669 - Model - INFO - Eval accuracy: 0.811733
+2024-05-09 18:24:35,669 - Model - INFO - Best mIoU: 0.520199
+2024-05-09 18:24:35,669 - Model - INFO - **** Epoch 41 (41/64) ****
+2024-05-09 18:24:35,669 - Model - INFO - Learning rate:0.000240
+2024-05-09 18:53:04,188 - Model - INFO - Training mean loss: 0.157087
+2024-05-09 18:53:04,189 - Model - INFO - Training accuracy: 0.943035
+2024-05-09 18:53:04,189 - Model - INFO - Save model...
+2024-05-09 18:53:04,189 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-09 18:53:04,235 - Model - INFO - Saving model....
+2024-05-09 18:53:04,493 - Model - INFO - ---- EPOCH 041 EVALUATION ----
+2024-05-09 19:04:14,488 - Model - INFO - eval mean loss: 0.963728
+2024-05-09 19:04:14,488 - Model - INFO - eval point avg class IoU: 0.508324
+2024-05-09 19:04:14,488 - Model - INFO - eval point accuracy: 0.822319
+2024-05-09 19:04:14,488 - Model - INFO - eval point avg class acc: 0.602824
+2024-05-09 19:04:14,489 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.894 
+class floor          weight: 0.203, IoU: 0.963 
+class wall           weight: 0.169, IoU: 0.729 
+class beam           weight: 0.273, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.072 
+class window         weight: 0.017, IoU: 0.547 
+class door           weight: 0.034, IoU: 0.070 
+class table          weight: 0.030, IoU: 0.659 
+class chair          weight: 0.040, IoU: 0.713 
+class sofa           weight: 0.020, IoU: 0.310 
+class bookcase       weight: 0.003, IoU: 0.637 
+class board          weight: 0.109, IoU: 0.593 
+class clutter        weight: 0.012, IoU: 0.421 
+
+2024-05-09 19:04:14,489 - Model - INFO - Eval mean loss: 0.963728
+2024-05-09 19:04:14,489 - Model - INFO - Eval accuracy: 0.822319
+2024-05-09 19:04:14,489 - Model - INFO - Best mIoU: 0.520199
+2024-05-09 19:04:14,489 - Model - INFO - **** Epoch 42 (42/64) ****
+2024-05-09 19:04:14,489 - Model - INFO - Learning rate:0.000240
+2024-05-09 19:32:43,816 - Model - INFO - Training mean loss: 0.152082
+2024-05-09 19:32:43,817 - Model - INFO - Training accuracy: 0.944495
+2024-05-09 19:32:44,096 - Model - INFO - ---- EPOCH 042 EVALUATION ----
+2024-05-09 19:43:58,638 - Model - INFO - eval mean loss: 1.017014
+2024-05-09 19:43:58,639 - Model - INFO - eval point avg class IoU: 0.488127
+2024-05-09 19:43:58,639 - Model - INFO - eval point accuracy: 0.807065
+2024-05-09 19:43:58,639 - Model - INFO - eval point avg class acc: 0.577622
+2024-05-09 19:43:58,639 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.893 
+class floor          weight: 0.200, IoU: 0.965 
+class wall           weight: 0.166, IoU: 0.711 
+class beam           weight: 0.276, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.128 
+class window         weight: 0.018, IoU: 0.480 
+class door           weight: 0.033, IoU: 0.036 
+class table          weight: 0.030, IoU: 0.638 
+class chair          weight: 0.040, IoU: 0.669 
+class sofa           weight: 0.019, IoU: 0.204 
+class bookcase       weight: 0.003, IoU: 0.616 
+class board          weight: 0.111, IoU: 0.600 
+class clutter        weight: 0.011, IoU: 0.405 
+
+2024-05-09 19:43:58,639 - Model - INFO - Eval mean loss: 1.017014
+2024-05-09 19:43:58,639 - Model - INFO - Eval accuracy: 0.807065
+2024-05-09 19:43:58,639 - Model - INFO - Best mIoU: 0.520199
+2024-05-09 19:43:58,639 - Model - INFO - **** Epoch 43 (43/64) ****
+2024-05-09 19:43:58,639 - Model - INFO - Learning rate:0.000240
+2024-05-09 20:12:25,856 - Model - INFO - Training mean loss: 0.156026
+2024-05-09 20:12:25,856 - Model - INFO - Training accuracy: 0.943409
+2024-05-09 20:12:26,125 - Model - INFO - ---- EPOCH 043 EVALUATION ----
+2024-05-09 20:23:33,609 - Model - INFO - eval mean loss: 0.921655
+2024-05-09 20:23:33,609 - Model - INFO - eval point avg class IoU: 0.511548
+2024-05-09 20:23:33,609 - Model - INFO - eval point accuracy: 0.814101
+2024-05-09 20:23:33,609 - Model - INFO - eval point avg class acc: 0.595779
+2024-05-09 20:23:33,609 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.896 
+class floor          weight: 0.201, IoU: 0.964 
+class wall           weight: 0.167, IoU: 0.715 
+class beam           weight: 0.275, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.115 
+class window         weight: 0.018, IoU: 0.483 
+class door           weight: 0.036, IoU: 0.045 
+class table          weight: 0.031, IoU: 0.688 
+class chair          weight: 0.040, IoU: 0.736 
+class sofa           weight: 0.019, IoU: 0.372 
+class bookcase       weight: 0.003, IoU: 0.619 
+class board          weight: 0.109, IoU: 0.599 
+class clutter        weight: 0.012, IoU: 0.418 
+
+2024-05-09 20:23:33,610 - Model - INFO - Eval mean loss: 0.921655
+2024-05-09 20:23:33,610 - Model - INFO - Eval accuracy: 0.814101
+2024-05-09 20:23:33,610 - Model - INFO - Best mIoU: 0.520199
+2024-05-09 20:23:33,610 - Model - INFO - **** Epoch 44 (44/64) ****
+2024-05-09 20:23:33,610 - Model - INFO - Learning rate:0.000240
+2024-05-09 20:52:02,672 - Model - INFO - Training mean loss: 0.153391
+2024-05-09 20:52:02,672 - Model - INFO - Training accuracy: 0.944047
+2024-05-09 20:52:03,268 - Model - INFO - ---- EPOCH 044 EVALUATION ----
+2024-05-09 21:03:11,280 - Model - INFO - eval mean loss: 0.956389
+2024-05-09 21:03:11,280 - Model - INFO - eval point avg class IoU: 0.466589
+2024-05-09 21:03:11,280 - Model - INFO - eval point accuracy: 0.771654
+2024-05-09 21:03:11,280 - Model - INFO - eval point avg class acc: 0.556995
+2024-05-09 21:03:11,280 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.860 
+class floor          weight: 0.202, IoU: 0.803 
+class wall           weight: 0.167, IoU: 0.708 
+class beam           weight: 0.276, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.048 
+class window         weight: 0.019, IoU: 0.509 
+class door           weight: 0.032, IoU: 0.026 
+class table          weight: 0.031, IoU: 0.649 
+class chair          weight: 0.039, IoU: 0.624 
+class sofa           weight: 0.019, IoU: 0.296 
+class bookcase       weight: 0.003, IoU: 0.581 
+class board          weight: 0.110, IoU: 0.617 
+class clutter        weight: 0.012, IoU: 0.342 
+
+2024-05-09 21:03:11,280 - Model - INFO - Eval mean loss: 0.956389
+2024-05-09 21:03:11,280 - Model - INFO - Eval accuracy: 0.771654
+2024-05-09 21:03:11,280 - Model - INFO - Best mIoU: 0.520199
+2024-05-09 21:03:11,280 - Model - INFO - **** Epoch 45 (45/64) ****
+2024-05-09 21:03:11,281 - Model - INFO - Learning rate:0.000240
+2024-05-09 21:31:39,660 - Model - INFO - Training mean loss: 0.151545
+2024-05-09 21:31:39,661 - Model - INFO - Training accuracy: 0.944623
+2024-05-09 21:31:40,022 - Model - INFO - ---- EPOCH 045 EVALUATION ----
+2024-05-09 21:42:46,980 - Model - INFO - eval mean loss: 1.127964
+2024-05-09 21:42:46,980 - Model - INFO - eval point avg class IoU: 0.491535
+2024-05-09 21:42:46,980 - Model - INFO - eval point accuracy: 0.810046
+2024-05-09 21:42:46,980 - Model - INFO - eval point avg class acc: 0.573669
+2024-05-09 21:42:46,980 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.092, IoU: 0.896 
+class floor          weight: 0.200, IoU: 0.946 
+class wall           weight: 0.166, IoU: 0.727 
+class beam           weight: 0.278, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.045 
+class window         weight: 0.019, IoU: 0.441 
+class door           weight: 0.033, IoU: 0.058 
+class table          weight: 0.030, IoU: 0.661 
+class chair          weight: 0.039, IoU: 0.680 
+class sofa           weight: 0.019, IoU: 0.335 
+class bookcase       weight: 0.003, IoU: 0.593 
+class board          weight: 0.109, IoU: 0.603 
+class clutter        weight: 0.012, IoU: 0.402 
+
+2024-05-09 21:42:46,980 - Model - INFO - Eval mean loss: 1.127964
+2024-05-09 21:42:46,980 - Model - INFO - Eval accuracy: 0.810046
+2024-05-09 21:42:46,980 - Model - INFO - Best mIoU: 0.520199
+2024-05-09 21:42:46,980 - Model - INFO - **** Epoch 46 (46/64) ****
+2024-05-09 21:42:46,980 - Model - INFO - Learning rate:0.000240
+2024-05-09 22:11:13,982 - Model - INFO - Training mean loss: 0.150730
+2024-05-09 22:11:13,982 - Model - INFO - Training accuracy: 0.944779
+2024-05-09 22:11:13,982 - Model - INFO - Save model...
+2024-05-09 22:11:13,982 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-09 22:11:14,030 - Model - INFO - Saving model....
+2024-05-09 22:11:14,318 - Model - INFO - ---- EPOCH 046 EVALUATION ----
+2024-05-09 22:22:22,020 - Model - INFO - eval mean loss: 1.038159
+2024-05-09 22:22:22,020 - Model - INFO - eval point avg class IoU: 0.499146
+2024-05-09 22:22:22,020 - Model - INFO - eval point accuracy: 0.816504
+2024-05-09 22:22:22,020 - Model - INFO - eval point avg class acc: 0.579039
+2024-05-09 22:22:22,021 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.092, IoU: 0.898 
+class floor          weight: 0.202, IoU: 0.965 
+class wall           weight: 0.168, IoU: 0.717 
+class beam           weight: 0.274, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.051 
+class window         weight: 0.019, IoU: 0.523 
+class door           weight: 0.034, IoU: 0.062 
+class table          weight: 0.029, IoU: 0.678 
+class chair          weight: 0.039, IoU: 0.709 
+class sofa           weight: 0.019, IoU: 0.306 
+class bookcase       weight: 0.003, IoU: 0.639 
+class board          weight: 0.108, IoU: 0.528 
+class clutter        weight: 0.012, IoU: 0.413 
+
+2024-05-09 22:22:22,021 - Model - INFO - Eval mean loss: 1.038159
+2024-05-09 22:22:22,021 - Model - INFO - Eval accuracy: 0.816504
+2024-05-09 22:22:22,021 - Model - INFO - Best mIoU: 0.520199
+2024-05-09 22:22:22,021 - Model - INFO - **** Epoch 47 (47/64) ****
+2024-05-09 22:22:22,021 - Model - INFO - Learning rate:0.000240
+2024-05-09 22:50:47,982 - Model - INFO - Training mean loss: 0.156242
+2024-05-09 22:50:47,982 - Model - INFO - Training accuracy: 0.943231
+2024-05-09 22:50:48,266 - Model - INFO - ---- EPOCH 047 EVALUATION ----
+2024-05-09 23:01:56,224 - Model - INFO - eval mean loss: 1.035061
+2024-05-09 23:01:56,224 - Model - INFO - eval point avg class IoU: 0.498549
+2024-05-09 23:01:56,224 - Model - INFO - eval point accuracy: 0.820066
+2024-05-09 23:01:56,224 - Model - INFO - eval point avg class acc: 0.580284
+2024-05-09 23:01:56,224 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.898 
+class floor          weight: 0.201, IoU: 0.966 
+class wall           weight: 0.166, IoU: 0.723 
+class beam           weight: 0.279, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.046 
+class window         weight: 0.018, IoU: 0.448 
+class door           weight: 0.033, IoU: 0.079 
+class table          weight: 0.031, IoU: 0.664 
+class chair          weight: 0.039, IoU: 0.708 
+class sofa           weight: 0.019, IoU: 0.307 
+class bookcase       weight: 0.003, IoU: 0.621 
+class board          weight: 0.109, IoU: 0.610 
+class clutter        weight: 0.011, IoU: 0.411 
+
+2024-05-09 23:01:56,224 - Model - INFO - Eval mean loss: 1.035061
+2024-05-09 23:01:56,224 - Model - INFO - Eval accuracy: 0.820066
+2024-05-09 23:01:56,224 - Model - INFO - Best mIoU: 0.520199
+2024-05-09 23:01:56,224 - Model - INFO - **** Epoch 48 (48/64) ****
+2024-05-09 23:01:56,224 - Model - INFO - Learning rate:0.000240
+2024-05-09 23:30:21,174 - Model - INFO - Training mean loss: 0.150486
+2024-05-09 23:30:21,174 - Model - INFO - Training accuracy: 0.945029
+2024-05-09 23:30:21,435 - Model - INFO - ---- EPOCH 048 EVALUATION ----
+2024-05-09 23:41:27,944 - Model - INFO - eval mean loss: 0.979518
+2024-05-09 23:41:27,944 - Model - INFO - eval point avg class IoU: 0.477010
+2024-05-09 23:41:27,944 - Model - INFO - eval point accuracy: 0.807159
+2024-05-09 23:41:27,944 - Model - INFO - eval point avg class acc: 0.576277
+2024-05-09 23:41:27,944 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.897 
+class floor          weight: 0.201, IoU: 0.903 
+class wall           weight: 0.166, IoU: 0.725 
+class beam           weight: 0.278, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.050 
+class window         weight: 0.018, IoU: 0.500 
+class door           weight: 0.033, IoU: 0.050 
+class table          weight: 0.030, IoU: 0.652 
+class chair          weight: 0.040, IoU: 0.662 
+class sofa           weight: 0.020, IoU: 0.237 
+class bookcase       weight: 0.003, IoU: 0.629 
+class board          weight: 0.109, IoU: 0.495 
+class clutter        weight: 0.012, IoU: 0.401 
+
+2024-05-09 23:41:27,944 - Model - INFO - Eval mean loss: 0.979518
+2024-05-09 23:41:27,944 - Model - INFO - Eval accuracy: 0.807159
+2024-05-09 23:41:27,945 - Model - INFO - Best mIoU: 0.520199
+2024-05-09 23:41:27,945 - Model - INFO - **** Epoch 49 (49/64) ****
+2024-05-09 23:41:27,945 - Model - INFO - Learning rate:0.000240
+2024-05-10 00:09:54,377 - Model - INFO - Training mean loss: 0.152581
+2024-05-10 00:09:54,377 - Model - INFO - Training accuracy: 0.944478
+2024-05-10 00:09:54,937 - Model - INFO - ---- EPOCH 049 EVALUATION ----
+2024-05-10 00:21:01,589 - Model - INFO - eval mean loss: 0.943881
+2024-05-10 00:21:01,590 - Model - INFO - eval point avg class IoU: 0.495908
+2024-05-10 00:21:01,590 - Model - INFO - eval point accuracy: 0.810991
+2024-05-10 00:21:01,590 - Model - INFO - eval point avg class acc: 0.579199
+2024-05-10 00:21:01,590 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.899 
+class floor          weight: 0.201, IoU: 0.946 
+class wall           weight: 0.167, IoU: 0.712 
+class beam           weight: 0.275, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.052 
+class window         weight: 0.018, IoU: 0.441 
+class door           weight: 0.034, IoU: 0.098 
+class table          weight: 0.031, IoU: 0.662 
+class chair          weight: 0.039, IoU: 0.721 
+class sofa           weight: 0.019, IoU: 0.298 
+class bookcase       weight: 0.003, IoU: 0.622 
+class board          weight: 0.109, IoU: 0.594 
+class clutter        weight: 0.012, IoU: 0.401 
+
+2024-05-10 00:21:01,590 - Model - INFO - Eval mean loss: 0.943881
+2024-05-10 00:21:01,590 - Model - INFO - Eval accuracy: 0.810991
+2024-05-10 00:21:01,590 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 00:21:01,590 - Model - INFO - **** Epoch 50 (50/64) ****
+2024-05-10 00:21:01,590 - Model - INFO - Learning rate:0.000240
+2024-05-10 00:49:28,473 - Model - INFO - Training mean loss: 0.150085
+2024-05-10 00:49:28,473 - Model - INFO - Training accuracy: 0.945091
+2024-05-10 00:49:28,730 - Model - INFO - ---- EPOCH 050 EVALUATION ----
+2024-05-10 01:00:34,333 - Model - INFO - eval mean loss: 1.055198
+2024-05-10 01:00:34,333 - Model - INFO - eval point avg class IoU: 0.467705
+2024-05-10 01:00:34,333 - Model - INFO - eval point accuracy: 0.792784
+2024-05-10 01:00:34,333 - Model - INFO - eval point avg class acc: 0.564048
+2024-05-10 01:00:34,333 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.895 
+class floor          weight: 0.200, IoU: 0.954 
+class wall           weight: 0.166, IoU: 0.705 
+class beam           weight: 0.280, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.029 
+class window         weight: 0.018, IoU: 0.491 
+class door           weight: 0.033, IoU: 0.027 
+class table          weight: 0.030, IoU: 0.637 
+class chair          weight: 0.040, IoU: 0.623 
+class sofa           weight: 0.019, IoU: 0.269 
+class bookcase       weight: 0.002, IoU: 0.580 
+class board          weight: 0.110, IoU: 0.502 
+class clutter        weight: 0.011, IoU: 0.370 
+
+2024-05-10 01:00:34,333 - Model - INFO - Eval mean loss: 1.055198
+2024-05-10 01:00:34,333 - Model - INFO - Eval accuracy: 0.792784
+2024-05-10 01:00:34,333 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 01:00:34,333 - Model - INFO - **** Epoch 51 (51/64) ****
+2024-05-10 01:00:34,333 - Model - INFO - Learning rate:0.000168
+2024-05-10 01:28:58,786 - Model - INFO - Training mean loss: 0.142021
+2024-05-10 01:28:58,786 - Model - INFO - Training accuracy: 0.947695
+2024-05-10 01:28:58,786 - Model - INFO - Save model...
+2024-05-10 01:28:58,786 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-10 01:28:58,834 - Model - INFO - Saving model....
+2024-05-10 01:28:59,111 - Model - INFO - ---- EPOCH 051 EVALUATION ----
+2024-05-10 01:40:10,129 - Model - INFO - eval mean loss: 1.025706
+2024-05-10 01:40:10,129 - Model - INFO - eval point avg class IoU: 0.502725
+2024-05-10 01:40:10,129 - Model - INFO - eval point accuracy: 0.814565
+2024-05-10 01:40:10,129 - Model - INFO - eval point avg class acc: 0.590163
+2024-05-10 01:40:10,129 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.899 
+class floor          weight: 0.200, IoU: 0.952 
+class wall           weight: 0.166, IoU: 0.725 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.047 
+class window         weight: 0.019, IoU: 0.513 
+class door           weight: 0.034, IoU: 0.098 
+class table          weight: 0.031, IoU: 0.660 
+class chair          weight: 0.039, IoU: 0.689 
+class sofa           weight: 0.019, IoU: 0.308 
+class bookcase       weight: 0.003, IoU: 0.628 
+class board          weight: 0.109, IoU: 0.607 
+class clutter        weight: 0.012, IoU: 0.408 
+
+2024-05-10 01:40:10,130 - Model - INFO - Eval mean loss: 1.025706
+2024-05-10 01:40:10,130 - Model - INFO - Eval accuracy: 0.814565
+2024-05-10 01:40:10,130 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 01:40:10,130 - Model - INFO - **** Epoch 52 (52/64) ****
+2024-05-10 01:40:10,130 - Model - INFO - Learning rate:0.000168
+2024-05-10 02:08:34,195 - Model - INFO - Training mean loss: 0.139714
+2024-05-10 02:08:34,195 - Model - INFO - Training accuracy: 0.948351
+2024-05-10 02:08:34,459 - Model - INFO - ---- EPOCH 052 EVALUATION ----
+2024-05-10 02:19:42,043 - Model - INFO - eval mean loss: 0.977468
+2024-05-10 02:19:42,043 - Model - INFO - eval point avg class IoU: 0.504436
+2024-05-10 02:19:42,043 - Model - INFO - eval point accuracy: 0.813821
+2024-05-10 02:19:42,043 - Model - INFO - eval point avg class acc: 0.608773
+2024-05-10 02:19:42,043 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.900 
+class floor          weight: 0.201, IoU: 0.966 
+class wall           weight: 0.167, IoU: 0.717 
+class beam           weight: 0.276, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.122 
+class window         weight: 0.019, IoU: 0.535 
+class door           weight: 0.034, IoU: 0.044 
+class table          weight: 0.031, IoU: 0.660 
+class chair          weight: 0.040, IoU: 0.664 
+class sofa           weight: 0.019, IoU: 0.339 
+class bookcase       weight: 0.003, IoU: 0.622 
+class board          weight: 0.109, IoU: 0.565 
+class clutter        weight: 0.012, IoU: 0.425 
+
+2024-05-10 02:19:42,044 - Model - INFO - Eval mean loss: 0.977468
+2024-05-10 02:19:42,044 - Model - INFO - Eval accuracy: 0.813821
+2024-05-10 02:19:42,044 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 02:19:42,044 - Model - INFO - **** Epoch 53 (53/64) ****
+2024-05-10 02:19:42,044 - Model - INFO - Learning rate:0.000168
+2024-05-10 02:48:07,976 - Model - INFO - Training mean loss: 0.140245
+2024-05-10 02:48:07,976 - Model - INFO - Training accuracy: 0.948330
+2024-05-10 02:48:08,233 - Model - INFO - ---- EPOCH 053 EVALUATION ----
+2024-05-10 02:59:14,760 - Model - INFO - eval mean loss: 0.955451
+2024-05-10 02:59:14,760 - Model - INFO - eval point avg class IoU: 0.485947
+2024-05-10 02:59:14,760 - Model - INFO - eval point accuracy: 0.805592
+2024-05-10 02:59:14,760 - Model - INFO - eval point avg class acc: 0.573049
+2024-05-10 02:59:14,760 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.092, IoU: 0.878 
+class floor          weight: 0.199, IoU: 0.953 
+class wall           weight: 0.165, IoU: 0.720 
+class beam           weight: 0.279, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.044 
+class window         weight: 0.019, IoU: 0.442 
+class door           weight: 0.035, IoU: 0.054 
+class table          weight: 0.030, IoU: 0.648 
+class chair          weight: 0.039, IoU: 0.675 
+class sofa           weight: 0.019, IoU: 0.305 
+class bookcase       weight: 0.003, IoU: 0.598 
+class board          weight: 0.109, IoU: 0.590 
+class clutter        weight: 0.012, IoU: 0.410 
+
+2024-05-10 02:59:14,761 - Model - INFO - Eval mean loss: 0.955451
+2024-05-10 02:59:14,761 - Model - INFO - Eval accuracy: 0.805592
+2024-05-10 02:59:14,761 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 02:59:14,761 - Model - INFO - **** Epoch 54 (54/64) ****
+2024-05-10 02:59:14,761 - Model - INFO - Learning rate:0.000168
+2024-05-10 03:27:38,204 - Model - INFO - Training mean loss: 0.143339
+2024-05-10 03:27:38,204 - Model - INFO - Training accuracy: 0.947220
+2024-05-10 03:27:38,473 - Model - INFO - ---- EPOCH 054 EVALUATION ----
+2024-05-10 03:38:45,600 - Model - INFO - eval mean loss: 0.921244
+2024-05-10 03:38:45,601 - Model - INFO - eval point avg class IoU: 0.494040
+2024-05-10 03:38:45,601 - Model - INFO - eval point accuracy: 0.808506
+2024-05-10 03:38:45,601 - Model - INFO - eval point avg class acc: 0.583082
+2024-05-10 03:38:45,601 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.894 
+class floor          weight: 0.200, IoU: 0.939 
+class wall           weight: 0.167, IoU: 0.709 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.071 
+class window         weight: 0.018, IoU: 0.505 
+class door           weight: 0.034, IoU: 0.053 
+class table          weight: 0.031, IoU: 0.636 
+class chair          weight: 0.039, IoU: 0.711 
+class sofa           weight: 0.019, IoU: 0.286 
+class bookcase       weight: 0.003, IoU: 0.602 
+class board          weight: 0.109, IoU: 0.602 
+class clutter        weight: 0.011, IoU: 0.413 
+
+2024-05-10 03:38:45,601 - Model - INFO - Eval mean loss: 0.921244
+2024-05-10 03:38:45,601 - Model - INFO - Eval accuracy: 0.808506
+2024-05-10 03:38:45,601 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 03:38:45,601 - Model - INFO - **** Epoch 55 (55/64) ****
+2024-05-10 03:38:45,601 - Model - INFO - Learning rate:0.000168
+2024-05-10 04:07:12,983 - Model - INFO - Training mean loss: 0.138692
+2024-05-10 04:07:12,984 - Model - INFO - Training accuracy: 0.948603
+2024-05-10 04:07:13,266 - Model - INFO - ---- EPOCH 055 EVALUATION ----
+2024-05-10 04:18:34,133 - Model - INFO - eval mean loss: 1.029269
+2024-05-10 04:18:34,133 - Model - INFO - eval point avg class IoU: 0.505433
+2024-05-10 04:18:34,134 - Model - INFO - eval point accuracy: 0.818439
+2024-05-10 04:18:34,134 - Model - INFO - eval point avg class acc: 0.593805
+2024-05-10 04:18:34,134 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.900 
+class floor          weight: 0.201, IoU: 0.965 
+class wall           weight: 0.166, IoU: 0.728 
+class beam           weight: 0.275, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.067 
+class window         weight: 0.018, IoU: 0.526 
+class door           weight: 0.034, IoU: 0.079 
+class table          weight: 0.032, IoU: 0.665 
+class chair          weight: 0.039, IoU: 0.728 
+class sofa           weight: 0.019, IoU: 0.294 
+class bookcase       weight: 0.003, IoU: 0.616 
+class board          weight: 0.110, IoU: 0.580 
+class clutter        weight: 0.012, IoU: 0.424 
+
+2024-05-10 04:18:34,134 - Model - INFO - Eval mean loss: 1.029269
+2024-05-10 04:18:34,134 - Model - INFO - Eval accuracy: 0.818439
+2024-05-10 04:18:34,134 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 04:18:34,134 - Model - INFO - **** Epoch 56 (56/64) ****
+2024-05-10 04:18:34,134 - Model - INFO - Learning rate:0.000168
+2024-05-10 04:47:09,288 - Model - INFO - Training mean loss: 0.137108
+2024-05-10 04:47:09,288 - Model - INFO - Training accuracy: 0.949081
+2024-05-10 04:47:09,288 - Model - INFO - Save model...
+2024-05-10 04:47:09,288 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-10 04:47:09,335 - Model - INFO - Saving model....
+2024-05-10 04:47:09,600 - Model - INFO - ---- EPOCH 056 EVALUATION ----
+2024-05-10 04:58:18,123 - Model - INFO - eval mean loss: 1.105598
+2024-05-10 04:58:18,124 - Model - INFO - eval point avg class IoU: 0.489505
+2024-05-10 04:58:18,124 - Model - INFO - eval point accuracy: 0.818323
+2024-05-10 04:58:18,124 - Model - INFO - eval point avg class acc: 0.576344
+2024-05-10 04:58:18,124 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.897 
+class floor          weight: 0.200, IoU: 0.946 
+class wall           weight: 0.165, IoU: 0.723 
+class beam           weight: 0.278, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.034 
+class window         weight: 0.017, IoU: 0.492 
+class door           weight: 0.034, IoU: 0.063 
+class table          weight: 0.030, IoU: 0.664 
+class chair          weight: 0.040, IoU: 0.669 
+class sofa           weight: 0.019, IoU: 0.245 
+class bookcase       weight: 0.003, IoU: 0.629 
+class board          weight: 0.109, IoU: 0.582 
+class clutter        weight: 0.012, IoU: 0.420 
+
+2024-05-10 04:58:18,124 - Model - INFO - Eval mean loss: 1.105598
+2024-05-10 04:58:18,124 - Model - INFO - Eval accuracy: 0.818323
+2024-05-10 04:58:18,124 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 04:58:18,124 - Model - INFO - **** Epoch 57 (57/64) ****
+2024-05-10 04:58:18,124 - Model - INFO - Learning rate:0.000168
+2024-05-10 05:26:46,050 - Model - INFO - Training mean loss: 0.136965
+2024-05-10 05:26:46,050 - Model - INFO - Training accuracy: 0.949146
+2024-05-10 05:26:46,311 - Model - INFO - ---- EPOCH 057 EVALUATION ----
+2024-05-10 05:37:56,646 - Model - INFO - eval mean loss: 1.071948
+2024-05-10 05:37:56,646 - Model - INFO - eval point avg class IoU: 0.494661
+2024-05-10 05:37:56,646 - Model - INFO - eval point accuracy: 0.818807
+2024-05-10 05:37:56,646 - Model - INFO - eval point avg class acc: 0.579550
+2024-05-10 05:37:56,646 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.899 
+class floor          weight: 0.202, IoU: 0.959 
+class wall           weight: 0.168, IoU: 0.730 
+class beam           weight: 0.275, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.069 
+class window         weight: 0.018, IoU: 0.476 
+class door           weight: 0.034, IoU: 0.044 
+class table          weight: 0.030, IoU: 0.652 
+class chair          weight: 0.039, IoU: 0.711 
+class sofa           weight: 0.019, IoU: 0.233 
+class bookcase       weight: 0.003, IoU: 0.640 
+class board          weight: 0.110, IoU: 0.601 
+class clutter        weight: 0.011, IoU: 0.416 
+
+2024-05-10 05:37:56,647 - Model - INFO - Eval mean loss: 1.071948
+2024-05-10 05:37:56,647 - Model - INFO - Eval accuracy: 0.818807
+2024-05-10 05:37:56,647 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 05:37:56,647 - Model - INFO - **** Epoch 58 (58/64) ****
+2024-05-10 05:37:56,647 - Model - INFO - Learning rate:0.000168
+2024-05-10 06:06:22,003 - Model - INFO - Training mean loss: 0.138811
+2024-05-10 06:06:22,003 - Model - INFO - Training accuracy: 0.948756
+2024-05-10 06:06:22,263 - Model - INFO - ---- EPOCH 058 EVALUATION ----
+2024-05-10 06:17:29,789 - Model - INFO - eval mean loss: 0.886346
+2024-05-10 06:17:29,789 - Model - INFO - eval point avg class IoU: 0.485356
+2024-05-10 06:17:29,789 - Model - INFO - eval point accuracy: 0.793234
+2024-05-10 06:17:29,789 - Model - INFO - eval point avg class acc: 0.578273
+2024-05-10 06:17:29,789 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.872 
+class floor          weight: 0.201, IoU: 0.872 
+class wall           weight: 0.167, IoU: 0.698 
+class beam           weight: 0.275, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.099 
+class window         weight: 0.019, IoU: 0.481 
+class door           weight: 0.033, IoU: 0.054 
+class table          weight: 0.030, IoU: 0.667 
+class chair          weight: 0.040, IoU: 0.651 
+class sofa           weight: 0.020, IoU: 0.298 
+class bookcase       weight: 0.003, IoU: 0.619 
+class board          weight: 0.110, IoU: 0.608 
+class clutter        weight: 0.012, IoU: 0.392 
+
+2024-05-10 06:17:29,789 - Model - INFO - Eval mean loss: 0.886346
+2024-05-10 06:17:29,789 - Model - INFO - Eval accuracy: 0.793234
+2024-05-10 06:17:29,789 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 06:17:29,789 - Model - INFO - **** Epoch 59 (59/64) ****
+2024-05-10 06:17:29,789 - Model - INFO - Learning rate:0.000168
+2024-05-10 06:45:55,162 - Model - INFO - Training mean loss: 0.136948
+2024-05-10 06:45:55,162 - Model - INFO - Training accuracy: 0.949316
+2024-05-10 06:45:55,459 - Model - INFO - ---- EPOCH 059 EVALUATION ----
+2024-05-10 06:57:03,662 - Model - INFO - eval mean loss: 0.957553
+2024-05-10 06:57:03,663 - Model - INFO - eval point avg class IoU: 0.502013
+2024-05-10 06:57:03,663 - Model - INFO - eval point accuracy: 0.820469
+2024-05-10 06:57:03,663 - Model - INFO - eval point avg class acc: 0.598660
+2024-05-10 06:57:03,663 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.899 
+class floor          weight: 0.200, IoU: 0.966 
+class wall           weight: 0.165, IoU: 0.727 
+class beam           weight: 0.279, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.058 
+class window         weight: 0.018, IoU: 0.517 
+class door           weight: 0.034, IoU: 0.097 
+class table          weight: 0.031, IoU: 0.678 
+class chair          weight: 0.039, IoU: 0.677 
+class sofa           weight: 0.019, IoU: 0.307 
+class bookcase       weight: 0.002, IoU: 0.633 
+class board          weight: 0.110, IoU: 0.553 
+class clutter        weight: 0.012, IoU: 0.414 
+
+2024-05-10 06:57:03,663 - Model - INFO - Eval mean loss: 0.957553
+2024-05-10 06:57:03,663 - Model - INFO - Eval accuracy: 0.820469
+2024-05-10 06:57:03,663 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 06:57:03,663 - Model - INFO - **** Epoch 60 (60/64) ****
+2024-05-10 06:57:03,663 - Model - INFO - Learning rate:0.000168
+2024-05-10 07:25:29,820 - Model - INFO - Training mean loss: 0.137041
+2024-05-10 07:25:29,821 - Model - INFO - Training accuracy: 0.949165
+2024-05-10 07:25:30,352 - Model - INFO - ---- EPOCH 060 EVALUATION ----
+2024-05-10 07:36:39,456 - Model - INFO - eval mean loss: 1.092450
+2024-05-10 07:36:39,456 - Model - INFO - eval point avg class IoU: 0.498406
+2024-05-10 07:36:39,456 - Model - INFO - eval point accuracy: 0.808124
+2024-05-10 07:36:39,457 - Model - INFO - eval point avg class acc: 0.596721
+2024-05-10 07:36:39,457 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.896 
+class floor          weight: 0.200, IoU: 0.963 
+class wall           weight: 0.165, IoU: 0.698 
+class beam           weight: 0.279, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.071 
+class window         weight: 0.018, IoU: 0.487 
+class door           weight: 0.033, IoU: 0.061 
+class table          weight: 0.030, IoU: 0.660 
+class chair          weight: 0.040, IoU: 0.711 
+class sofa           weight: 0.019, IoU: 0.331 
+class bookcase       weight: 0.002, IoU: 0.615 
+class board          weight: 0.111, IoU: 0.558 
+class clutter        weight: 0.012, IoU: 0.429 
+
+2024-05-10 07:36:39,457 - Model - INFO - Eval mean loss: 1.092450
+2024-05-10 07:36:39,457 - Model - INFO - Eval accuracy: 0.808124
+2024-05-10 07:36:39,457 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 07:36:39,457 - Model - INFO - **** Epoch 61 (61/64) ****
+2024-05-10 07:36:39,457 - Model - INFO - Learning rate:0.000118
+2024-05-10 08:05:05,341 - Model - INFO - Training mean loss: 0.128734
+2024-05-10 08:05:05,341 - Model - INFO - Training accuracy: 0.951722
+2024-05-10 08:05:05,341 - Model - INFO - Save model...
+2024-05-10 08:05:05,341 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-10 08:05:05,389 - Model - INFO - Saving model....
+2024-05-10 08:05:05,654 - Model - INFO - ---- EPOCH 061 EVALUATION ----
+2024-05-10 08:16:14,164 - Model - INFO - eval mean loss: 0.942008
+2024-05-10 08:16:14,164 - Model - INFO - eval point avg class IoU: 0.499799
+2024-05-10 08:16:14,164 - Model - INFO - eval point accuracy: 0.819374
+2024-05-10 08:16:14,164 - Model - INFO - eval point avg class acc: 0.583915
+2024-05-10 08:16:14,165 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.895 
+class floor          weight: 0.201, IoU: 0.958 
+class wall           weight: 0.167, IoU: 0.737 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.058 
+class window         weight: 0.018, IoU: 0.477 
+class door           weight: 0.034, IoU: 0.076 
+class table          weight: 0.030, IoU: 0.679 
+class chair          weight: 0.039, IoU: 0.710 
+class sofa           weight: 0.019, IoU: 0.263 
+class bookcase       weight: 0.003, IoU: 0.627 
+class board          weight: 0.108, IoU: 0.599 
+class clutter        weight: 0.012, IoU: 0.418 
+
+2024-05-10 08:16:14,165 - Model - INFO - Eval mean loss: 0.942008
+2024-05-10 08:16:14,165 - Model - INFO - Eval accuracy: 0.819374
+2024-05-10 08:16:14,165 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 08:16:14,165 - Model - INFO - **** Epoch 62 (62/64) ****
+2024-05-10 08:16:14,165 - Model - INFO - Learning rate:0.000118
+2024-05-10 08:44:42,496 - Model - INFO - Training mean loss: 0.128032
+2024-05-10 08:44:42,496 - Model - INFO - Training accuracy: 0.951955
+2024-05-10 08:44:42,757 - Model - INFO - ---- EPOCH 062 EVALUATION ----
+2024-05-10 08:55:52,143 - Model - INFO - eval mean loss: 1.022121
+2024-05-10 08:55:52,143 - Model - INFO - eval point avg class IoU: 0.506752
+2024-05-10 08:55:52,143 - Model - INFO - eval point accuracy: 0.822534
+2024-05-10 08:55:52,143 - Model - INFO - eval point avg class acc: 0.593368
+2024-05-10 08:55:52,143 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.895 
+class floor          weight: 0.201, IoU: 0.965 
+class wall           weight: 0.167, IoU: 0.731 
+class beam           weight: 0.276, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.051 
+class window         weight: 0.020, IoU: 0.522 
+class door           weight: 0.034, IoU: 0.083 
+class table          weight: 0.030, IoU: 0.664 
+class chair          weight: 0.039, IoU: 0.726 
+class sofa           weight: 0.019, IoU: 0.293 
+class bookcase       weight: 0.003, IoU: 0.636 
+class board          weight: 0.109, IoU: 0.610 
+class clutter        weight: 0.012, IoU: 0.411 
+
+2024-05-10 08:55:52,143 - Model - INFO - Eval mean loss: 1.022121
+2024-05-10 08:55:52,143 - Model - INFO - Eval accuracy: 0.822534
+2024-05-10 08:55:52,143 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 08:55:52,143 - Model - INFO - **** Epoch 63 (63/64) ****
+2024-05-10 08:55:52,143 - Model - INFO - Learning rate:0.000118
+2024-05-10 09:24:19,775 - Model - INFO - Training mean loss: 0.128480
+2024-05-10 09:24:19,775 - Model - INFO - Training accuracy: 0.951728
+2024-05-10 09:24:20,040 - Model - INFO - ---- EPOCH 063 EVALUATION ----
+2024-05-10 09:35:29,717 - Model - INFO - eval mean loss: 0.950145
+2024-05-10 09:35:29,717 - Model - INFO - eval point avg class IoU: 0.496421
+2024-05-10 09:35:29,717 - Model - INFO - eval point accuracy: 0.815065
+2024-05-10 09:35:29,717 - Model - INFO - eval point avg class acc: 0.588499
+2024-05-10 09:35:29,717 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.090, IoU: 0.897 
+class floor          weight: 0.201, IoU: 0.948 
+class wall           weight: 0.167, IoU: 0.717 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.071 
+class window         weight: 0.018, IoU: 0.494 
+class door           weight: 0.034, IoU: 0.090 
+class table          weight: 0.030, IoU: 0.665 
+class chair          weight: 0.039, IoU: 0.698 
+class sofa           weight: 0.019, IoU: 0.247 
+class bookcase       weight: 0.003, IoU: 0.634 
+class board          weight: 0.109, IoU: 0.568 
+class clutter        weight: 0.012, IoU: 0.425 
+
+2024-05-10 09:35:29,717 - Model - INFO - Eval mean loss: 0.950145
+2024-05-10 09:35:29,717 - Model - INFO - Eval accuracy: 0.815065
+2024-05-10 09:35:29,717 - Model - INFO - Best mIoU: 0.520199
+2024-05-10 09:35:29,717 - Model - INFO - **** Epoch 64 (64/64) ****
+2024-05-10 09:35:29,718 - Model - INFO - Learning rate:0.000118
+2024-05-10 10:04:04,376 - Model - INFO - Training mean loss: 0.129818
+2024-05-10 10:04:04,376 - Model - INFO - Training accuracy: 0.951568
+2024-05-10 10:04:04,655 - Model - INFO - ---- EPOCH 064 EVALUATION ----
+2024-05-10 10:15:14,006 - Model - INFO - eval mean loss: 0.983721
+2024-05-10 10:15:14,006 - Model - INFO - eval point avg class IoU: 0.461885
+2024-05-10 10:15:14,006 - Model - INFO - eval point accuracy: 0.773167
+2024-05-10 10:15:14,006 - Model - INFO - eval point avg class acc: 0.551389
+2024-05-10 10:15:14,007 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.089, IoU: 0.873 
+class floor          weight: 0.201, IoU: 0.788 
+class wall           weight: 0.167, IoU: 0.706 
+class beam           weight: 0.277, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.010 
+class window         weight: 0.018, IoU: 0.437 
+class door           weight: 0.035, IoU: 0.082 
+class table          weight: 0.029, IoU: 0.615 
+class chair          weight: 0.039, IoU: 0.650 
+class sofa           weight: 0.020, IoU: 0.274 
+class bookcase       weight: 0.003, IoU: 0.591 
+class board          weight: 0.110, IoU: 0.629 
+class clutter        weight: 0.012, IoU: 0.349 
+
+2024-05-10 10:15:14,007 - Model - INFO - Eval mean loss: 0.983721
+2024-05-10 10:15:14,007 - Model - INFO - Eval accuracy: 0.773167
+2024-05-10 10:15:14,007 - Model - INFO - Best mIoU: 0.520199
+2024-05-13 07:54:51,913 - Model - INFO - PARAMETER ...
+2024-05-13 07:54:51,913 - Model - INFO - Namespace(model='pointnet2_sem_seg', batch_size=16, epoch=50, learning_rate=0.001, gpu='0', optimizer='Adam', log_dir='pointnet2_sem_seg', decay_rate=0.0001, npoint=4096, step_size=10, lr_decay=0.7, test_area=5)
+2024-05-13 07:55:16,166 - Model - INFO - The number of training data is: 47474
+2024-05-13 07:55:16,166 - Model - INFO - The number of test data is: 19191
+2024-05-13 07:55:16,269 - Model - INFO - No existing model, starting training from scratch...
+2024-05-13 07:55:17,101 - Model - INFO - **** Epoch 1 (1/50) ****
+2024-05-13 07:55:17,101 - Model - INFO - Learning rate:0.001000
+2024-05-13 08:24:36,508 - Model - INFO - Training mean loss: 1.220571
+2024-05-13 08:24:36,509 - Model - INFO - Training accuracy: 0.668425
+2024-05-13 08:24:36,509 - Model - INFO - Save model...
+2024-05-13 08:24:36,509 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/model.pth
+2024-05-13 08:24:36,557 - Model - INFO - Saving model....
+2024-05-13 08:24:36,807 - Model - INFO - ---- EPOCH 001 EVALUATION ----
+2024-05-13 08:36:08,101 - Model - INFO - eval mean loss: 1.039191
+2024-05-13 08:36:08,101 - Model - INFO - eval point avg class IoU: 0.348932
+2024-05-13 08:36:08,101 - Model - INFO - eval point accuracy: 0.715536
+2024-05-13 08:36:08,101 - Model - INFO - eval point avg class acc: 0.466795
+2024-05-13 08:36:08,101 - Model - INFO - ------- IoU --------
+class ceiling        weight: 0.091, IoU: 0.879 
+class floor          weight: 0.200, IoU: 0.916 
+class wall           weight: 0.168, IoU: 0.612 
+class beam           weight: 0.281, IoU: 0.000 
+class column         weight: 0.000, IoU: 0.001 
+class window         weight: 0.018, IoU: 0.337 
+class door           weight: 0.033, IoU: 0.017 
+class table          weight: 0.029, IoU: 0.443 
+class chair          weight: 0.039, IoU: 0.399 
+class sofa           weight: 0.019, IoU: 0.052 
+class bookcase       weight: 0.003, IoU: 0.400 
+class board          weight: 0.107, IoU: 0.182 
+class clutter        weight: 0.012, IoU: 0.296 
+
+2024-05-13 08:36:08,101 - Model - INFO - Eval mean loss: 1.039191
+2024-05-13 08:36:08,101 - Model - INFO - Eval accuracy: 0.715536
+2024-05-13 08:36:08,101 - Model - INFO - Save model...
+2024-05-13 08:36:08,101 - Model - INFO - Saving at log\sem_seg\pointnet2_sem_seg\checkpoints/best_model.pth
+2024-05-13 08:36:08,146 - Model - INFO - Saving model....
+2024-05-13 08:36:08,146 - Model - INFO - Best mIoU: 0.348932
+2024-05-13 08:36:08,146 - Model - INFO - **** Epoch 2 (2/50) ****
+2024-05-13 08:36:08,146 - Model - INFO - Learning rate:0.001000

@@ -107,7 +107,7 @@ def main(args):
     NUM_POINT = args.npoint
     BATCH_SIZE = args.batch_size
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    num_workers = 0
+    num_workers = 4
 
     print(f"Loading training data ... (Workers: {num_workers})")
     TRAIN_DATASET = S3DISDataset(split='train', data_root=root, num_point=NUM_POINT, test_area=args.test_area,
@@ -129,7 +129,7 @@ def main(args):
     testDataLoader = torch.utils.data.DataLoader(TEST_DATASET, batch_size=BATCH_SIZE, shuffle=False,
                                                  num_workers=num_workers, pin_memory=True, drop_last=True)
 
-    weights = torch.Tensor(TRAIN_DATASET.labelweights).cuda()
+    weights = torch.tensor(TRAIN_DATASET.labelweights, device=device)
 
     log_string("The number of training data is: %d" % len(TRAIN_DATASET))
     log_string("The number of test data is: %d" % len(TEST_DATASET))
@@ -145,8 +145,8 @@ def main(args):
     # For some reason the in-channels are always + 3 the actual input?
     in_channels = TRAIN_DATASET[0][0].shape[1] + 3
 
-    classifier = pointnetv2semseg.get_model(num_classes=NUM_CLASSES, in_channels=in_channels).cuda()
-    criterion = MODEL.get_loss().cuda()
+    classifier = pointnetv2semseg.get_model(num_classes=NUM_CLASSES, in_channels=in_channels).to(device=device)
+    criterion = MODEL.get_loss().to(device=device)
     classifier.apply(inplace_relu)
 
     def weights_init(m):
@@ -218,9 +218,13 @@ def main(args):
             if augment_using_z_rotate:
                 points = points.data.numpy()
                 points[:, :, :3] = provider.rotate_point_cloud_z(points[:, :, :3])
+                points = torch.tensor(points, device=device, dtype=torch.float32)
 
-            points = torch.Tensor(points)
-            points, target = points.float().cuda(), target.long().cuda()
+            if isinstance(points, np.ndarray):
+                points = torch.tensor(points, device=device, dtype=torch.float32)
+
+            target = target.to(device=device, dtype=torch.long, non_blocking=True)
+            # points, target = points.float().cuda(), target.long().cuda()
             points = points.transpose(2, 1)
 
             seg_pred, trans_feat = classifier(points)
