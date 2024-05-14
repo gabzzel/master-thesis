@@ -1,5 +1,7 @@
+import copy
 import sys
 from pathlib import Path
+from typing import Tuple, Optional, List
 
 import numpy as np
 import open3d
@@ -9,33 +11,82 @@ import segmentation
 import utilities.HDBSCANConfig
 
 
+def get_points_and_labels(data_path: Path) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    if data_path.suffix in [".ply", ".pcd"]:
+        print("Loading point cloud...")
+        pcd: open3d.geometry.PointCloud = open3d.io.read_point_cloud(str(data_path))
+        downsample: bool = True
+        if downsample:
+            voxel_size = 0.01
+            print(f"Downsampling point cloud using voxel size {voxel_size}")
+            pcd = pcd.voxel_down_sample(voxel_size)
+        print(f"Loaded point cloud with {len(pcd.points)} points.")
+
+        assert pcd.has_normals()
+        assert pcd.has_colors()
+        return np.hstack((np.asarray(pcd.points), np.asarray(pcd.normals), np.asarray(pcd.colors))), None
+
+    elif data_path.suffix == ".npy":
+        print("Loading npy data file")
+        data = np.load(data_path)
+        assert data.shape[1] == 10
+        return data[:, :9], data[:, 9]
+
+    print("Loading failed.")
+
 def execute():
-    point_cloud_path = "C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-reconstruction\\data\\etvr\\enfsi-2023_reduced_cloud_preprocessed.ply"
+    class_colors = [("gray", np.array([0.5, 0.5, 0.5])),
+                    ("black", np.array([0, 0, 0])),
+                    ("red", np.array([1.0, 0.0, 0.0])),
+                    ("lime", np.array([0.0, 1.0, 0.0])),
+                    ("blue", np.array([0.0, 0.0, 1.0])),
+                    ("yellow", np.array([1.0, 1.0, 0.0])),
+                    ("olive", np.array([0.5, 0.5, 0.0])),
+                    ("green", np.array([0.0, 0.5, 0.0])),
+                    ("aqua", np.array([0.0, 1.0, 1.0])),
+                    ("teal", np.array([0.0, 0.5, 0.5])),
+                    ("fuchsia", np.array([1.0, 0.0, 1.0])),
+                    ("purple", np.array([0.5, 0.0, 0.5])),
+                    ("navy", np.array([0.0, 0.0, 0.5]))]
 
-    print("Loading point cloud...")
-    pcd: open3d.geometry.PointCloud = open3d.io.read_point_cloud(point_cloud_path)
-    downsample: bool = True
-    if downsample:
-        voxel_size = 0.01
-        print(f"Downsampling point cloud using voxel size {voxel_size}")
-        pcd = pcd.voxel_down_sample(voxel_size)
-    print(f"Loaded point cloud with {len(pcd.points)} points.")
+    data_path = "C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\data\\s3dis_npy_incl_normals\\Area_1_conferenceRoom_1.npy"
+    data_path = Path(data_path)
 
-    # pointnet_checkpoint_path = ("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal"
-    #                            "\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original.pth")
+    points, labels = get_points_and_labels(data_path)
 
-    # segmentation.pointnetv2(pointnet_checkpoint_path, pcd)
+    normalize_coordinates = False
+    if normalize_coordinates:
+        min_coords = np.min(points[:, :3], axis=0)
+        points[:, :3] -= min_coords
+        max_coords = np.max(points[:, :3], axis=0)
+        points[:, :3] /= max_coords
 
-    hdbscan_config_path = "C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\results\\training-complex\\hdbscan\\config.json"
+    hdbscan_config_path = ("C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\results"
+                           "\\training-complex\\hdbscan\\config.json")
     hdbscan_config_path = Path(hdbscan_config_path)
     result_path = hdbscan_config_path.parent.joinpath("results.csv")
     hdbscan_configs = utilities.HDBSCANConfig.read_from_file_multiple(hdbscan_config_path)
 
     for i in tqdm.trange(len(hdbscan_configs), desc="Executing HDBSCANs..."):
-        segmentation.hdbscan(pcd, hdbscan_configs[i], verbose=False)
+        config = hdbscan_configs[i]
+        segmentation.hdbscan(points, config, verbose=False)
+        if labels is not None:
+            cluster_label_map = config.assign_labels_to_clusters(labels=labels)
+            if config.visualize:
+                pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(points[:, :3]))
+                class_colors_np = np.array([a[1] for a in class_colors])
+                colors = class_colors_np[cluster_label_map[config.clusters]]
+                pcd.colors = open3d.utility.Vector3dVector(colors)
+                open3d.visualization.draw_geometries([pcd])
+
 
     utilities.HDBSCANConfig.write_multiple(hdbscan_configs, result_path, delimiter=";")
 
+
+    # pointnet_checkpoint_path = ("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal"
+    #                            "\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original.pth")
+
+    # segmentation.pointnetv2(pointnet_checkpoint_path, pcd)
 
     return
     segmentation.octree_based_region_growing(pcd,

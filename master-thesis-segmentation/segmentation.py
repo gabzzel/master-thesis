@@ -1,7 +1,7 @@
 import math
 import sys
 import time
-from typing import Optional, Union, Tuple
+from typing import Optional, Union, Tuple, List
 
 import fast_hdbscan
 import numpy as np
@@ -14,35 +14,36 @@ from scipy.spatial import KDTree
 import pointnetexternal.models.pointnet2_sem_seg
 import regionGrowingOctree.RegionGrowingOctreeVisualization
 from regionGrowingOctree import RegionGrowingOctree
-import utilities.HDBSCANConfig
+from utilities.HDBSCANConfig import HDBSCANConfigAndResult
 
 
-def hdbscan(pcd: open3d.geometry.PointCloud,
-            config: utilities.HDBSCANConfig,
+
+def hdbscan(points: np.ndarray,
+            config: HDBSCANConfigAndResult,
             verbose: bool = False):
     """
     Parameters
-    :param pcd: The point cloud to segment.
     :param config: The configuration file.
     :returns: The segment index per point and their memberships strengths, and the noise indices.
     """
+
+    assert points.ndim == 2
+    assert points.shape[1] == 9
 
     if verbose:
         print(f"Clustering / segmenting using HDBScan (min cluster size {config.min_cluster_size}, "
               f"min samples {config.min_samples}, method '{config.method}')")
 
     start_time = time.time()
-    points = np.asarray(pcd.points)
+
+    if config.include_normals and not config.include_colors:
+        points = points[:, :6]
+    elif not config.include_normals and config.include_colors:
+        points = np.hstack((points[:, :3], points[:, 6:]))
+    elif not config.include_normals and not config.include_colors:
+        points = points[:, :3]
+
     sys.setrecursionlimit(15000)
-
-    if config.include_normals and pcd.has_normals():
-        normals = np.asarray(pcd.normals)
-        points = np.hstack((points, normals))
-
-    if config.include_colors and pcd.has_colors():
-        colors = np.asarray(pcd.colors)
-        points = np.hstack((points, colors))
-
     membership_strengths: np.ndarray = None
 
     use_sklearn = False
@@ -113,6 +114,7 @@ def hdbscan(pcd: open3d.geometry.PointCloud,
         #    colors[:, 1] *= membership_strengths
         #    colors[:, 2] *= membership_strengths
 
+        pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(points[:, :3]))
         pcd.colors = open3d.utility.Vector3dVector(colors)
         open3d.visualization.draw_geometries([pcd])
 

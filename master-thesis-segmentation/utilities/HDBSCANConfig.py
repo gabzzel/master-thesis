@@ -3,7 +3,7 @@ import itertools
 import json
 from os import PathLike
 from pathlib import Path
-from typing import Union, Optional, List, Dict, Any
+from typing import Union, Optional, List, Dict, Any, Tuple
 
 import numpy as np
 
@@ -63,6 +63,44 @@ class HDBSCANConfigAndResult:
             ("TotalPoints",self.total_points)
         ]
         return results
+
+    def assign_labels_to_clusters(self, labels: np.ndarray) -> np.ndarray:
+        assert self.clusters is not None
+        number_of_clusters = len(np.unique(self.clusters))
+
+        classes = ['ceiling', 'floor', 'wall', 'beam', 'column', 'window', 'door', 'table', 'chair', 'sofa', 'bookcase',
+                   'board', 'clutter']
+
+        point_indices_per_cluster = []
+        point_indices_per_label = []
+        cluster_to_label_map = np.full(shape=(number_of_clusters, ), fill_value=-1, dtype=int)
+
+        for i in range(number_of_clusters):
+            point_indices_per_cluster.append(np.argwhere(self.clusters == i).squeeze())
+
+        for i in range(len(classes)):
+            point_indices_per_label.append(np.argwhere(labels == i).squeeze())
+
+        for i, cluster in enumerate(point_indices_per_cluster):
+            max_intersection_size = 0
+            max_label = -1
+
+            for j, l in enumerate(point_indices_per_label):
+                intersection_size = len(np.intersect1d(cluster, l))
+                if intersection_size > max_intersection_size:
+                    max_intersection_size = intersection_size
+                    max_label = j
+
+            cluster_to_label_map[i] = max_label
+            intersection_percentage = round(float(max_intersection_size) / float(len(cluster)) * 100.0, 5)
+
+            if max_label == -1:
+                print(f"Found no label for cluster {i}")
+            else:
+                print(f"Found label {classes[max_label]} for cluster {i} (intersection {max_intersection_size} = {intersection_percentage}%)")
+
+        return cluster_to_label_map
+
 
 
 def read_from_file(path: Union[str, PathLike]) -> HDBSCANConfigAndResult:

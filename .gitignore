@@ -23,3 +23,4 @@ master-thesis-reconstruction/run_configs/results.csv
 master-thesis-segmentation/pointnetexternal/models/__pycache__/pointnet2_sem_seg.cpython-310.pyc
 master-thesis-segmentation/regionGrowingOctree/__pycache__/RegionGrowingOctree.cpython-310.pyc
 master-thesis-segmentation/regionGrowingOctree/__pycache__/RegionGrowingOctreeNode.cpython-310.pyc
+/master-thesis-segmentation/data
