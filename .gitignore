@@ -19,3 +19,4 @@ master-thesis-reconstruction/run_configs/results.csv
 *.pyc
 *.pyc
 /master-thesis-segmentation/pointnetexternal/models/__pycache__
+/master-thesis-segmentation/results
