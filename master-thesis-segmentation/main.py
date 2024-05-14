@@ -1,13 +1,16 @@
 import sys
+from pathlib import Path
 
 import numpy as np
 import open3d
+import tqdm
 
 import segmentation
+import utilities.HDBSCANConfig
 
 
 def execute():
-    point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis-reconstruction\\data\\etvr\\enfsi-2023_reduced_cloud_preprocessed.ply"
+    point_cloud_path = "C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-reconstruction\\data\\etvr\\enfsi-2023_reduced_cloud_preprocessed.ply"
 
     print("Loading point cloud...")
     pcd: open3d.geometry.PointCloud = open3d.io.read_point_cloud(point_cloud_path)
@@ -23,16 +26,18 @@ def execute():
 
     # segmentation.pointnetv2(pointnet_checkpoint_path, pcd)
 
-    cluster_per_points, membership_strengths = segmentation.hdbscan(pcd,
-                                                                    minimum_cluster_size=100,
-                                                                    minimum_samples=200,
-                                                                    visualize=True,
-                                                                    use_sklearn_estimator=False,
-                                                                    use_colors=True,
-                                                                    use_normals=True)
+    hdbscan_config_path = "C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\results\\training-complex\\hdbscan\\config.json"
+    hdbscan_config_path = Path(hdbscan_config_path)
+    result_path = hdbscan_config_path.parent.joinpath("results.csv")
+    hdbscan_configs = utilities.HDBSCANConfig.read_from_file_multiple(hdbscan_config_path)
+
+    for i in tqdm.trange(len(hdbscan_configs), desc="Executing HDBSCANs..."):
+        segmentation.hdbscan(pcd, hdbscan_configs[i], verbose=False)
+
+    utilities.HDBSCANConfig.write_multiple(hdbscan_configs, result_path, delimiter=";")
+
 
     return
-
     segmentation.octree_based_region_growing(pcd,
                                              initial_voxel_size=0.1,
                                              down_sample_voxel_size=None,

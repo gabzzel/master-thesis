@@ -14,72 +14,55 @@ from scipy.spatial import KDTree
 import pointnetexternal.models.pointnet2_sem_seg
 import regionGrowingOctree.RegionGrowingOctreeVisualization
 from regionGrowingOctree import RegionGrowingOctree
+import utilities.HDBSCANConfig
 
 
 def hdbscan(pcd: open3d.geometry.PointCloud,
-            use_normals: bool = False,
-            use_colors: bool = False,
-            minimum_cluster_size: Union[int, str] = 10,
-            minimum_samples: Optional[Union[int, str]] = None,
-            cluster_selection_epsilon: Union[float, str] = 0.0,
-            method: str = "eom",
-            visualize: bool = True,
-            use_sklearn_estimator: bool = False,
-            assign_noise_to_nearest_neighbour: bool = True) -> Tuple[np.ndarray, np.ndarray]:
+            config: utilities.HDBSCANConfig,
+            verbose: bool = False):
     """
     Parameters
-    :param assign_noise_to_nearest_neighbour: Whether to assign the cluster / segment of the nearest neighbour for
-        each unassigned / unsegmented / noise point.
-    :param use_colors: Whether to include the color data (if available) in the clustering
-    :param use_normals: Whether to include the normal data (if available) in the clustering
-    :param use_sklearn_estimator: Whether to use sklearn HDBSCAN implementation. If false, uses the fast_hdbscan \
-        implementation.
-    :param method: Which method to use for determining best cluster set. Default is excess of mass.
-    :param visualize: Whether to draw the segments to the screen using Open3D visualization.
-    :param cluster_selection_epsilon: A distance threshold. Clusters below this value will be merged. \
-        I probably need to keep this to 0 to keep to the original HDBSCAN method.
-    :param minimum_samples: The number of samples in a neighborhood for a point to be considered as a core point. \
-        This includes the point itself. When None, defaults to min_cluster_size.
     :param pcd: The point cloud to segment.
-    :param minimum_cluster_size: The minimum number of samples in a group for that group to be considered a cluster; \
-        groupings smaller than this size will be left as noise.
-    :returns: The segment index per point and their memberships strengths.
+    :param config: The configuration file.
+    :returns: The segment index per point and their memberships strengths, and the noise indices.
     """
 
-    print(f"Clustering / segmenting using HDBScan (min cluster size {minimum_cluster_size}, "
-          f"min samples {minimum_samples}, method '{method}')")
+    if verbose:
+        print(f"Clustering / segmenting using HDBScan (min cluster size {config.min_cluster_size}, "
+              f"min samples {config.min_samples}, method '{config.method}')")
 
     start_time = time.time()
     points = np.asarray(pcd.points)
     sys.setrecursionlimit(15000)
 
-    if use_normals and pcd.has_normals():
+    if config.include_normals and pcd.has_normals():
         normals = np.asarray(pcd.normals)
         points = np.hstack((points, normals))
 
-    if use_colors and pcd.has_colors():
+    if config.include_colors and pcd.has_colors():
         colors = np.asarray(pcd.colors)
         points = np.hstack((points, colors))
 
-    cluster_per_point = None
-    membership_strengths = None
+    membership_strengths: np.ndarray = None
 
-    if use_sklearn_estimator:
-        model = fast_hdbscan.HDBSCAN(min_cluster_size=minimum_cluster_size,
-                                     min_samples=minimum_samples,
-                                     cluster_selection_method=method,
+    use_sklearn = False
+
+    if use_sklearn:
+        model = fast_hdbscan.HDBSCAN(min_cluster_size=config.min_cluster_size,
+                                     min_samples=config.min_samples,
+                                     cluster_selection_method=config.min_samples,
                                      allow_single_cluster=False,
-                                     cluster_selection_epsilon=cluster_selection_epsilon)
+                                     cluster_selection_epsilon=0)
 
         cluster_per_point = model.fit_predict(points)
 
     else:
         results = fast_hdbscan.fast_hdbscan(points,
-                                            min_samples=minimum_samples,
-                                            min_cluster_size=minimum_cluster_size,
-                                            cluster_selection_method=method,
+                                            min_samples=config.min_samples,
+                                            min_cluster_size=config.min_cluster_size,
+                                            cluster_selection_method=config.method,
                                             allow_single_cluster=False,
-                                            cluster_selection_epsilon=cluster_selection_epsilon,
+                                            cluster_selection_epsilon=0.0,
                                             return_trees=False)
 
         cluster_per_point, membership_strengths = results
@@ -90,8 +73,9 @@ def hdbscan(pcd: open3d.geometry.PointCloud,
     #    X = np.hstack((X, np.asarray(pcd.colors)), dtype=np.float32)
 
     end_time = time.time()
-    print("Clustering done.")
-    print(f"Created {number_of_clusters} clusters in {round(end_time - start_time, 4)} seconds.")
+    if verbose:
+        print("Clustering done.")
+        print(f"Created {number_of_clusters} clusters in {round(end_time - start_time, 4)} seconds.")
 
     cluster_sizes = []
     for i in range(number_of_clusters):
@@ -99,17 +83,26 @@ def hdbscan(pcd: open3d.geometry.PointCloud,
         if cluster > 0:
             cluster_sizes.append(cluster)
 
-    print(f"Cluster sizes (min {minimum_cluster_size}): smallest {min(cluster_sizes)} largest {max(cluster_sizes)} "
-          f"mean {np.mean(cluster_sizes)} std {np.std(cluster_sizes)} median {np.median(cluster_sizes)}")
+    if verbose:
+        print(f"Cluster sizes (min {config.min_cluster_size}): smallest {min(cluster_sizes)} largest {max(cluster_sizes)} "
+              f"mean {np.mean(cluster_sizes)} std {np.std(cluster_sizes)} median {np.median(cluster_sizes)}")
 
-    print(f"Noise / non-clustered points: {np.count_nonzero(cluster_per_point < 0)}")
+        print(f"Noise / non-clustered points: {np.count_nonzero(cluster_per_point < 0)}")
 
-    if cluster_per_point is not None and assign_noise_to_nearest_neighbour:
-        new_clusters_for_noise = assign_noise_nearest_neighbour_cluster(points, cluster_per_point)
+    config.noise_indices = np.nonzero(cluster_per_point < 0)[0]
+
+    if cluster_per_point is not None and config.noise_nearest_neighbours > 0:
+        new_clusters_for_noise = assign_noise_nearest_neighbour_cluster(points, cluster_per_point, config.noise_nearest_neighbours)
         cluster_per_point[cluster_per_point < 0] = new_clusters_for_noise
-        print(f"Assigned non-clustered noise points. Noise remaining {np.count_nonzero(cluster_per_point < 0)}")
+        if verbose:
+            print(f"Assigned non-clustered noise points. Noise remaining {np.count_nonzero(cluster_per_point < 0)}")
 
-    if visualize and cluster_per_point is not None:
+    config.clusters = cluster_per_point
+    config.membership_strengths = membership_strengths
+    config.clustering_time = round(end_time - start_time, 6)
+    config.total_points = points.shape[0]
+
+    if config.visualize and cluster_per_point is not None:
         unique_clusters = np.unique(cluster_per_point)
         rng = np.random.default_rng()
         colors_per_cluster = rng.random((len(unique_clusters), 3), dtype=np.float64)
@@ -123,7 +116,6 @@ def hdbscan(pcd: open3d.geometry.PointCloud,
         pcd.colors = open3d.utility.Vector3dVector(colors)
         open3d.visualization.draw_geometries([pcd])
 
-    return cluster_per_point, membership_strengths
 
 
 def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
@@ -251,7 +243,8 @@ def pointnetv2(model_checkpoint_path: str,
                     ("purple", np.array([0.5, 0.0, 0.5])),
                     ("navy", np.array([0.0, 0.0, 0.5]))]
 
-    classifier: torch.nn.Module = pointnetexternal.models.pointnet2_sem_seg.get_model(number_of_classes).cuda()
+    channels = 9
+    classifier: torch.nn.Module = pointnetexternal.models.pointnet2_sem_seg.get_model(number_of_classes, channels).cuda()
 
     # Load the checkpoint (i.e. the saved model)
     checkpoint = torch.load(model_checkpoint_path)
@@ -263,10 +256,11 @@ def pointnetv2(model_checkpoint_path: str,
     # Prepare the input
     points: np.ndarray = np.asarray(pcd.points)
     colors: np.ndarray = np.asarray(pcd.colors)
-    data = np.hstack((points, colors))
+    # data = np.hstack((points, colors))
 
     npoint = 4096
-    batches, batches_indices = convert_to_batches(data, point_amount=npoint, block_size=1, stride=0.5)
+    batches, batches_indices = convert_to_batches(points=points, colors=None, normals=None,
+                                                 point_amount=npoint, block_size=1, stride=0.25)
     print(f"Created {len(batches)} batches.")
 
     # model expects input of size B x 9 x points where B is probably batches
@@ -307,10 +301,18 @@ def pointnetv2(model_checkpoint_path: str,
     colors_per_point: np.ndarray = numpy_class_colors[classifications]
     visualize_pcd = open3d.geometry.PointCloud(pcd.points)
     visualize_pcd.colors = open3d.utility.Vector3dVector(colors_per_point)
+
+    classification_save_path = "C:\\Users\\ETVR\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\results\\classifications.npy"
+
+    np.save(classification_save_path, classifications)
     open3d.visualization.draw_geometries([visualize_pcd])
+    classification_save_path = "C:\\Users\\ETVR\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\results\\classifications.ply"
+    open3d.io.write_point_cloud(classification_save_path, visualize_pcd)
 
 
-def convert_to_batches(data,
+def convert_to_batches(points: np.ndarray,
+                       colors: np.ndarray = None,
+                       normals: np.ndarray = None,
                        block_size: float = 0.5,
                        stride: float = 0.1,
                        padding: float = 0.001,
@@ -321,7 +323,9 @@ def convert_to_batches(data,
     Convert point cloud data into batches that can be fed into the pointnet++ network.
 
     Parameters:
-        data (np.ndarray): point cloud data to be converted to batches. Must be of shape (n_points, 6).
+        points (np.ndarray): point cloud coords to be converted to batches. Must be of shape (n_points, 3).
+        colors (np.ndarray): colors of points. Must be of shape (n_points, 3).
+        normals (np.ndarray): normals of points. Must be of shape (n_points, 3).
         block_size (float): the size of the 'blocks' that will be used to group points in the batches. Only applies
             to x and y dimensions. For example, of value of 1.0 will group points in 'pillars' of 1x1 meters.
         padding (float): the amount of padding to be added to each block to avoid missing points on the edge.
@@ -333,8 +337,8 @@ def convert_to_batches(data,
         batch_size: The size of each batch.
     """
 
-    minimum_coordinates: np.ndarray = np.amin(data, axis=0)[:3]
-    maximum_coordinates: np.ndarray = np.amax(data, axis=0)[:3]
+    minimum_coordinates: np.ndarray = np.amin(points, axis=0)
+    maximum_coordinates: np.ndarray = np.amax(points, axis=0)
     grid_x = int(np.ceil(float(maximum_coordinates[0] - minimum_coordinates[0] - block_size) / stride) + 1)
     grid_y = int(np.ceil(float(maximum_coordinates[1] - minimum_coordinates[1] - block_size) / stride) + 1)
 
@@ -351,10 +355,10 @@ def convert_to_batches(data,
             e_y: float = min(s_y + block_size, maximum_coordinates[1])
             s_y = e_y - block_size
 
-            point_idxs: np.ndarray = np.where((data[:, 0] >= s_x - padding) &
-                                              (data[:, 0] <= e_x + padding) &
-                                              (data[:, 1] >= s_y - padding) &
-                                              (data[:, 1] <= e_y + padding))[0]
+            point_idxs: np.ndarray = np.where((points[:, 0] >= s_x - padding) &
+                                              (points[:, 0] <= e_x + padding) &
+                                              (points[:, 1] >= s_y - padding) &
+                                              (points[:, 1] <= e_y + padding))[0]
 
             if point_idxs.size == 0:
                 continue
@@ -375,15 +379,28 @@ def convert_to_batches(data,
 
             # Shuffle the indices and create the data
             np.random.shuffle(point_idxs)
-            block_data = data[point_idxs, :]
-            normalized_xyz = np.zeros((point_size, 3))
-            normalized_xyz[:, 0] = block_data[:, 0] / maximum_coordinates[0]
-            normalized_xyz[:, 1] = block_data[:, 1] / maximum_coordinates[1]
-            normalized_xyz[:, 2] = block_data[:, 2] / maximum_coordinates[2]
-            block_data[:, 0] = block_data[:, 0] - (s_x + block_size / 2.0)
-            block_data[:, 1] = block_data[:, 1] - (s_y + block_size / 2.0)
-            block_data[:, 3:6] /= 255.0
-            block_data = np.concatenate((block_data, normalized_xyz), axis=1)
+
+            block_data = np.zeros((len(point_idxs), 3))
+            # First the "centered" points
+            block_data[:, 0] = points[point_idxs, 0] - (s_x + block_size / 2.0)
+            block_data[:, 1] = points[point_idxs, 1] - (s_y + block_size / 2.0)
+            block_data[:, 2] = points[point_idxs, 2]
+
+            # Add the colors
+            occupied_indices = 3
+            if colors is not None:
+                block_data = np.hstack((blocks_data, colors[point_idxs][:, np.newaxis]))
+                occupied_indices += 3
+
+            # Add the normalized points
+            for i in range(3):
+                normalized_points = points[point_idxs, i] / maximum_coordinates[i]
+                block_data = np.hstack((block_data, normalized_points[:, np.newaxis]))
+            occupied_indices += 3
+
+            if normals is not None:
+                block_data = np.hstack((blocks_data, normals[point_idxs]))
+                occupied_indices += 3
 
             blocks_data = np.vstack((blocks_data, block_data)) if blocks_data is not None else block_data
             indices = np.hstack((indices, point_idxs)) if indices is not None else point_idxs
@@ -404,7 +421,9 @@ def convert_to_batches(data,
     return batches, batches_indices
 
 
-def assign_noise_nearest_neighbour_cluster(points: np.ndarray, cluster_per_point: np.ndarray) -> np.ndarray:
+def assign_noise_nearest_neighbour_cluster(points: np.ndarray,
+                                           cluster_per_point: np.ndarray,
+                                           neighbour_count: int) -> np.ndarray:
     noise_point_indices = np.nonzero(cluster_per_point < 0)[0]
 
     data_points_indices = np.nonzero(cluster_per_point >= 0)[0]
@@ -423,6 +442,16 @@ def assign_noise_nearest_neighbour_cluster(points: np.ndarray, cluster_per_point
 
     # Create a KDTree to quickly find nearest neighbours
     kd_tree = KDTree(data_points)
-    _, nearest_neighbour_indices = kd_tree.query(noise_points, k=1, workers=-1)
-    new_clusters = cluster_per_point[data_points_indices[nearest_neighbour_indices]]
+
+    if neighbour_count == 1:
+        _, nearest_neighbour_indices = kd_tree.query(noise_points, k=1, workers=-1)
+        new_clusters = cluster_per_point[data_points_indices[nearest_neighbour_indices]]
+    else:
+        _, nearest_neighbour_indices = kd_tree.query(noise_points, k=neighbour_count, workers=-1)
+        neighbouring_clusters = cluster_per_point[data_points_indices[nearest_neighbour_indices]]
+        u, indices = np.unique(neighbouring_clusters, return_inverse=True)
+        axis = 1
+        new_clusters = u[np.argmax(np.apply_along_axis(np.bincount, axis, indices.reshape(neighbouring_clusters.shape),None, np.max(indices) + 1), axis=axis)]
+
+
     return new_clusters
