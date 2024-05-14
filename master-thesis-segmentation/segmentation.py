@@ -1,11 +1,15 @@
 import math
-from typing import Optional, Union
+import sys
+import time
+from typing import Optional, Union, Tuple
 
 import fast_hdbscan
 import numpy as np
 import open3d
+import scipy.spatial.distance
 import torch
 import tqdm
+from scipy.spatial import KDTree
 
 import pointnetexternal.models.pointnet2_sem_seg
 import regionGrowingOctree.RegionGrowingOctreeVisualization
@@ -13,14 +17,24 @@ from regionGrowingOctree import RegionGrowingOctree
 
 
 def hdbscan(pcd: open3d.geometry.PointCloud,
+            use_normals: bool = False,
+            use_colors: bool = False,
             minimum_cluster_size: Union[int, str] = 10,
             minimum_samples: Optional[Union[int, str]] = None,
             cluster_selection_epsilon: Union[float, str] = 0.0,
             method: str = "eom",
             visualize: bool = True,
-            use_sklearn_estimator: bool = False):
+            use_sklearn_estimator: bool = False,
+            assign_noise_to_nearest_neighbour: bool = True) -> Tuple[np.ndarray, np.ndarray]:
     """
-
+    Parameters
+    :param assign_noise_to_nearest_neighbour: Whether to assign the cluster / segment of the nearest neighbour for
+        each unassigned / unsegmented / noise point.
+    :param use_colors: Whether to include the color data (if available) in the clustering
+    :param use_normals: Whether to include the normal data (if available) in the clustering
+    :param use_sklearn_estimator: Whether to use sklearn HDBSCAN implementation. If false, uses the fast_hdbscan \
+        implementation.
+    :param method: Which method to use for determining best cluster set. Default is excess of mass.
     :param visualize: Whether to draw the segments to the screen using Open3D visualization.
     :param cluster_selection_epsilon: A distance threshold. Clusters below this value will be merged. \
         I probably need to keep this to 0 to keep to the original HDBSCAN method.
@@ -29,13 +43,24 @@ def hdbscan(pcd: open3d.geometry.PointCloud,
     :param pcd: The point cloud to segment.
     :param minimum_cluster_size: The minimum number of samples in a group for that group to be considered a cluster; \
         groupings smaller than this size will be left as noise.
-    :return:
+    :returns: The segment index per point and their memberships strengths.
     """
 
-    print(
-        f"Clustering / segmenting using HDBScan (min cluster size {minimum_cluster_size}, min samples {minimum_samples}, method '{method}')")
+    print(f"Clustering / segmenting using HDBScan (min cluster size {minimum_cluster_size}, "
+          f"min samples {minimum_samples}, method '{method}')")
 
+    start_time = time.time()
     points = np.asarray(pcd.points)
+    sys.setrecursionlimit(15000)
+
+    if use_normals and pcd.has_normals():
+        normals = np.asarray(pcd.normals)
+        points = np.hstack((points, normals))
+
+    if use_colors and pcd.has_colors():
+        colors = np.asarray(pcd.colors)
+        points = np.hstack((points, colors))
+
     cluster_per_point = None
     membership_strengths = None
 
@@ -64,8 +89,25 @@ def hdbscan(pcd: open3d.geometry.PointCloud,
     # if pcd.has_colors():
     #    X = np.hstack((X, np.asarray(pcd.colors)), dtype=np.float32)
 
+    end_time = time.time()
     print("Clustering done.")
-    print(f"Created {number_of_clusters} clusters.")
+    print(f"Created {number_of_clusters} clusters in {round(end_time - start_time, 4)} seconds.")
+
+    cluster_sizes = []
+    for i in range(number_of_clusters):
+        cluster = np.count_nonzero(cluster_per_point == i)
+        if cluster > 0:
+            cluster_sizes.append(cluster)
+
+    print(f"Cluster sizes (min {minimum_cluster_size}): smallest {min(cluster_sizes)} largest {max(cluster_sizes)} "
+          f"mean {np.mean(cluster_sizes)} std {np.std(cluster_sizes)} median {np.median(cluster_sizes)}")
+
+    print(f"Noise / non-clustered points: {np.count_nonzero(cluster_per_point < 0)}")
+
+    if cluster_per_point is not None and assign_noise_to_nearest_neighbour:
+        new_clusters_for_noise = assign_noise_nearest_neighbour_cluster(points, cluster_per_point)
+        cluster_per_point[cluster_per_point < 0] = new_clusters_for_noise
+        print(f"Assigned non-clustered noise points. Noise remaining {np.count_nonzero(cluster_per_point < 0)}")
 
     if visualize and cluster_per_point is not None:
         unique_clusters = np.unique(cluster_per_point)
@@ -80,6 +122,8 @@ def hdbscan(pcd: open3d.geometry.PointCloud,
 
         pcd.colors = open3d.utility.Vector3dVector(colors)
         open3d.visualization.draw_geometries([pcd])
+
+    return cluster_per_point, membership_strengths
 
 
 def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
@@ -286,6 +330,7 @@ def convert_to_batches(data,
         point_amount (int): the minimum amount of points in per batch entry. If there are more points in the block than
             the points amount, the batch element will just be larger. If there are fewer points in the block than the
             point amount, random choice with replacement will be used to fill the gaps.
+        batch_size: The size of each batch.
     """
 
     minimum_coordinates: np.ndarray = np.amin(data, axis=0)[:3]
@@ -357,3 +402,27 @@ def convert_to_batches(data,
         batches_indices.append(indices[start_index:end_index])
 
     return batches, batches_indices
+
+
+def assign_noise_nearest_neighbour_cluster(points: np.ndarray, cluster_per_point: np.ndarray) -> np.ndarray:
+    noise_point_indices = np.nonzero(cluster_per_point < 0)[0]
+
+    data_points_indices = np.nonzero(cluster_per_point >= 0)[0]
+
+    assert cluster_per_point.ndim == 1
+    assert points.ndim == 2
+
+    if points.shape[1] == 3:
+        data_points = points[data_points_indices]
+        noise_points = points[noise_point_indices]
+    elif points.shape[1] > 3:
+        data_points = points[data_points_indices, :3]
+        noise_points = points[noise_point_indices, :3]
+    else:
+        raise ValueError("Points numpy array be of shape (n_points, 3)")
+
+    # Create a KDTree to quickly find nearest neighbours
+    kd_tree = KDTree(data_points)
+    _, nearest_neighbour_indices = kd_tree.query(noise_points, k=1, workers=-1)
+    new_clusters = cluster_per_point[data_points_indices[nearest_neighbour_indices]]
+    return new_clusters

@@ -1,37 +1,37 @@
 import sys
 
+import numpy as np
 import open3d
 
 import segmentation
 
 
-def segment_with_hdbscan(pcd):
-    sys.setrecursionlimit(15000)
-
-    # Office (downsampled 0.01, minimum cluster size 300 and minimum samples None, method EOM) = 43 GB RAM
-    # Office (downsampled 0.01, minimum cluster size 400 and minimum samples None, method EOM) = 56 GB RAM
-    # Office (downsampled 0.01, minimum cluster size 500 and minimum samples None, method EOM) = 68 GB RAM
-
-    segmentation.hdbscan(pcd,
-                         minimum_cluster_size=300,
-                         minimum_samples=100,
-                         cluster_selection_epsilon=0.0,
-                         method="eom",
-                         visualize=True)
-
-
 def execute():
-    point_cloud_path = "E:\\etvr_datasets\\enfsi-2023_reduced_cloud_preprocessed.ply"
+    point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis-reconstruction\\data\\etvr\\enfsi-2023_reduced_cloud_preprocessed.ply"
 
     print("Loading point cloud...")
     pcd: open3d.geometry.PointCloud = open3d.io.read_point_cloud(point_cloud_path)
-    pcd = pcd.voxel_down_sample(0.01)
+    downsample: bool = True
+    if downsample:
+        voxel_size = 0.01
+        print(f"Downsampling point cloud using voxel size {voxel_size}")
+        pcd = pcd.voxel_down_sample(voxel_size)
     print(f"Loaded point cloud with {len(pcd.points)} points.")
 
     # pointnet_checkpoint_path = ("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal"
     #                            "\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original.pth")
 
     # segmentation.pointnetv2(pointnet_checkpoint_path, pcd)
+
+    cluster_per_points, membership_strengths = segmentation.hdbscan(pcd,
+                                                                    minimum_cluster_size=100,
+                                                                    minimum_samples=200,
+                                                                    visualize=True,
+                                                                    use_sklearn_estimator=False,
+                                                                    use_colors=True,
+                                                                    use_normals=True)
+
+    return
 
     segmentation.octree_based_region_growing(pcd,
                                              initial_voxel_size=0.1,
