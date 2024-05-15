@@ -47,7 +47,7 @@ class RegionGrowingOctree:
     def initial_voxelization(self, voxel_size: float):
         self._initial_voxelization_points(voxel_size)
 
-    def _initial_voxelization_points(self, voxel_size: float):
+    def _initial_voxelization_points(self, voxel_size: float, verbose: bool = False):
         self.initial_voxel_size = voxel_size
         # with cProfile.Profile() as pr:
         shifted_points = self.points[:, :3] - self.root_node.position_min
@@ -60,8 +60,10 @@ class RegionGrowingOctree:
         max_vertices_in_a_voxel = 0
         self.nodes_per_depth.append([])  # Make sure we have a list to put all nodes at depth 1
 
+        progress_bar = tqdm.tqdm(total=len(voxel_indices), unit="points", desc="Initial voxelization") if verbose else None
+
         # Iterate over each point to determine its voxel index
-        for i in tqdm.trange(len(voxel_indices), unit="points", desc="Initial voxelization"):
+        for i in range(len(voxel_indices)):
             voxel_index_tuple = tuple(voxel_indices[i])
 
             # Create a new Voxel object if it doesn't exist already
@@ -74,10 +76,14 @@ class RegionGrowingOctree:
             voxel: RegionGrowingOctreeNode = voxel_grid[voxel_index_tuple]
             voxel.vertex_indices.append(i)
             max_vertices_in_a_voxel = max(max_vertices_in_a_voxel, len(voxel.vertex_indices))
+            if progress_bar:
+                progress_bar.update()
 
             # pr.print_stats(sort='cumtime')
-        print(f"Created {voxel_count} voxels of size {voxel_size}")
-        print(f"Vertices per voxel: avg {self.points.shape[0] / float(voxel_count)} , max {max_vertices_in_a_voxel}")
+
+        if verbose:
+            print(f"Created {voxel_count} voxels of size {voxel_size}")
+            print(f"Vertices per voxel: avg {self.points.shape[0] / float(voxel_count)} , max {max_vertices_in_a_voxel}")
 
     def _create_initial_voxel(self, local_voxel_index: np.ndarray, voxel_size):
         pos = self.root_node.position_min + local_voxel_index * voxel_size
@@ -95,7 +101,8 @@ class RegionGrowingOctree:
                             minimum_voxel_size: float,
                             residual_threshold: float,
                             max_depth: Optional[int] = None,
-                            profile: bool = False):
+                            profile: bool = False,
+                            verbose: bool = False):
 
         pr = None
         if profile:
@@ -108,7 +115,9 @@ class RegionGrowingOctree:
         residual_sum: float = 0.0
         residual_counts: int = 0
 
-        for i in tqdm.trange(len(self.root_node.children), desc="Creating octree"):
+        progress_bar = tqdm.tqdm(total=len(self.root_node.children), desc="Creating octree") if verbose else None
+
+        for i in range(len(self.root_node.children)):
             node = self.root_node.children[i]
             node.subdivide(octree=self,
                            points=coords,
@@ -121,12 +130,16 @@ class RegionGrowingOctree:
             residual_sum += node.residual
             residual_counts += int(node.residual > 0)
 
+            if progress_bar:
+                progress_bar.update()
+
         if profile:
             pr.disable()
             pr.print_stats(sort='cumulative')
 
-        print(f"Octree generation complete, total leaf nodes: {sum(len(i) for i in self.leaf_nodes)} ")
-        print(f"Residual average: {residual_sum / residual_counts}")
+        if verbose:
+            print(f"Octree generation complete, total leaf nodes: {sum(len(i) for i in self.leaf_nodes)} ")
+            print(f"Residual average: {residual_sum / residual_counts}")
 
     def visualize_voxels(self, segments: list, maximum: Optional[int] = None, ):
         if maximum is None:
@@ -160,7 +173,8 @@ class RegionGrowingOctree:
                      normal_deviation_threshold_degrees: float,
                      minimum_valid_segment_size: int,
                      profile: bool = False,
-                     residual_threshold_is_absolute: bool = True):
+                     residual_threshold_is_absolute: bool = True,
+                     verbose: bool = False):
 
         if not residual_threshold_is_absolute:
             residual_threshold = max(min(residual_threshold, 1.0), 0.0)
@@ -187,12 +201,13 @@ class RegionGrowingOctree:
         nodes_to_do.sort(reverse=True, key=lambda x: x.residual)
 
         original_length = len(nodes_to_do)
-        progress_bar = tqdm.tqdm(total=original_length, unit="voxel")
+        progress_bar = tqdm.tqdm(total=original_length, unit="voxel", desc="Growing regions") if verbose else None
         normal_deviation_threshold = np.cos(np.deg2rad(normal_deviation_threshold_degrees))
 
         while len(nodes_to_do) > 0:
             v_min = nodes_to_do.pop()
-            progress_bar.update()
+            if verbose:
+                progress_bar.update()
 
             if v_min.residual > residual_threshold:
                 break
@@ -219,7 +234,8 @@ class RegionGrowingOctree:
                         continue
 
                     removed_nodes.add(v_j)  # Mark this node as removed (it's not actually removed, only marked!)
-                    progress_bar.update()
+                    if progress_bar:
+                        progress_bar.update()
 
                     # Rabbani et al. 2007: "As the direction of normal vector has a 180 degree ambiguity we have to
                     # take the absolute value of the dot product."
@@ -292,7 +308,8 @@ class RegionGrowingOctree:
                        planar_distance_threshold: float = 0.001,
                        fast_refinement_distance_threshold: float = 0.001,
                        buffer_zone_size: float = 0.02,
-                       angular_divergence_threshold_degrees: float = 15):
+                       angular_divergence_threshold_degrees: float = 15,
+                       verbose: bool = False):
         """
         Refine the regions to get more details.
 
@@ -314,7 +331,9 @@ class RegionGrowingOctree:
 
         planar_count = 0
 
-        for segment_index in tqdm.trange(len(self.segments), desc="Refining regions/segments", unit="segment"):
+        progress_bar = tqdm.tqdm(total=len(self.segments), desc="Refining regions...", unit="segment") if verbose else None
+
+        for segment_index in range(len(self.segments)):
             segment = self.segments[segment_index]
             boundary_nodes = self.get_boundary_nodes(segment)
 
@@ -348,7 +367,12 @@ class RegionGrowingOctree:
                                         angular_divergence_threshold_radians=adtr,
                                         points=coords,
                                         normals=normals)
-        print(f"Completed refining. Used fast refining {planar_count}/{len(self.segments)} times")
+
+            if progress_bar:
+                progress_bar.update()
+
+        if verbose:
+            print(f"Completed refining. Used fast refining {planar_count}/{len(self.segments)} times")
 
     def get_boundary_nodes(self, segment) -> List[RegionGrowingOctreeNode]:
         boundary_nodes = []
@@ -447,10 +471,16 @@ class RegionGrowingOctree:
                     continue
 
                 segment.vertex_indices.add(other_index)
+                self.segment_index_per_point[other_index] = segment.index
                 already_added_others.add(other_index)
 
+    def finalize(self):
+        self.segment_index_per_point = np.full(shape=(len(self.points), ), fill_value=-1, dtype=np.int32)
+        for i, segment in enumerate(self.segments):
+            for point_index in segment.vertex_indices:
+                self.segment_index_per_point[point_index] = i
 
-    def assign_labels_to_clusters(self, classes, labels: np.ndarray) -> np.ndarray:
+    def assign_labels_to_clusters(self, classes, labels: np.ndarray, verbose: bool = False) -> np.ndarray:
         assert self.segment_index_per_point.size > 0
         number_of_clusters = len(np.unique(self.segment_index_per_point))
 
@@ -481,9 +511,9 @@ class RegionGrowingOctree:
             else:
                 label_to_clusters_map[max_label] = [i]
 
-            #if max_label == -1:
+            # if max_label == -1:
             #    print(f"Found no label for cluster {i}")
-            #else:
+            # else:
             #    print(f"Found label {classes[max_label]} for cluster {i} (intersection {max_intersection_size} = {intersection_percentage}%)")
 
         IoU_per_class = np.zeros(shape=(len(classes),))
@@ -506,6 +536,7 @@ class RegionGrowingOctree:
             # print(f"Class {i} ({classes[i]}) has IoU {IoU_per_class[i]}")
 
         weighted_IoU = (IoU_per_class * class_weights).sum()
-        mean_class_IoU = IoU_per_class.mean()
-        print(f"Weighted total IoU: {weighted_IoU}, mean class IoU: {IoU_per_class.mean()}")
+        if verbose:
+            print(f"Weighted total IoU: {weighted_IoU}, mean class IoU: {IoU_per_class.mean()}")
+
         return cluster_to_label_map

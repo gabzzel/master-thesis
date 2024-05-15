@@ -7,18 +7,11 @@ from regionGrowingOctree.RegionGrowingOctree import RegionGrowingOctree
 
 def visualize_segments_with_points(octree: RegionGrowingOctree):
     rng = np.random.default_rng()
-    original_points = np.asarray(octree.origin_point_cloud.points)
-    points = []
-    colors = []
-    for segment in octree.segments:
-        current_segment_color = rng.random(size=(3,))
-        for node in segment.nodes:
-            for point_index in node.vertex_indices:
-                points.append(original_points[point_index])
-                colors.append(current_segment_color)
-
-    pcd = open3d.geometry.PointCloud(points=open3d.utility.Vector3dVector(points))
-    pcd.colors = open3d.utility.Vector3dVector(colors)
+    original_points = octree.points[:, :3]
+    colors = rng.random(size=(len(np.unique(octree.segment_index_per_point)), 3))
+    colors_per_point = colors[octree.segment_index_per_point]
+    pcd = open3d.geometry.PointCloud(points=open3d.utility.Vector3dVector(original_points))
+    pcd.colors = open3d.utility.Vector3dVector(colors_per_point)
     open3d.visualization.draw_geometries([pcd])
 
 
