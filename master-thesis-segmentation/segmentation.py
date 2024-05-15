@@ -230,7 +230,7 @@ def pointnetv2(model_checkpoint_path: str,
                working_directory: Union[str, PathLike],
                visualize_raw_classifications: bool = True,
                create_segmentations: bool = True,
-               segmentation_max_distance: float = 0.02) -> Tuple[np.ndarray, Optional[Dict[List[Set]]]]:
+               segmentation_max_distance: float = 0.02) -> Tuple[np.ndarray, Optional[Dict[int, List[Set]]]]:
 
     """
     Execute a classification (and possible segmentation) using a trained PointNet++ model.

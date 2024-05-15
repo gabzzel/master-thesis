@@ -34,7 +34,7 @@ class RegionGrowingOctree:
 
         for i in range(3):
             _max = np.max(self.points[:, i])
-            _min = np.min(self.points[:, :i])
+            _min = np.min(self.points[:, i])
             size = max(size, abs(_max - _min) * (1.0 + root_margin))  # Use the maximum size
 
         min_position = self.points[:, :3].min(axis=0) - np.full(shape=(3,), fill_value=size * root_margin * 0.5)

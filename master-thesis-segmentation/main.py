@@ -100,7 +100,7 @@ def execute_hdbscan_on_data(class_colors: list,
 
 
 def execute_obrg_on_S3DIS():
-    data_path = "C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\data\\s3dis_npy_incl_normals"
+    data_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis-segmentation\\data\\"
     start_index = 0
     end_index = None
 
