@@ -453,7 +453,19 @@ def assign_noise_nearest_neighbour_cluster(points: np.ndarray,
         neighbouring_clusters = cluster_per_point[data_points_indices[nearest_neighbour_indices]]
         u, indices = np.unique(neighbouring_clusters, return_inverse=True)
         axis = 1
-        new_clusters = u[np.argmax(np.apply_along_axis(np.bincount, axis, indices.reshape(neighbouring_clusters.shape),None, np.max(indices) + 1), axis=axis)]
+        try:
+            x = np.apply_along_axis(np.bincount, axis, indices.reshape(neighbouring_clusters.shape),None, np.max(indices) + 1)
+            arg_max = np.argmax(x, axis=axis)
+            new_clusters = u[arg_max]
+        except Exception as e:
+            print(f"Got exception, assigning noise points in the naive way; {e}")
+            new_clusters = np.full(shape=(noise_points.shape[0]), fill_value=-1)
+            for i in range(len(noise_points)):
+                nearest_neighbours = nearest_neighbour_indices[i]
+                nearest_neighbour_clusters = cluster_per_point[data_points_indices[nearest_neighbours]]
+                counts = [np.count_nonzero(nearest_neighbour_clusters == i) for i in range(len(np.unique(cluster_per_point)))]
+                argmax = np.argmax(counts)
+                new_clusters[i] = argmax
 
 
     return new_clusters

@@ -52,9 +52,17 @@ def execute():
 
     data_path = "C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\data\\s3dis_npy_incl_normals"
 
-    for npy_file in tqdm.tqdm(os.listdir(data_path), desc="Clustering S3DIS point clouds..."):
+    start_index = 0
+    all_files = sorted(os.listdir(data_path))
+
+    area = None
+
+    for npy_file in tqdm.tqdm(all_files[start_index:], desc=f"Clustering S3DIS area {area}"):
         current_file_path = Path(data_path).joinpath(str(npy_file))
         if not current_file_path.suffix == ".npy":
+            continue
+
+        if area is not None and f"Area_{area}" not in current_file_path.name:
             continue
 
         points, labels = get_points_and_labels(current_file_path)
