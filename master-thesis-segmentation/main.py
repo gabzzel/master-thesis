@@ -53,35 +53,7 @@ def execute():
     data_path = Path(data_path)
 
     points, labels = get_points_and_labels(data_path)
-
-    normalize_coordinates = False
-    if normalize_coordinates:
-        min_coords = np.min(points[:, :3], axis=0)
-        points[:, :3] -= min_coords
-        max_coords = np.max(points[:, :3], axis=0)
-        points[:, :3] /= max_coords
-
-    hdbscan_config_path = ("C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\results"
-                           "\\training-complex\\hdbscan\\config.json")
-    hdbscan_config_path = Path(hdbscan_config_path)
-    result_path = hdbscan_config_path.parent.joinpath("results.csv")
-    hdbscan_configs = utilities.HDBSCANConfig.read_from_file_multiple(hdbscan_config_path)
-
-    for i in tqdm.trange(len(hdbscan_configs), desc="Executing HDBSCANs..."):
-        config = hdbscan_configs[i]
-        segmentation.hdbscan(points, config, verbose=False)
-        if labels is not None:
-            cluster_label_map = config.assign_labels_to_clusters(labels=labels)
-            if config.visualize:
-                pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(points[:, :3]))
-                class_colors_np = np.array([a[1] for a in class_colors])
-                colors = class_colors_np[cluster_label_map[config.clusters]]
-                pcd.colors = open3d.utility.Vector3dVector(colors)
-                open3d.visualization.draw_geometries([pcd])
-
-
-    utilities.HDBSCANConfig.write_multiple(hdbscan_configs, result_path, delimiter=";")
-
+    execute_hdbscan_on_data(class_colors, labels, points, str(data_path.stem))
 
     # pointnet_checkpoint_path = ("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal"
     #                            "\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original.pth")
@@ -110,6 +82,35 @@ def execute():
                                              fast_refinement_distance_threshold=0.05,
                                              fast_refinement_planar_amount_threshold=0.8,
                                              visualize=True)
+
+
+def execute_hdbscan_on_data(class_colors: list,
+                            labels: Optional[np.ndarray],
+                            points: np.ndarray,
+                            dataset_name_override: str = ""):
+    normalize_coordinates = False
+    if normalize_coordinates:
+        min_coords = np.min(points[:, :3], axis=0)
+        points[:, :3] -= min_coords
+        max_coords = np.max(points[:, :3], axis=0)
+        points[:, :3] /= max_coords
+    hdbscan_config_path = ("C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\results"
+                           "\\training-complex\\hdbscan\\config.json")
+    hdbscan_config_path = Path(hdbscan_config_path)
+    result_path = hdbscan_config_path.parent.joinpath("results.csv")
+    hdbscan_configs = utilities.HDBSCANConfig.read_from_file_multiple(hdbscan_config_path, dataset_name_override)
+    for i in tqdm.trange(len(hdbscan_configs), desc="Executing HDBSCANs..."):
+        config = hdbscan_configs[i]
+        segmentation.hdbscan(points, config, verbose=False)
+        if labels is not None:
+            cluster_label_map = config.assign_labels_to_clusters(labels=labels)
+            if config.visualize:
+                pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(points[:, :3]))
+                class_colors_np = np.array([a[1] for a in class_colors])
+                colors = class_colors_np[cluster_label_map[config.clusters]]
+                pcd.colors = open3d.utility.Vector3dVector(colors)
+                open3d.visualization.draw_geometries([pcd])
+    utilities.HDBSCANConfig.write_multiple(hdbscan_configs, result_path, delimiter=";")
 
 
 if __name__ == '__main__':
