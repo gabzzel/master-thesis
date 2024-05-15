@@ -1,4 +1,5 @@
 import copy
+import os
 import sys
 from pathlib import Path
 from typing import Tuple, Optional, List
@@ -49,11 +50,15 @@ def execute():
                     ("purple", np.array([0.5, 0.0, 0.5])),
                     ("navy", np.array([0.0, 0.0, 0.5]))]
 
-    data_path = "C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\data\\s3dis_npy_incl_normals\\Area_1_conferenceRoom_1.npy"
-    data_path = Path(data_path)
+    data_path = "C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\data\\s3dis_npy_incl_normals"
 
-    points, labels = get_points_and_labels(data_path)
-    execute_hdbscan_on_data(class_colors, labels, points, str(data_path.stem))
+    for npy_file in tqdm.tqdm(os.listdir(data_path), desc="Clustering S3DIS point clouds..."):
+        current_file_path = Path(data_path).joinpath(str(npy_file))
+        if not current_file_path.suffix == ".npy":
+            continue
+
+        points, labels = get_points_and_labels(current_file_path)
+        execute_hdbscan_on_data(class_colors, labels, points, str(current_file_path.stem))
 
     # pointnet_checkpoint_path = ("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal"
     #                            "\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original.pth")
