@@ -36,19 +36,6 @@ def get_points_and_labels(data_path: Path) -> Tuple[np.ndarray, Optional[np.ndar
     print("Loading failed.")
 
 def execute():
-    class_colors = [("gray", np.array([0.5, 0.5, 0.5])),
-                    ("black", np.array([0, 0, 0])),
-                    ("red", np.array([1.0, 0.0, 0.0])),
-                    ("lime", np.array([0.0, 1.0, 0.0])),
-                    ("blue", np.array([0.0, 0.0, 1.0])),
-                    ("yellow", np.array([1.0, 1.0, 0.0])),
-                    ("olive", np.array([0.5, 0.5, 0.0])),
-                    ("green", np.array([0.0, 0.5, 0.0])),
-                    ("aqua", np.array([0.0, 1.0, 1.0])),
-                    ("teal", np.array([0.0, 0.5, 0.5])),
-                    ("fuchsia", np.array([1.0, 0.0, 1.0])),
-                    ("purple", np.array([0.5, 0.0, 0.5])),
-                    ("navy", np.array([0.0, 0.0, 0.5]))]
 
     data_path = "C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\data\\s3dis_npy_incl_normals"
 
@@ -58,7 +45,7 @@ def execute():
             continue
 
         points, labels = get_points_and_labels(current_file_path)
-        execute_hdbscan_on_data(class_colors, labels, points, str(current_file_path.stem))
+        execute_hdbscan_on_data(segmentation.CLASS_COLORS, labels, points, str(current_file_path.stem))
 
     # pointnet_checkpoint_path = ("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal"
     #                            "\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original.pth")

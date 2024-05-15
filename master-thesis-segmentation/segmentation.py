@@ -1,7 +1,9 @@
 import math
 import sys
 import time
-from typing import Optional, Union, Tuple, List
+from os import PathLike
+from pathlib import Path
+from typing import Optional, Union, Tuple, List, Set, Dict
 
 import fast_hdbscan
 import numpy as np
@@ -16,6 +18,22 @@ import regionGrowingOctree.RegionGrowingOctreeVisualization
 from regionGrowingOctree import RegionGrowingOctree
 from utilities.HDBSCANConfig import HDBSCANConfigAndResult
 
+CLASSES = ['ceiling', 'floor', 'wall', 'beam', 'column', 'window', 'door', 'table', 'chair', 'sofa', 'bookcase',
+           'board', 'clutter']
+
+CLASS_COLORS = [("gray", np.array([0.5, 0.5, 0.5])),
+                ("black", np.array([0, 0, 0])),
+                ("red", np.array([1.0, 0.0, 0.0])),
+                ("lime", np.array([0.0, 1.0, 0.0])),
+                ("blue", np.array([0.0, 0.0, 1.0])),
+                ("yellow", np.array([1.0, 1.0, 0.0])),
+                ("olive", np.array([0.5, 0.5, 0.0])),
+                ("green", np.array([0.0, 0.5, 0.0])),
+                ("aqua", np.array([0.0, 1.0, 1.0])),
+                ("teal", np.array([0.0, 0.5, 0.5])),
+                ("fuchsia", np.array([1.0, 0.0, 1.0])),
+                ("purple", np.array([0.5, 0.0, 0.5])),
+                ("navy", np.array([0.0, 0.0, 0.5]))]
 
 
 def hdbscan(points: np.ndarray,
@@ -85,15 +103,17 @@ def hdbscan(points: np.ndarray,
             cluster_sizes.append(cluster)
 
     if verbose:
-        print(f"Cluster sizes (min {config.min_cluster_size}): smallest {min(cluster_sizes)} largest {max(cluster_sizes)} "
-              f"mean {np.mean(cluster_sizes)} std {np.std(cluster_sizes)} median {np.median(cluster_sizes)}")
+        print(
+            f"Cluster sizes (min {config.min_cluster_size}): smallest {min(cluster_sizes)} largest {max(cluster_sizes)} "
+            f"mean {np.mean(cluster_sizes)} std {np.std(cluster_sizes)} median {np.median(cluster_sizes)}")
 
         print(f"Noise / non-clustered points: {np.count_nonzero(cluster_per_point < 0)}")
 
     config.noise_indices = np.nonzero(cluster_per_point < 0)[0]
 
     if cluster_per_point is not None and config.noise_nearest_neighbours > 0:
-        new_clusters_for_noise = assign_noise_nearest_neighbour_cluster(points, cluster_per_point, config.noise_nearest_neighbours)
+        new_clusters_for_noise = assign_noise_nearest_neighbour_cluster(points, cluster_per_point,
+                                                                        config.noise_nearest_neighbours)
         cluster_per_point[cluster_per_point < 0] = new_clusters_for_noise
         if verbose:
             print(f"Assigned non-clustered noise points. Noise remaining {np.count_nonzero(cluster_per_point < 0)}")
@@ -117,7 +137,6 @@ def hdbscan(points: np.ndarray,
         pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(points[:, :3]))
         pcd.colors = open3d.utility.Vector3dVector(colors)
         open3d.visualization.draw_geometries([pcd])
-
 
 
 def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
@@ -226,28 +245,29 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
 
 
 def pointnetv2(model_checkpoint_path: str,
-               pcd: open3d.geometry.PointCloud):
-    number_of_classes = 13  # PointNet++ is trained on the S3DIS dataset, which has 13 classes.
-    classes = ['ceiling', 'floor', 'wall', 'beam', 'column', 'window', 'door', 'table', 'chair', 'sofa', 'bookcase',
-               'board', 'clutter']
+               pcd: open3d.geometry.PointCloud,
+               working_directory: Union[str, PathLike],
+               visualize_raw_classifications: bool = True,
+               create_segmentations: bool = True,
+               segmentation_max_distance: float = 0.02) -> Tuple[np.ndarray, Optional[Dict[List[Set]]]]:
 
-    class_colors = [("gray", np.array([0.5, 0.5, 0.5])),
-                    ("black", np.array([0, 0, 0])),
-                    ("red", np.array([1.0, 0.0, 0.0])),
-                    ("lime", np.array([0.0, 1.0, 0.0])),
-                    ("blue", np.array([0.0, 0.0, 1.0])),
-                    ("yellow", np.array([1.0, 1.0, 0.0])),
-                    ("olive", np.array([0.5, 0.5, 0.0])),
-                    ("green", np.array([0.0, 0.5, 0.0])),
-                    ("aqua", np.array([0.0, 1.0, 1.0])),
-                    ("teal", np.array([0.0, 0.5, 0.5])),
-                    ("fuchsia", np.array([1.0, 0.0, 1.0])),
-                    ("purple", np.array([0.5, 0.0, 0.5])),
-                    ("navy", np.array([0.0, 0.0, 0.5]))]
+    """
+    Execute a classification (and possible segmentation) using a trained PointNet++ model.
 
+    :param model_checkpoint_path: The path to the model checkpoint to load as the PointNet++ model.
+    :param pcd: The point cloud to classify.
+    :param working_directory: The working directory to store the classification results (and possible visualization)
+    :param visualize_raw_classifications: Whether to draw the raw classification results using Open3D
+    :param create_segmentations: Whether to segment the classified pointcloud using region growing.
+    :param segmentation_max_distance: The maximum distance during region growing, used during segmentation.
+    :return: The classifications per point in the point cloud and optionally the clusters (i.e. sets of indices \
+        of points) per label/class.
+    """
+
+    number_of_classes = len(CLASSES)  # PointNet++ is trained on the S3DIS dataset, which has 13 classes.
     channels = 9
-    classifier: torch.nn.Module = pointnetexternal.models.pointnet2_sem_seg.get_model(number_of_classes, channels).cuda()
-
+    classifier: torch.nn.Module = pointnetexternal.models.pointnet2_sem_seg.get_model(number_of_classes,
+                                                                                      channels).cuda()
     # Load the checkpoint (i.e. the saved model)
     checkpoint = torch.load(model_checkpoint_path)
     classifier.load_state_dict(checkpoint['model_state_dict'])
@@ -257,12 +277,12 @@ def pointnetv2(model_checkpoint_path: str,
 
     # Prepare the input
     points: np.ndarray = np.asarray(pcd.points)
-    colors: np.ndarray = np.asarray(pcd.colors)
+    # colors: np.ndarray = np.asarray(pcd.colors)
     # data = np.hstack((points, colors))
 
     npoint = 4096
     batches, batches_indices = convert_to_batches(points=points, colors=None, normals=None,
-                                                 point_amount=npoint, block_size=1, stride=0.25)
+                                                  point_amount=npoint, block_size=1, stride=0.25)
     print(f"Created {len(batches)} batches.")
 
     # model expects input of size B x 9 x points where B is probably batches
@@ -297,19 +317,31 @@ def pointnetv2(model_checkpoint_path: str,
 
     classifications = votes.argmax(axis=1)
     for i in range(number_of_classes):
-        print(f"Class {classes[i]} (color {class_colors[i][0]} : {class_colors[i][1]}) occurred {np.count_nonzero(classifications == i)} times.")
+        print(
+            f"Class {CLASSES[i]} (color {CLASS_COLORS[i][0]} : {CLASS_COLORS[i][1]}) "
+            f"occurred {np.count_nonzero(classifications == i)} times.")
 
-    numpy_class_colors = np.array([c[1] for c in class_colors])
-    colors_per_point: np.ndarray = numpy_class_colors[classifications]
-    visualize_pcd = open3d.geometry.PointCloud(pcd.points)
-    visualize_pcd.colors = open3d.utility.Vector3dVector(colors_per_point)
+    working_directory_path = Path(working_directory)
 
-    classification_save_path = "C:\\Users\\ETVR\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\results\\classifications.npy"
-
+    classification_save_path = working_directory_path.joinpath("classifications.npy")
     np.save(classification_save_path, classifications)
-    open3d.visualization.draw_geometries([visualize_pcd])
-    classification_save_path = "C:\\Users\\ETVR\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\results\\classifications.ply"
-    open3d.io.write_point_cloud(classification_save_path, visualize_pcd)
+
+    numpy_class_colors = np.array([c[1] for c in CLASS_COLORS])
+    if visualize_raw_classifications:
+        colors_per_point: np.ndarray = numpy_class_colors[classifications]
+        visualize_pcd = open3d.geometry.PointCloud(pcd.points)
+        visualize_pcd.colors = open3d.utility.Vector3dVector(colors_per_point)
+        open3d.visualization.draw_geometries([visualize_pcd])
+        pcd_colored_to_classes_path = working_directory_path.joinpath("classifications.ply")
+        open3d.io.write_point_cloud(str(pcd_colored_to_classes_path), visualize_pcd)
+
+    clusters_per_class = None
+    if create_segmentations:
+        clusters_per_class = extract_clusters_from_labelled_points(points=points[:, :3],  # Sanity check!
+                                                                   labels_per_point=classifications,
+                                                                   max_distance=segmentation_max_distance)
+
+    return classifications, clusters_per_class
 
 
 def convert_to_batches(points: np.ndarray,
@@ -320,7 +352,6 @@ def convert_to_batches(points: np.ndarray,
                        padding: float = 0.001,
                        point_amount: int = 4096,
                        batch_size: int = 32):
-
     """
     Convert point cloud data into batches that can be fed into the pointnet++ network.
 
@@ -453,7 +484,59 @@ def assign_noise_nearest_neighbour_cluster(points: np.ndarray,
         neighbouring_clusters = cluster_per_point[data_points_indices[nearest_neighbour_indices]]
         u, indices = np.unique(neighbouring_clusters, return_inverse=True)
         axis = 1
-        new_clusters = u[np.argmax(np.apply_along_axis(np.bincount, axis, indices.reshape(neighbouring_clusters.shape),None, np.max(indices) + 1), axis=axis)]
-
+        new_clusters = u[np.argmax(
+            np.apply_along_axis(np.bincount, axis, indices.reshape(neighbouring_clusters.shape), None,
+                                np.max(indices) + 1), axis=axis)]
 
     return new_clusters
+
+
+def extract_clusters_from_labelled_points(points: np.ndarray,
+                                          labels_per_point: np.ndarray,
+                                          max_distance: float = 0.02) -> Dict[int, List[Set]]:
+    points_indices_per_class = [np.nonzero(labels_per_point == i)[0] for i in range(len(CLASSES))]
+    clusters_per_class: dict = {}
+
+    for c in range(len(CLASSES)):
+        relevant_points = points_indices_per_class[c]
+        if len(relevant_points) > 0:
+            clusters = _extract_clusters_region_growing(points[relevant_points], max_distance)
+            clusters_per_class[c] = clusters
+
+    return clusters_per_class
+
+
+def _extract_clusters_region_growing(points: np.ndarray, max_distance: float = 0.02) -> List[Set]:
+    all_clusters = []
+
+    unassigned_points_indices_set = set(range(len(points)))
+    kd_tree = KDTree(points)
+
+    while len(unassigned_points_indices_set) > 0:
+        initial_seed = unassigned_points_indices_set.pop()
+        indices_stack = [initial_seed]
+        current_cluster = set()
+        current_cluster.add(initial_seed)
+        while len(indices_stack) > 0:
+            current_seed_index = indices_stack.pop()
+            current_seed_point = points[current_seed_index]
+
+            # Get all neighbours of this current point
+            _, neighbour_indices = kd_tree.query_ball_point(current_seed_point, max_distance, workers=-1)
+
+            # Get all non-assigned neighbours. If there are none, just continue.
+            neighbour_indices = set(neighbour_indices).union(unassigned_points_indices_set)
+            if len(neighbour_indices) == 0:
+                continue
+
+            # Add all the neighbours to the indices stack to check later
+            indices_stack.extend(neighbour_indices)
+
+            # Mark the current neighbour indices as assigned.
+            current_cluster = current_cluster.union(neighbour_indices)
+            unassigned_points_indices_set = unassigned_points_indices_set.difference(neighbour_indices)
+
+        # Add the cluster
+        all_clusters.append(current_cluster)
+
+    return all_clusters
