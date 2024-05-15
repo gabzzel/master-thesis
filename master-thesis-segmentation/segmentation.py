@@ -1,4 +1,3 @@
-import math
 import sys
 import time
 from os import PathLike
@@ -8,7 +7,6 @@ from typing import Optional, Union, Tuple, List, Set, Dict
 import fast_hdbscan
 import numpy as np
 import open3d
-import scipy.spatial.distance
 import torch
 import tqdm
 from scipy.spatial import KDTree
@@ -139,9 +137,8 @@ def hdbscan(points: np.ndarray,
         open3d.visualization.draw_geometries([pcd])
 
 
-def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
+def octree_based_region_growing(data: np.ndarray,
                                 initial_voxel_size: float = 0.1,
-                                down_sample_voxel_size: Optional[float] = 0.01,
                                 minimum_valid_segment_size: int = 10,
                                 subdivision_residual_threshold: float = 0.001,
                                 subdivision_full_threshold: int = 10,
@@ -176,11 +173,8 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
     :param region_growing_residual_threshold: The quantile of the residuals of the octree leaf nodes that determines \
         the actual threshold. Octree leaf nodes with a residual above the resulting threshold will not be considered \
         as seeds (for segments) for region growing.
-    :param pcd: The point cloud to do the region growing on.
     :param initial_voxel_size: Octree-based region growing first voxelizes the input before creating the octree. \
         This parameter controls the size of these initial voxels.
-    :param down_sample_voxel_size: The voxel size to use during voxel downsampling of the input point cloud. \
-        Set to 0 or None to not downsample the input point cloud.
     :param minimum_valid_segment_size: During region growing, the minimum amount of octree nodes that need to be \
         in a segment for the segment to be considered valid.
     :param subdivision_residual_threshold: During subdivision, i.e. octree creation, the minimum residual value \
@@ -192,26 +186,12 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
     :return:
     """
 
-    original_number_of_points = len(pcd.points)
-    r = 0.01 * math.sqrt(12.0)
-
-    if down_sample_voxel_size is not None and down_sample_voxel_size > 0.0:
-        r = down_sample_voxel_size * math.sqrt(12)
-        ds_pcd = pcd.voxel_down_sample(voxel_size=down_sample_voxel_size)
-        print(f"Downsampled point cloud from {original_number_of_points} to {len(ds_pcd.points)} points")
-    else:
-        ds_pcd = pcd
-
-    if not ds_pcd.has_normals():
-        print("Computing normals...")
-        ds_pcd.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=r, max_nn=10))
-        print("Orienting normals...")
-        ds_pcd.orient_normals_consistent_tangent_plane(k=10)
-        ds_pcd.normalize_normals()
+    assert data.ndim == 2
+    assert data.shape[1] == 9
 
     # open3d.visualization.draw_geometries([ds_pcd], point_show_normal=True)
     print("Creating octree for Octree-based-region-growing...")
-    octree = RegionGrowingOctree.RegionGrowingOctree(ds_pcd, root_margin=0.1)
+    octree = RegionGrowingOctree.RegionGrowingOctree(data, root_margin=0.1)
     print("Performing initial voxelization...")
 
     octree.initial_voxelization(initial_voxel_size)
@@ -220,7 +200,7 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
                                residual_threshold=subdivision_residual_threshold,
                                full_threshold=subdivision_full_threshold,
                                max_depth=9,  # A higher max depth is not recommended
-                               profile=True)
+                               profile=False)
 
     print("Growing regions...")
     octree.grow_regions(minimum_valid_segment_size=minimum_valid_segment_size,
@@ -242,6 +222,7 @@ def octree_based_region_growing(pcd: open3d.geometry.PointCloud,
         regionGrowingOctree.RegionGrowingOctreeVisualization.visualize_segments_as_points(octree, True)
         regionGrowingOctree.RegionGrowingOctreeVisualization.visualize_segments_with_points(octree)
     print("Done!")
+    return octree
 
 
 def pointnetv2(model_checkpoint_path: str,

@@ -1,14 +1,9 @@
-import bisect
 import cProfile
-from typing import List, Optional, Dict, Set
+from typing import List, Optional, Dict
 
 import numpy as np
 import open3d
-import pymorton
-import scipy.linalg
-import queue
 import tqdm
-from open3d.cpu.pybind.geometry import PointCloud as PointCloud
 from scipy.spatial.distance import cdist
 
 from regionGrowingOctree.Region import Region
@@ -16,7 +11,7 @@ from regionGrowingOctree.RegionGrowingOctreeNode import RegionGrowingOctreeNode
 
 
 class RegionGrowingOctree:
-    def __init__(self, point_cloud: PointCloud, root_margin: float = 0.1):
+    def __init__(self, points: np.ndarray, root_margin: float = 0.1):
         self.root_node: Optional[RegionGrowingOctreeNode] = None
 
         # A list whose indices are depths, values are dictionaries that contain leaf nodes by coordinate
@@ -26,24 +21,23 @@ class RegionGrowingOctree:
         # A list of nodes per depth level. Elements in this list are lists that contain all nodes at this level.
         self.nodes_per_depth: List[List[RegionGrowingOctreeNode]] = []
 
-        self.origin_point_cloud = point_cloud
+        self.points: np.ndarray = points
         self._create_root_node(root_margin)
         self.segments: List[Region] = []
         self.initial_voxel_size: float = 0
 
         self.one_offsets = None
-        self.segment_index_per_point = np.full(shape=(len(point_cloud.points),), fill_value=-1, dtype=np.int32)
+        self.segment_index_per_point = np.full(shape=(self.points.shape[0],), fill_value=-1, dtype=np.int32)
 
     def _create_root_node(self, root_margin):
-        points = np.asarray(self.origin_point_cloud.points)
         size = 0
 
         for i in range(3):
-            _max = np.max(points[:][i])
-            _min = np.min(points[:][i])
+            _max = np.max(self.points[:, i])
+            _min = np.min(self.points[:, :i])
             size = max(size, abs(_max - _min) * (1.0 + root_margin))  # Use the maximum size
 
-        min_position = points.min(axis=0) - np.full(shape=(3,), fill_value=size * root_margin * 0.5)
+        min_position = self.points[:, :3].min(axis=0) - np.full(shape=(3,), fill_value=size * root_margin * 0.5)
         self.root_node = RegionGrowingOctreeNode(depth=0,
                                                  local_index=np.array([0, 0, 0]),
                                                  global_index=np.array([0, 0, 0]),
@@ -56,8 +50,7 @@ class RegionGrowingOctree:
     def _initial_voxelization_points(self, voxel_size: float):
         self.initial_voxel_size = voxel_size
         # with cProfile.Profile() as pr:
-        points = np.asarray(self.origin_point_cloud.points)
-        shifted_points = points - self.root_node.position_min
+        shifted_points = self.points[:, :3] - self.root_node.position_min
         voxel_grid: Dict[tuple, RegionGrowingOctreeNode] = {}
 
         # Calculate the indices of the voxels that each point belongs to
@@ -84,7 +77,7 @@ class RegionGrowingOctree:
 
             # pr.print_stats(sort='cumtime')
         print(f"Created {voxel_count} voxels of size {voxel_size}")
-        print(f"Vertices per voxel: avg {len(points) / voxel_count} , max {max_vertices_in_a_voxel}")
+        print(f"Vertices per voxel: avg {self.points.shape[0] / float(voxel_count)} , max {max_vertices_in_a_voxel}")
 
     def _create_initial_voxel(self, local_voxel_index: np.ndarray, voxel_size):
         pos = self.root_node.position_min + local_voxel_index * voxel_size
@@ -109,8 +102,8 @@ class RegionGrowingOctree:
             pr = cProfile.Profile()
             pr.enable()
 
-        points = np.asarray(self.origin_point_cloud.points)
-        normals = np.asarray(self.origin_point_cloud.normals)
+        coords = self.points[:, :3]
+        normals = self.points[:, 6:9]
 
         residual_sum: float = 0.0
         residual_counts: int = 0
@@ -118,7 +111,7 @@ class RegionGrowingOctree:
         for i in tqdm.trange(len(self.root_node.children), desc="Creating octree"):
             node = self.root_node.children[i]
             node.subdivide(octree=self,
-                           points=points,
+                           points=coords,
                            normals=normals,
                            full_threshold=full_threshold,
                            minimum_voxel_size=minimum_voxel_size,
@@ -316,8 +309,8 @@ class RegionGrowingOctree:
         :return:
         """
 
-        points = np.asarray(self.origin_point_cloud.points)
-        normals = np.asarray(self.origin_point_cloud.normals)
+        coords = self.points[:, :3]
+        normals = self.points[:, 6:9]
 
         planar_count = 0
 
@@ -329,7 +322,7 @@ class RegionGrowingOctree:
             # TODO
 
             # 3. Check planarity
-            is_planar = segment.is_planar(points, normals,
+            is_planar = segment.is_planar(coords, normals,
                                           amount_threshold=planar_amount_threshold,
                                           distance_threshold=planar_distance_threshold)
 
@@ -342,7 +335,7 @@ class RegionGrowingOctree:
             if is_planar:
                 self.fast_refinement(boundary_nodes,
                                      fast_refinement_distance_threshold,
-                                     points,
+                                     coords,
                                      segment)
                 planar_count += 1
             # General refinement.
@@ -353,7 +346,7 @@ class RegionGrowingOctree:
                                         buffer_zone_size=buffer_zone_size,
                                         nearest_neighbours=20,
                                         angular_divergence_threshold_radians=adtr,
-                                        points=points,
+                                        points=coords,
                                         normals=normals)
         print(f"Completed refining. Used fast refining {planar_count}/{len(self.segments)} times")
 
@@ -455,3 +448,64 @@ class RegionGrowingOctree:
 
                 segment.vertex_indices.add(other_index)
                 already_added_others.add(other_index)
+
+
+    def assign_labels_to_clusters(self, classes, labels: np.ndarray) -> np.ndarray:
+        assert self.segment_index_per_point.size > 0
+        number_of_clusters = len(np.unique(self.segment_index_per_point))
+
+        point_indices_per_cluster = []
+        point_indices_per_label = []
+        cluster_to_label_map = np.full(shape=(number_of_clusters,), fill_value=-1, dtype=int)
+        label_to_clusters_map: Dict[int, List] = {}
+
+        for i in range(number_of_clusters):
+            point_indices_per_cluster.append(np.argwhere(self.segment_index_per_point == i).squeeze())
+
+        for i in range(len(classes)):
+            point_indices_per_label.append(np.argwhere(labels == i).squeeze())
+
+        for i, cluster in enumerate(point_indices_per_cluster):
+            max_intersection_size = 0
+            max_label = -1
+
+            for j, l in enumerate(point_indices_per_label):
+                intersection_size = len(np.intersect1d(cluster, l))
+                if intersection_size > max_intersection_size:
+                    max_intersection_size = intersection_size
+                    max_label = j
+
+            cluster_to_label_map[i] = max_label
+            if max_label in label_to_clusters_map:
+                label_to_clusters_map[max_label].append(i)
+            else:
+                label_to_clusters_map[max_label] = [i]
+
+            #if max_label == -1:
+            #    print(f"Found no label for cluster {i}")
+            #else:
+            #    print(f"Found label {classes[max_label]} for cluster {i} (intersection {max_intersection_size} = {intersection_percentage}%)")
+
+        IoU_per_class = np.zeros(shape=(len(classes),))
+        class_weights = np.array([np.count_nonzero(labels == i) / float(len(labels)) for i in range(len(classes))])
+
+        for i in range(len(classes)):
+            indices_with_label = np.nonzero(labels == i)[0]
+
+            if len(indices_with_label) == 0:
+                continue
+
+            if i not in label_to_clusters_map:
+                continue
+
+            relevant_clusters: list = label_to_clusters_map[i]
+            indices_in_clusters_with_label = np.nonzero(np.isin(self.segment_index_per_point, relevant_clusters))[0]
+            intersection_size = len(np.intersect1d(indices_in_clusters_with_label, indices_with_label))
+            union = len(indices_in_clusters_with_label) + len(indices_with_label) - intersection_size
+            IoU_per_class[i] = intersection_size / union if union > 0 else 0
+            # print(f"Class {i} ({classes[i]}) has IoU {IoU_per_class[i]}")
+
+        weighted_IoU = (IoU_per_class * class_weights).sum()
+        mean_class_IoU = IoU_per_class.mean()
+        print(f"Weighted total IoU: {weighted_IoU}, mean class IoU: {IoU_per_class.mean()}")
+        return cluster_to_label_map
