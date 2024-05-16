@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Union, Optional, List, Dict, Any
 
 import numpy as np
+import tqdm
 
 
 def get_settings_header() -> List[str]:
@@ -69,12 +70,19 @@ class HDBSCANConfigAndResult:
         ]
         return results
 
-    def assign_labels_to_clusters(self, labels: np.ndarray) -> np.ndarray:
+    def assign_labels_to_clusters(self, labels: np.ndarray, verbose: bool = True) -> np.ndarray:
         assert self.clusters is not None
         number_of_clusters = len(np.unique(self.clusters))
 
+
+        progress_bar = None
+        if verbose:
+            progress_bar = tqdm.tqdm(total=4, unit="steps", desc=f"Assigning labels to {number_of_clusters} clusters.")
+
         classes = ['ceiling', 'floor', 'wall', 'beam', 'column', 'window', 'door', 'table', 'chair', 'sofa', 'bookcase',
                    'board', 'clutter']
+
+
 
         point_indices_per_cluster = []
         point_indices_per_label = []
@@ -84,8 +92,14 @@ class HDBSCANConfigAndResult:
         for i in range(number_of_clusters):
             point_indices_per_cluster.append(np.argwhere(self.clusters == i).squeeze())
 
+        if progress_bar:
+            progress_bar.update()
+
         for i in range(len(classes)):
             point_indices_per_label.append(np.argwhere(labels == i).squeeze())
+
+        if progress_bar:
+            progress_bar.update()
 
         for i, cluster in enumerate(point_indices_per_cluster):
             max_intersection_size = 0
@@ -110,6 +124,8 @@ class HDBSCANConfigAndResult:
 
         IoU_per_class = np.zeros(shape=(len(classes),))
         class_weights = np.array([np.count_nonzero(labels == i) / float(len(labels)) for i in range(len(classes))])
+        if progress_bar:
+            progress_bar.update()
 
         for i in range(len(classes)):
             indices_with_label = np.nonzero(labels == i)[0]
@@ -129,6 +145,8 @@ class HDBSCANConfigAndResult:
 
         self.weighted_IoU = (IoU_per_class * class_weights).sum()
         self.mean_class_IoU = IoU_per_class.mean()
+        if progress_bar:
+            progress_bar.update()
         # print(f"Weighted total IoU: {to}, mean class IoU: {IoU_per_class.mean()}")
         return cluster_to_label_map
 

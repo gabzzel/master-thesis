@@ -30,7 +30,7 @@ def get_points_and_labels(data_path: Path) -> Tuple[np.ndarray, Optional[np.ndar
         return np.hstack((np.asarray(pcd.points), np.asarray(pcd.normals), np.asarray(pcd.colors))), None
 
     elif data_path.suffix == ".npy":
-        print("Loading npy data file")
+        print(f"Loading npy data file {data_path.name}")
         data = np.load(data_path)
         assert data.shape[1] == 10
         return data[:, :9], data[:, 9]
@@ -39,8 +39,8 @@ def get_points_and_labels(data_path: Path) -> Tuple[np.ndarray, Optional[np.ndar
 
 
 def execute():
-    # execute_hdbscan_on_S3DIS()
-    execute_obrg_on_S3DIS()
+    execute_hdbscan_on_S3DIS()
+    # execute_obrg_on_S3DIS()
 
     # pointnet_checkpoint_path = ("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal"
     #                            "\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original.pth")
@@ -54,7 +54,7 @@ def execute_hdbscan_on_S3DIS():
     start_index = 0
     all_files = sorted(os.listdir(data_path))
 
-    area = None
+    area = 5
 
     for npy_file in tqdm.tqdm(all_files[start_index:], desc=f"Clustering S3DIS area {area}"):
         current_file_path = Path(data_path).joinpath(str(npy_file))
@@ -89,7 +89,7 @@ def execute_hdbscan_on_data(class_colors: list,
     hdbscan_configs = utilities.HDBSCANConfig.read_from_file_multiple(hdbscan_config_path, dataset_name_override)
     for i in tqdm.trange(len(hdbscan_configs), desc="Executing HDBSCANs..."):
         config = hdbscan_configs[i]
-        segmentation.hdbscan(points, config, verbose=False)
+        segmentation.hdbscan(points, config, verbose=True)
         if labels is not None:
             cluster_label_map = config.assign_labels_to_clusters(labels=labels)
             if config.visualize:

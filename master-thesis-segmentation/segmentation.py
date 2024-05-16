@@ -15,6 +15,7 @@ import pointnetexternal.models.pointnet2_sem_seg
 import regionGrowingOctree.RegionGrowingOctreeVisualization
 from regionGrowingOctree import RegionGrowingOctree
 from utilities.HDBSCANConfig import HDBSCANConfigAndResult
+from utilities.noise_clustering import get_noise_clusters_k1, get_noise_clusters_kx
 from utilities.pointnetv2_utilities import convert_to_batches
 from utilities.OctreeBasedRegionGrowingConfig import OctreeBasedRegionGrowingConfig
 
@@ -96,6 +97,9 @@ def hdbscan(points: np.ndarray,
         print("Clustering done.")
         print(f"Created {number_of_clusters} clusters in {round(end_time - start_time, 4)} seconds.")
 
+    if number_of_clusters == 0:
+        return
+
     cluster_sizes = []
     for i in range(number_of_clusters):
         cluster = np.count_nonzero(cluster_per_point == i)
@@ -111,7 +115,7 @@ def hdbscan(points: np.ndarray,
 
     config.noise_indices = np.nonzero(cluster_per_point < 0)[0]
 
-    if cluster_per_point is not None and config.noise_nearest_neighbours > 0:
+    if cluster_per_point is not None and config.noise_nearest_neighbours > 0 and np.count_nonzero(cluster_per_point < 0) > 0:
         new_clusters_for_noise = assign_noise_nearest_neighbour_cluster(points, cluster_per_point,
                                                                         config.noise_nearest_neighbours)
         cluster_per_point[cluster_per_point < 0] = new_clusters_for_noise
@@ -316,28 +320,10 @@ def assign_noise_nearest_neighbour_cluster(points: np.ndarray,
     kd_tree = KDTree(data_points)
 
     if neighbour_count == 1:
-        _, nearest_neighbour_indices = kd_tree.query(noise_points, k=1, workers=-1)
-        new_clusters = cluster_per_point[data_points_indices[nearest_neighbour_indices]]
+        return get_noise_clusters_k1(cluster_per_point, data_points_indices, kd_tree, noise_points)
     else:
-        _, nearest_neighbour_indices = kd_tree.query(noise_points, k=neighbour_count, workers=-1)
-        neighbouring_clusters = cluster_per_point[data_points_indices[nearest_neighbour_indices]]
-        u, indices = np.unique(neighbouring_clusters, return_inverse=True)
-        axis = 1
-        try:
-            x = np.apply_along_axis(np.bincount, axis, indices.reshape(neighbouring_clusters.shape),None, np.max(indices) + 1)
-            arg_max = np.argmax(x, axis=axis)
-            new_clusters = u[arg_max]
-        except Exception as e:
-            print(f"Got exception, assigning noise points in the naive way; {e}")
-            new_clusters = np.full(shape=(noise_points.shape[0]), fill_value=-1)
-            for i in range(len(noise_points)):
-                nearest_neighbours = nearest_neighbour_indices[i]
-                nearest_neighbour_clusters = cluster_per_point[data_points_indices[nearest_neighbours]]
-                counts = [np.count_nonzero(nearest_neighbour_clusters == i) for i in range(len(np.unique(cluster_per_point)))]
-                argmax = np.argmax(counts)
-                new_clusters[i] = argmax
-
-    return new_clusters
+        return get_noise_clusters_kx(cluster_per_point, data_points_indices, kd_tree, neighbour_count,
+                                     noise_point_indices, noise_points)
 
 
 def extract_clusters_from_labelled_points(points: np.ndarray,
