@@ -37,7 +37,7 @@ class HDBSCANConfigAndResult:
         self.include_normals: bool = include_normals
         self.include_colors: bool = include_colors
         self.noise_nearest_neighbours: int = noise_nearest_neighbours
-        self.visualize: int = visualize
+        self.visualize: bool = visualize
 
         self.clusters: np.ndarray = None
         self.noise_indices: np.ndarray = None

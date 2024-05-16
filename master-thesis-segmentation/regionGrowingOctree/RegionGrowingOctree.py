@@ -6,6 +6,7 @@ import open3d
 import tqdm
 from scipy.spatial.distance import cdist
 
+import utilities.OctreeBasedRegionGrowingConfig
 from regionGrowingOctree.Region import Region
 from regionGrowingOctree.RegionGrowingOctreeNode import RegionGrowingOctreeNode
 
@@ -480,7 +481,12 @@ class RegionGrowingOctree:
             for point_index in segment.vertex_indices:
                 self.segment_index_per_point[point_index] = i
 
-    def assign_labels_to_clusters(self, classes, labels: np.ndarray, verbose: bool = False) -> np.ndarray:
+    def assign_labels_to_clusters(self,
+                                  classes,
+                                  labels: np.ndarray,
+                                  config: utilities.OctreeBasedRegionGrowingConfig.OctreeBasedRegionGrowingConfig,
+                                  verbose: bool = False) -> np.ndarray:
+
         assert self.segment_index_per_point.size > 0
         number_of_clusters = len(np.unique(self.segment_index_per_point))
 
@@ -536,6 +542,8 @@ class RegionGrowingOctree:
             # print(f"Class {i} ({classes[i]}) has IoU {IoU_per_class[i]}")
 
         weighted_IoU = (IoU_per_class * class_weights).sum()
+        config.average_IoU_per_class = IoU_per_class.mean()
+        config.IoU = weighted_IoU
         if verbose:
             print(f"Weighted total IoU: {weighted_IoU}, mean class IoU: {IoU_per_class.mean()}")
 

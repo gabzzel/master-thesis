@@ -1,8 +1,8 @@
 import copy
 import os
-import sys
+import time
 from pathlib import Path
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, Union
 
 import numpy as np
 import open3d
@@ -10,6 +10,8 @@ import tqdm
 
 import segmentation
 import utilities.HDBSCANConfig
+import utilities.OctreeBasedRegionGrowingConfig
+from utilities.OctreeBasedRegionGrowingConfig import OctreeBasedRegionGrowingConfig
 
 
 def get_points_and_labels(data_path: Path) -> Tuple[np.ndarray, Optional[np.ndarray]]:
@@ -101,6 +103,8 @@ def execute_hdbscan_on_data(class_colors: list,
 
 def execute_obrg_on_S3DIS():
     data_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis-segmentation\\data\\"
+    result_dir_path = Path("E:\\thesis-results\\segmentation\\obrg")
+    config = utilities.OctreeBasedRegionGrowingConfig.read_from_file(result_dir_path.joinpath("config.json"))
     start_index = 0
     end_index = None
 
@@ -109,42 +113,47 @@ def execute_obrg_on_S3DIS():
         end_index = len(files)
     files = files[start_index:end_index]
 
+
+    configs = []
     for npy_file in tqdm.tqdm(files, desc="Clustering S3DIS point clouds..."):
         current_file_path = Path(data_path).joinpath(str(npy_file))
         if not current_file_path.suffix == ".npy":
             continue
 
         points, labels = get_points_and_labels(current_file_path)
-        execute_obrg_on_data(points, labels, visualize=True)
+        current_config = copy.copy(config)
+        current_config.data_set = str(current_file_path.stem)
+        configs.append(current_config)
+        execute_obrg_on_data(points, labels, current_config, visualize=True, verbose=True)
+
+    results_path = result_dir_path.joinpath("results.csv")
+    utilities.OctreeBasedRegionGrowingConfig.write_results_to_file_multiple(results_path, configs)
 
 
-def execute_obrg_on_data(points: np.ndarray, labels: Optional[np.ndarray], visualize: bool = True):
+def execute_obrg_on_data(points: np.ndarray,
+                         labels: Optional[np.ndarray],
+                         config: Union[str, os.PathLike, OctreeBasedRegionGrowingConfig],
+                         visualize: bool = True,
+                         verbose: bool = True):
+
     assert points.ndim == 2
     assert points.shape[1] == 9
     assert points.shape[0] > 0
 
+    if isinstance(config, (str, Path)):
+        config = utilities.OctreeBasedRegionGrowingConfig.read_from_file(Path(config))
+
+    start_time = time.time()
     octree = segmentation.octree_based_region_growing(points,
-                                                      initial_voxel_size=0.1,
-                                                      # Subdivision parameters
-                                                      subdivision_residual_threshold=0.001,
-                                                      subdivision_full_threshold=4,
-                                                      subdivision_minimum_voxel_size=0.01,
+                                                      config,
+                                                      visualize=visualize,
+                                                      verbose=verbose)
 
-                                                      # Region growing parameters
-                                                      minimum_valid_segment_size=20,
-                                                      region_growing_residual_threshold=0.95,
-                                                      growing_normal_deviation_threshold_degrees=90,
-
-                                                      # Region refining / refinement parameter
-                                                      refining_normal_deviation_threshold_degrees=30,
-                                                      general_refinement_buffer_size=0.02,
-                                                      fast_refinement_planar_distance_threshold=0.02,
-                                                      fast_refinement_distance_threshold=0.05,
-                                                      fast_refinement_planar_amount_threshold=0.8,
-                                                      visualize=True)
+    end_time = time.time()
+    config.total_time = end_time - start_time
 
     if labels is not None:
-        cluster_label_map = octree.assign_labels_to_clusters(classes=segmentation.CLASSES, labels=labels)
+        cluster_label_map = octree.assign_labels_to_clusters(classes=segmentation.CLASSES, config=config, labels=labels)
         if visualize:
             pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(points[:, :3]))
             class_colors_np = np.array([a[1] for a in segmentation.CLASS_COLORS])

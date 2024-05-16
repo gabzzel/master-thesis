@@ -16,6 +16,7 @@ import regionGrowingOctree.RegionGrowingOctreeVisualization
 from regionGrowingOctree import RegionGrowingOctree
 from utilities.HDBSCANConfig import HDBSCANConfigAndResult
 from utilities.pointnetv2_utilities import convert_to_batches
+from utilities.OctreeBasedRegionGrowingConfig import OctreeBasedRegionGrowingConfig
 
 CLASSES = ['ceiling', 'floor', 'wall', 'beam', 'column', 'window', 'door', 'table', 'chair', 'sofa', 'bookcase',
            'board', 'clutter']
@@ -139,88 +140,51 @@ def hdbscan(points: np.ndarray,
 
 
 def octree_based_region_growing(data: np.ndarray,
-                                initial_voxel_size: float = 0.1,
-                                minimum_valid_segment_size: int = 10,
-                                subdivision_residual_threshold: float = 0.001,
-                                subdivision_full_threshold: int = 10,
-                                subdivision_minimum_voxel_size: float = 0.01,
-                                region_growing_residual_threshold: float = 0.05,
-                                growing_normal_deviation_threshold_degrees: float = 15.0,
-                                refining_normal_deviation_threshold_degrees: float = 15.0,
-                                fast_refinement_planar_amount_threshold: float = 0.9,
-                                fast_refinement_planar_distance_threshold: float = 0.01,
-                                fast_refinement_distance_threshold: float = 0.02,
-                                general_refinement_buffer_size: float = 0.02,
+                                config: OctreeBasedRegionGrowingConfig,
                                 visualize: bool = True,
-                                verbose: bool = True):
+                                verbose: bool = True) -> RegionGrowingOctree.RegionGrowingOctree:
     """
     Perform octree-based region growing on a given point cloud.
 
+    :param config: The configuration with all the parameters.
+    :param data: The data to actually use during region growing (i.e. the points, colors and normals)
+    :param verbose: Whether to print debug statements and progress bars.
     :param visualize: Whether to show the voxels using the standard Open3D visualizer
-    :param general_refinement_buffer_size: The buffer around the boundary nodes of a region / segment \
-        in which points will be considered during general refinement.
-    :param fast_refinement_distance_threshold: The maximum distance a point can be to the plane (defined by the \
-        normal and centroid) of a region for that point to be joined with the region.
-    :param fast_refinement_planar_distance_threshold: The maximum distance of points to the plane (defined by the normal \
-        and centroid of a target region) for them to be considered for checking eligibility of fast refinement for \
-        said target region.
-    :param fast_refinement_planar_amount_threshold: The minimum fraction of points within a region that must be within \
-        'refining_planar_distance_threshold' from the plane defined by the centroid and normal of the region for \
-        the region to be eligible for fast refinement.
-    :param refining_normal_deviation_threshold_degrees: The maximum angular deviation between neighbouring points \
-        for them to join the region during (general) refinement. Used on points, not segments or nodes!
-    :param growing_normal_deviation_threshold_degrees: The maximum angular deviation between normals (in degrees) of \
-        neighbouring octree nodes for them to be joined with a segment. Used during growing of regions over octree \
-        leaf nodes.
-    :param region_growing_residual_threshold: The quantile of the residuals of the octree leaf nodes that determines \
-        the actual threshold. Octree leaf nodes with a residual above the resulting threshold will not be considered \
-        as seeds (for segments) for region growing.
-    :param initial_voxel_size: Octree-based region growing first voxelizes the input before creating the octree. \
-        This parameter controls the size of these initial voxels.
-    :param minimum_valid_segment_size: During region growing, the minimum amount of octree nodes that need to be \
-        in a segment for the segment to be considered valid.
-    :param subdivision_residual_threshold: During subdivision, i.e. octree creation, the minimum residual value \
-        to consider the octree node for subdivision.
-    :param subdivision_full_threshold: How many points must be in the octree node at a minimum to consider the node \
-        for subdivision.
-    :param subdivision_minimum_voxel_size: The minimum size of an octree node during subdivision. The size of all \
-        octree nodes will thus be equal to larger than this.
-    :return:
+
+    :return: The resulting octree
     """
 
     assert data.ndim == 2
     assert data.shape[1] == 9
 
-    # open3d.visualization.draw_geometries([ds_pcd], point_show_normal=True)
-    print("Creating octree for Octree-based-region-growing...")
+    if verbose:
+        print("Creating octree for Octree-based-region-growing...")
     octree = RegionGrowingOctree.RegionGrowingOctree(data, root_margin=0.1)
-    print("Performing initial voxelization...")
 
-    octree.initial_voxelization(initial_voxel_size)
+    octree.initial_voxelization(config.initial_voxel_size)
 
-    octree.recursive_subdivide(minimum_voxel_size=subdivision_minimum_voxel_size,
-                               residual_threshold=subdivision_residual_threshold,
-                               full_threshold=subdivision_full_threshold,
+    octree.recursive_subdivide(minimum_voxel_size=config.subdivision_minimum_voxel_size,
+                               residual_threshold=config.subdivision_residual_threshold,
+                               full_threshold=config.subdivision_full_threshold,
                                max_depth=9,  # A higher max depth is not recommended
                                profile=False, verbose=verbose)
 
-    print("Growing regions...")
-    octree.grow_regions(minimum_valid_segment_size=minimum_valid_segment_size,
-                        residual_threshold=region_growing_residual_threshold,
-                        normal_deviation_threshold_degrees=growing_normal_deviation_threshold_degrees,
+    octree.grow_regions(minimum_valid_segment_size=config.minimum_valid_segment_size,
+                        residual_threshold=config.region_growing_residual_threshold,
+                        normal_deviation_threshold_degrees=config.growing_normal_deviation_threshold_degrees,
                         residual_threshold_is_absolute=False,
                         profile=False, verbose=verbose)
 
-    print("Refining...")
-    octree.refine_regions(planar_amount_threshold=fast_refinement_planar_amount_threshold,
-                          planar_distance_threshold=fast_refinement_planar_distance_threshold,
-                          fast_refinement_distance_threshold=fast_refinement_distance_threshold,
-                          buffer_zone_size=general_refinement_buffer_size,
-                          angular_divergence_threshold_degrees=refining_normal_deviation_threshold_degrees,
+    octree.refine_regions(planar_amount_threshold=config.fast_refinement_planar_amount_threshold,
+                          planar_distance_threshold=config.fast_refinement_planar_distance_threshold,
+                          fast_refinement_distance_threshold=config.fast_refinement_distance_threshold,
+                          buffer_zone_size=config.general_refinement_buffer_size,
+                          angular_divergence_threshold_degrees=config.refining_normal_deviation_threshold_degrees,
                           verbose=verbose)
 
     octree.finalize()
     noise_cluster_indices = assign_noise_nearest_neighbour_cluster(data, octree.segment_index_per_point, 3)
+    config.noise_points = len(noise_cluster_indices)
     octree.segment_index_per_point[octree.segment_index_per_point < 0] = noise_cluster_indices
 
     if visualize:
@@ -301,7 +265,7 @@ def pointnetv2(model_checkpoint_path: str,
                     for j in range(indices.shape[1]):
                         votes[indices[i, j], class_per_point[i, j]] += 1
 
-    classifications = votes.argmax(axis=1)
+    classifications: np.ndarray = votes.argmax(axis=1)
     for i in range(number_of_classes):
         print(
             f"Class {CLASSES[i]} (color {CLASS_COLORS[i][0]} : {CLASS_COLORS[i][1]}) "
@@ -372,7 +336,6 @@ def assign_noise_nearest_neighbour_cluster(points: np.ndarray,
                 counts = [np.count_nonzero(nearest_neighbour_clusters == i) for i in range(len(np.unique(cluster_per_point)))]
                 argmax = np.argmax(counts)
                 new_clusters[i] = argmax
-
 
     return new_clusters
 
