@@ -14,15 +14,14 @@ import utilities.OctreeBasedRegionGrowingConfig
 from utilities.OctreeBasedRegionGrowingConfig import OctreeBasedRegionGrowingConfig
 
 
-def get_points_and_labels(data_path: Path) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+def get_points_and_labels(data_path: Path, down_sample_voxel_size: float = 0.01) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     if data_path.suffix in [".ply", ".pcd"]:
         print("Loading point cloud...")
         pcd: open3d.geometry.PointCloud = open3d.io.read_point_cloud(str(data_path))
-        downsample: bool = True
-        if downsample:
+        if down_sample_voxel_size > 0:
             voxel_size = 0.01
             print(f"Downsampling point cloud using voxel size {voxel_size}")
-            pcd = pcd.voxel_down_sample(voxel_size)
+            pcd = pcd.voxel_down_sample(down_sample_voxel_size)
         print(f"Loaded point cloud with {len(pcd.points)} points.")
 
         assert pcd.has_normals()
@@ -33,28 +32,35 @@ def get_points_and_labels(data_path: Path) -> Tuple[np.ndarray, Optional[np.ndar
         print(f"Loading npy data file {data_path.name}")
         data = np.load(data_path)
         assert data.shape[1] == 10
-        return data[:, :9], data[:, 9]
+        return np.hstack((data[:, :3], data[:, 6:9], data[:, 3:6])), data[:, 9]
 
     print("Loading failed.")
 
 
 def execute():
-    execute_hdbscan_on_S3DIS()
+    # execute_hdbscan_on_S3DIS()
     # execute_obrg_on_S3DIS()
 
-    # pointnet_checkpoint_path = ("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal"
-    #                            "\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original.pth")
+    pointnet_checkpoint_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis-segmentation\\pointnetexternal\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\best_model.pth"
+    pointcloud_path = Path("E:\\etvr_datasets\\enfsi-2023_reduced_cloud_preprocessed.ply")
+    result_directory = Path("C:\\Users\\Gabi\\master-thesis\\master-thesis-segmentation\\results\\pointnetv2")
 
-    # segmentation.pointnetv2(pointnet_checkpoint_path, pcd)
+    points, _ = get_points_and_labels(pointcloud_path, down_sample_voxel_size=0.0)
+    segmentation.pointnetv2(model_checkpoint_path=pointnet_checkpoint_path,
+                            points=points,
+                            working_directory=result_directory,
+                            visualize_raw_classifications=True,
+                            create_segmentations=True,
+                            segmentation_max_distance=0.02)
 
 
 def execute_hdbscan_on_S3DIS():
-    data_path = "C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\data\\s3dis_npy_incl_normals"
+    data_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis-segmentation\\data"
 
     start_index = 0
     all_files = sorted(os.listdir(data_path))
 
-    area = 5
+    area = 1
 
     for npy_file in tqdm.tqdm(all_files[start_index:], desc=f"Clustering S3DIS area {area}"):
         current_file_path = Path(data_path).joinpath(str(npy_file))
@@ -78,8 +84,7 @@ def execute_hdbscan_on_data(class_colors: list,
         points[:, :3] -= min_coords
         max_coords = np.max(points[:, :3], axis=0)
         points[:, :3] /= max_coords
-    hdbscan_config_path = ("C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\results"
-                           "\\training-complex\\hdbscan\\config.json")
+    hdbscan_config_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis-segmentation\\results\\config.json"
     hdbscan_config_path = Path(hdbscan_config_path)
 
     if not hdbscan_config_path.exists():
@@ -105,6 +110,7 @@ def execute_obrg_on_S3DIS():
     data_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis-segmentation\\data\\"
     result_dir_path = Path("E:\\thesis-results\\segmentation\\obrg")
     config = utilities.OctreeBasedRegionGrowingConfig.read_from_file(result_dir_path.joinpath("config.json"))
+    config.segments_save_path = result_dir_path
     start_index = 0
     end_index = None
 
@@ -152,14 +158,25 @@ def execute_obrg_on_data(points: np.ndarray,
     end_time = time.time()
     config.total_time = end_time - start_time
 
-    if labels is not None:
-        cluster_label_map = octree.assign_labels_to_clusters(classes=segmentation.CLASSES, config=config, labels=labels)
-        if visualize:
-            pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(points[:, :3]))
-            class_colors_np = np.array([a[1] for a in segmentation.CLASS_COLORS])
-            colors = class_colors_np[cluster_label_map[octree.segment_index_per_point]]
-            pcd.colors = open3d.utility.Vector3dVector(colors)
-            open3d.visualization.draw_geometries([pcd])
+    if labels is None:
+        return
+
+    cluster_label_map = octree.assign_labels_to_clusters(classes=segmentation.CLASSES, config=config, labels=labels)
+
+    if visualize:
+        pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(points[:, :3]))
+        class_colors_np = np.array([a[1] for a in segmentation.CLASS_COLORS])
+        colors = class_colors_np[cluster_label_map[octree.segment_index_per_point]]
+        pcd.colors = open3d.utility.Vector3dVector(colors)
+        open3d.visualization.draw_geometries([pcd])
+
+    if config.segments_save_path is None:
+        return
+
+    segment_save_path = config.segments_save_path if isinstance(config.segments_save_path, Path) else Path(config.segments_save_path)
+    np.savetxt(segment_save_path.joinpath(f"segments-{time.time()}.txt"), octree.segment_index_per_point)
+
+
 
 
 if __name__ == '__main__':

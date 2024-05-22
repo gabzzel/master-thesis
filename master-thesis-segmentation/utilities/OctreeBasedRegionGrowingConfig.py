@@ -1,7 +1,7 @@
 import json
 from os import PathLike
 from pathlib import Path
-from typing import Union, List
+from typing import Union, List, Optional
 
 
 class OctreeBasedRegionGrowingConfig:
@@ -60,6 +60,8 @@ class OctreeBasedRegionGrowingConfig:
         # The buffer around the boundary nodes of a region / segment in which points will be considered
         # during general refinement.
         self.general_refinement_buffer_size: float = 0.02
+
+        self.segments_save_path: Optional[Union[str, PathLike]] = None
 
         self.total_time: float = 0.0
         self.weighted_IoU: float = 0.0

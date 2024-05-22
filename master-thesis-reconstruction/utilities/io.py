@@ -262,7 +262,10 @@ def get_run_configurations_from_json(file_name: Path) -> Tuple[List[RunConfigura
     return configs, verbose, draw, copy
 
 
-def get_run_config_from_json(data, pcd_path: Union[Path, str], base_config: RunConfiguration = None) \
+def get_run_config_from_json(data,
+                             pcd_path: Union[Path, str],
+                             base_config: RunConfiguration = None,
+                             classifications_path: Union[Path, str] = None) \
         -> RunConfiguration:
 
     config = RunConfiguration()
@@ -271,6 +274,7 @@ def get_run_config_from_json(data, pcd_path: Union[Path, str], base_config: RunC
         print("Config copies settings from base config.")
 
     config.point_cloud_path = Path(pcd_path) if isinstance(pcd_path, str) else pcd_path
+    config.classifications_path = Path(classifications_path) if isinstance(classifications_path, str) else classifications_path
 
     config.set_setting(data, "down_sample_method", default=None, cast_method=pcd_utils.get_down_sample_method)
     config.set_setting(data, "down_sample_params", default=0, cast_method=float)

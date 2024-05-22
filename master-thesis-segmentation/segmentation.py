@@ -199,7 +199,7 @@ def octree_based_region_growing(data: np.ndarray,
 
 
 def pointnetv2(model_checkpoint_path: str,
-               pcd: open3d.geometry.PointCloud,
+               points: np.ndarray,
                working_directory: Union[str, PathLike],
                visualize_raw_classifications: bool = True,
                create_segmentations: bool = True,
@@ -209,7 +209,6 @@ def pointnetv2(model_checkpoint_path: str,
     Execute a classification (and possible segmentation) using a trained PointNet++ model.
 
     :param model_checkpoint_path: The path to the model checkpoint to load as the PointNet++ model.
-    :param pcd: The point cloud to classify.
     :param working_directory: The working directory to store the classification results (and possible visualization)
     :param visualize_raw_classifications: Whether to draw the raw classification results using Open3D
     :param create_segmentations: Whether to segment the classified pointcloud using region growing.
@@ -220,8 +219,9 @@ def pointnetv2(model_checkpoint_path: str,
 
     number_of_classes = len(CLASSES)  # PointNet++ is trained on the S3DIS dataset, which has 13 classes.
     channels = 9
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     classifier: torch.nn.Module = pointnetexternal.models.pointnet2_sem_seg.get_model(number_of_classes,
-                                                                                      channels).cuda()
+                                                                                      channels).to(device=device)
     # Load the checkpoint (i.e. the saved model)
     checkpoint = torch.load(model_checkpoint_path)
     classifier.load_state_dict(checkpoint['model_state_dict'])
@@ -230,12 +230,14 @@ def pointnetv2(model_checkpoint_path: str,
     classifier = classifier.eval()
 
     # Prepare the input
-    points: np.ndarray = np.asarray(pcd.points)
+    assert points.ndim == 2
+    assert points.shape[1] >= 3
+    coords: np.ndarray = points[:, :3]
     # colors: np.ndarray = np.asarray(pcd.colors)
     # data = np.hstack((points, colors))
 
     npoint = 4096
-    batches, batches_indices = convert_to_batches(points=points, colors=None, normals=None,
+    batches, batches_indices = convert_to_batches(points=coords, colors=None, normals=None,
                                                   point_amount=npoint, block_size=1, stride=0.25)
     print(f"Created {len(batches)} batches.")
 
@@ -283,7 +285,7 @@ def pointnetv2(model_checkpoint_path: str,
     numpy_class_colors = np.array([c[1] for c in CLASS_COLORS])
     if visualize_raw_classifications:
         colors_per_point: np.ndarray = numpy_class_colors[classifications]
-        visualize_pcd = open3d.geometry.PointCloud(pcd.points)
+        visualize_pcd = open3d.geometry.PointCloud(coords)
         visualize_pcd.colors = open3d.utility.Vector3dVector(colors_per_point)
         open3d.visualization.draw_geometries([visualize_pcd])
         pcd_colored_to_classes_path = working_directory_path.joinpath("classifications.ply")

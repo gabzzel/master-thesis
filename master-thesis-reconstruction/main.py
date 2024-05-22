@@ -1,7 +1,7 @@
 import argparse
 import sys
 import time
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union, List
 import pathlib
 import os
 
@@ -121,7 +121,7 @@ def execute_run(run_config: RunConfiguration,
 def load_point_cloud(config: RunConfiguration,
                      results: EvaluationResults,
                      verbose: bool = True) \
-        -> Tuple[open3d.geometry.PointCloud, open3d.geometry.PointCloud]:
+        -> Tuple[open3d.geometry.PointCloud, Union[open3d.geometry.PointCloud, List[open3d.geometry.PointCloud]]]:
     start_time = time.time()
 
     if config.point_cloud_path.is_absolute():
@@ -129,25 +129,31 @@ def load_point_cloud(config: RunConfiguration,
     else:
         pcd_path = pathlib.Path(sys.argv[0]).parent.joinpath("data", config.point_cloud_path)
 
-    raw_pcd, pcd = pcd_utils.load_point_cloud(pcd_path,
-                                              results=results,
-                                              down_sample_method=config.down_sample_method,
-                                              down_sample_param=config.down_sample_params,
-                                              verbose=verbose)
+    if config.classifications_path is None:
+        raw_pcd, pcd = pcd_utils.load_point_cloud(pcd_path,
+                                                  results=results,
+                                                  down_sample_method=config.down_sample_method,
+                                                  down_sample_param=config.down_sample_params,
+                                                  verbose=verbose)
 
-    if config.surface_reconstruction_method != SurfaceReconstructionMethod.SCREENED_POISSON_SURFACE_RECONSTRUCTION and \
-            config.surface_reconstruction_method != SurfaceReconstructionMethod.BALL_PIVOTING_ALGORITHM:
-        print("Skipped normal estimation since surface reconstruction method is neither SPSR or BPA.")
+        if config.surface_reconstruction_method != SurfaceReconstructionMethod.SCREENED_POISSON_SURFACE_RECONSTRUCTION and \
+                config.surface_reconstruction_method != SurfaceReconstructionMethod.BALL_PIVOTING_ALGORITHM:
+            print("Skipped normal estimation since surface reconstruction method is neither SPSR or BPA.")
+        else:
+            pcd_utils.estimate_normals(pcd,
+                                       max_nn=config.normal_estimation_neighbours,
+                                       radius=config.normal_estimation_radius,
+                                       orient=config.orient_normals,
+                                       normalize=not config.skip_normalizing_normals,
+                                       verbose=verbose)
+
+        results.loading_and_preprocessing_time = time.time() - start_time
+        return raw_pcd, pcd
+
     else:
-        pcd_utils.estimate_normals(pcd,
-                                   max_nn=config.normal_estimation_neighbours,
-                                   radius=config.normal_estimation_radius,
-                                   orient=config.orient_normals,
-                                   normalize=not config.skip_normalizing_normals,
-                                   verbose=verbose)
+        print("Got classifications. Splitting point cloud.")
 
-    results.loading_and_preprocessing_time = time.time() - start_time
-    return raw_pcd, pcd
+
 
 
 def run_with_test_cube():
