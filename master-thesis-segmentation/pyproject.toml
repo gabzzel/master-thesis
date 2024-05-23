@@ -1,8 +1,0 @@
-[build-system]
-requires = ["setuptools", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
-
-[project]
-dependencies = [
-    'PointNet2 @ git+ssh://git@github.com/charlesq34/pointnet2.git',
-]

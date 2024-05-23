@@ -138,9 +138,6 @@ class S3DISDataset(Dataset):
         current_points[:, 1] = selected_points[:, 1] - center[1]
         current_points[:, 2] = selected_points[:, 2] - center[2] if self.apply_z_centering else selected_points[:, 2]
 
-        for i in range(3):
-            current_points[:, i] = selected_points[:, i] - center[i]
-
         occupied_indices = 3
 
         # Add the colors and normalize them
@@ -159,10 +156,6 @@ class S3DISDataset(Dataset):
         if self.includes_normals:
             current_points[:, occupied_indices:occupied_indices+3] = selected_points[:, 6:9]
             occupied_indices += 3
-
-        # Normalize the colors
-        if self.include_colors:
-            selected_points[:, 3:6] /= 255.0
 
         if self.includes_normals:
             current_points[:, 0:9] = selected_points

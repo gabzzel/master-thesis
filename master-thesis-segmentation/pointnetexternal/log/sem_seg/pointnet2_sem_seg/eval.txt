@@ -121,3 +121,17 @@ class clutter       , IoU: 0.416
 2024-05-08 13:04:39,068 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='pointnet2_sem_seg', visual=False, test_area=5, num_votes=3)
 2024-05-08 13:04:45,214 - Model - INFO - The number of test data is: 67
 2024-05-08 13:04:45,454 - Model - INFO - ---- EVALUATION WHOLE SCENE----
+2024-05-21 08:44:37,644 - Model - INFO - PARAMETER ...
+2024-05-21 08:44:37,645 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='pointnet2_sem_seg', visual=False, test_area=5, num_votes=3)
+2024-05-21 08:44:45,450 - Model - INFO - The number of test data is: 67
+2024-05-21 08:45:52,341 - Model - INFO - PARAMETER ...
+2024-05-21 08:45:52,341 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='pointnet2_sem_seg', visual=False, test_area=5, num_votes=3)
+2024-05-21 08:46:03,690 - Model - INFO - The number of test data is: 68
+2024-05-21 08:47:28,661 - Model - INFO - PARAMETER ...
+2024-05-21 08:47:28,661 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='pointnet2_sem_seg', visual=False, test_area=5, num_votes=3)
+2024-05-21 08:47:37,741 - Model - INFO - The number of test data is: 68
+2024-05-21 08:48:54,911 - Model - INFO - PARAMETER ...
+2024-05-21 08:48:54,912 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='pointnet2_sem_seg', visual=False, test_area=5, num_votes=3)
+2024-05-21 08:49:03,962 - Model - INFO - The number of test data is: 68
+2024-05-21 08:49:08,404 - Model - INFO - ---- EVALUATION WHOLE SCENE----
+2024-05-21 08:50:43,764 - Model - INFO - Mean IoU of Area_5_conferenceRoom_1: 0.0649

@@ -222,9 +222,10 @@ def main(args):
 
             if isinstance(points, np.ndarray):
                 points = torch.tensor(points, device=device, dtype=torch.float32)
+            elif isinstance(points, torch.Tensor):
+                points = points.to(device=device, dtype=torch.float32, non_blocking=True)
 
             target = target.to(device=device, dtype=torch.long, non_blocking=True)
-            # points, target = points.float().cuda(), target.long().cuda()
             points = points.transpose(2, 1)
 
             seg_pred, trans_feat = classifier(points)
@@ -270,9 +271,13 @@ def main(args):
 
             log_string('---- EPOCH %03d EVALUATION ----' % (global_epoch + 1))
             for i, (points, target) in tqdm(enumerate(testDataLoader), total=len(testDataLoader), smoothing=0.9):
-                points = points.data.numpy()
-                points = torch.Tensor(points)
-                points, target = points.float().cuda(), target.long().cuda()
+                # points = points.data.numpy()
+                # points = torch.Tensor(points)
+                # points, target = points.float().cuda(), target.long().cuda()
+
+                target = target.to(device=device, dtype=torch.long, non_blocking=True)
+                points = points.to(device=device, dtype=torch.float32, non_blocking=True)
+                # points = torch.tensor(points.data, device=device, dtype=torch.float32)
                 points = points.transpose(2, 1)
 
                 seg_pred, trans_feat = classifier(points)
@@ -282,7 +287,7 @@ def main(args):
                 batch_label = target.cpu().data.numpy()
                 target = target.view(-1, 1)[:, 0]
                 loss = criterion(seg_pred, target, trans_feat, weights)
-                loss_sum += loss
+                loss_sum += loss.detach().item()
                 pred_val = np.argmax(pred_val, 2)
                 correct = np.sum((pred_val == batch_label))
                 total_correct += correct
