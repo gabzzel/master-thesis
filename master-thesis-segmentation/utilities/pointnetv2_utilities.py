@@ -80,7 +80,8 @@ def convert_to_batches(points: np.ndarray,
             # Add the colors
             occupied_indices = 3
             if colors is not None:
-                block_data = np.hstack((blocks_data, colors[point_idxs][:, np.newaxis]))
+                relevant_color_data = colors[point_idxs]
+                block_data = np.hstack((block_data, relevant_color_data))
                 occupied_indices += 3
 
             # Add the normalized points
@@ -90,7 +91,7 @@ def convert_to_batches(points: np.ndarray,
             occupied_indices += 3
 
             if normals is not None:
-                block_data = np.hstack((blocks_data, normals[point_idxs]))
+                block_data = np.hstack((block_data, normals[point_idxs]))
                 occupied_indices += 3
 
             blocks_data = np.vstack((blocks_data, block_data)) if blocks_data is not None else block_data
