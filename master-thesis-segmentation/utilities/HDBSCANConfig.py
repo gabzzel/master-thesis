@@ -220,9 +220,9 @@ def write_multiple(configs: List[HDBSCANConfigAndResult],
     exists = Path(path).exists()
 
     with open(path, "a") as file:
-        if not exists:
-            for s in get_settings_header():
-                file.write(f"{s}{delimiter}")
+        #if not exists:
+        #    for s in get_settings_header():
+        #        file.write(f"{s}{delimiter}")
         for k in configs[0].get_results():
             file.write(f"{k[0]}{delimiter}")
         file.write("\n")

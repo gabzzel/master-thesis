@@ -77,15 +77,19 @@ def hdbscan(points: np.ndarray,
         cluster_per_point = model.fit_predict(points)
 
     else:
-        results = fast_hdbscan.fast_hdbscan(points,
-                                            min_samples=config.min_samples,
-                                            min_cluster_size=config.min_cluster_size,
-                                            cluster_selection_method=config.method,
-                                            allow_single_cluster=False,
-                                            cluster_selection_epsilon=0.0,
-                                            return_trees=False)
+        try:
+            results = fast_hdbscan.fast_hdbscan(points,
+                                                min_samples=config.min_samples,
+                                                min_cluster_size=config.min_cluster_size,
+                                                cluster_selection_method=config.method,
+                                                allow_single_cluster=False,
+                                                cluster_selection_epsilon=0.0,
+                                                return_trees=False)
 
-        cluster_per_point, membership_strengths = results
+            cluster_per_point, membership_strengths = results
+        except Exception as e:
+            print(f"HDBSCAN failed because of error. {e}")
+            cluster_per_point = np.array([])
 
     number_of_clusters = len(np.unique(cluster_per_point))
 

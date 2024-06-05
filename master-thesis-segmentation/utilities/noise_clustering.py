@@ -44,6 +44,5 @@ def get_noise_clusters_kx(cluster_per_point, data_points_indices, kd_tree, neigh
         arg_max, u = get_noise_clusters_kx_unsafe(neighbouring_clusters)
         return u[arg_max]
     except Exception as e:
-        print(f"Got exception, assigning noise points using batches {e}")
-        return _get_noise_clusters_kx_batches(cluster_per_point, data_points_indices, nearest_neighbour_indices,
-                                              noise_point_indices, noise_points)
+        print(f"Got exception, assigning noise using k=1: {e}")
+        return get_noise_clusters_k1(cluster_per_point, data_points_indices, kd_tree, noise_points)
