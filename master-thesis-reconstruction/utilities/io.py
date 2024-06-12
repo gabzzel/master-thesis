@@ -245,6 +245,10 @@ def get_run_configurations_from_json(file_name: Path) -> Tuple[List[RunConfigura
             copy = bool(json_data_raw["copy"])
 
         pcd_path = Path(json_data_raw['point_cloud_path'])
+        if "segments_path" in json_data_raw:
+            segments_path = json_data_raw['segments_path']
+        else:
+            segments_path = None
 
         for i in range(len(json_data_raw["runs"])):
             run_config_raw = json_data_raw["runs"][i]
@@ -252,7 +256,8 @@ def get_run_configurations_from_json(file_name: Path) -> Tuple[List[RunConfigura
                 base_config = None
                 if i > 0 and copy:
                     base_config = configs[i - 1]  # If we want to copy the previous config
-                config = get_run_config_from_json(run_config_raw, pcd_path=pcd_path, base_config=base_config)
+                config = get_run_config_from_json(run_config_raw, pcd_path=pcd_path, base_config=base_config,
+                                                  segments_path=segments_path)
                 configs.append(config)
             except json.JSONDecodeError as e:
                 print(f"Could not parse run {i} json config file {file_name}: {e}")
@@ -265,7 +270,7 @@ def get_run_configurations_from_json(file_name: Path) -> Tuple[List[RunConfigura
 def get_run_config_from_json(data,
                              pcd_path: Union[Path, str],
                              base_config: RunConfiguration = None,
-                             classifications_path: Union[Path, str] = None) \
+                             segments_path: Union[Path, str] = None) \
         -> RunConfiguration:
 
     config = RunConfiguration()
@@ -274,7 +279,7 @@ def get_run_config_from_json(data,
         print("Config copies settings from base config.")
 
     config.point_cloud_path = Path(pcd_path) if isinstance(pcd_path, str) else pcd_path
-    config.classifications_path = Path(classifications_path) if isinstance(classifications_path, str) else classifications_path
+    config.segments_path = Path(segments_path) if isinstance(segments_path, str) else segments_path
 
     config.set_setting(data, "down_sample_method", default=None, cast_method=pcd_utils.get_down_sample_method)
     config.set_setting(data, "down_sample_params", default=0, cast_method=float)

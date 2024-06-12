@@ -1,9 +1,11 @@
 import time
-from typing import Union, Optional, Tuple
+from typing import Union, Optional, Tuple, List
 
 import numpy as np
 import open3d
 import scipy.spatial
+import tqdm
+from open3d.cpu.pybind.utility import Vector3dVector
 
 from utilities import utils
 from utilities.enumerations import SurfaceReconstructionMethod as SRM, SurfaceReconstructionParameters as SRP
@@ -37,7 +39,9 @@ def get_surface_reconstruction_method(to_evaluate: Union[str, SRM]) -> SRM:
 def run(pcd: open3d.geometry.PointCloud,
         config: RunConfiguration,
         results: EvaluationResults,
-        verbose: bool = True) -> Tuple[Optional[open3d.geometry.TriangleMesh], Optional[np.ndarray]]:
+        verbose: bool = True) \
+        -> Tuple[Optional[open3d.geometry.TriangleMesh], Optional[np.ndarray]]:
+
     start_time = time.time()
     if config.surface_reconstruction_method not in SRM:
         raise ValueError(f"Unknown algorithm {config.surface_reconstruction_method}. "
@@ -50,35 +54,75 @@ def run(pcd: open3d.geometry.PointCloud,
     if verbose:
         print(f"Starting surface reconstruction using {config.surface_reconstruction_method}")
 
-    mesh: open3d.geometry.TriangleMesh = None
-    densities: np.ndarray = None
+    point_clouds = [(pcd, np.arange(len(pcd.points)))]
 
-    if config.surface_reconstruction_method == SRM.BALL_PIVOTING_ALGORITHM:
-        radii = config.surface_reconstruction_params[SRP.BPA_RADII]
-        mesh = ball_pivoting_algorithm(point_cloud=pcd, radii=radii, verbose=verbose)
+    # Apply the segmentation
+    if config.segments_path is not None:
+        point_clouds = []
+        points = np.asarray(pcd.points)
+        colors = np.asarray(pcd.colors) if pcd.has_colors() else None
+        normals = np.asarray(pcd.normals) if pcd.has_normals() else None
+        segments_per_point = np.load(config.segments_path)
+        segments = np.unique(segments_per_point)
+        for segment in segments:
+            indices = segments_per_point == segment
+            relevant_points = points[indices, :]
+            segmented_pcd = open3d.geometry.PointCloud(Vector3dVector(relevant_points))
+            if pcd.has_colors():
+                relevant_colors = colors[indices, :]
+                segmented_pcd.colors = open3d.utility.Vector3dVector(relevant_colors)
+            if pcd.has_normals():
+                relevant_normals = normals[indices, :]
+                segmented_pcd.normals = open3d.utility.Vector3dVector(relevant_normals)
+            point_clouds.append((segmented_pcd, np.nonzero(indices)))
 
-    elif config.surface_reconstruction_method == SRM.ALPHA_SHAPES:
-        alpha = config.surface_reconstruction_params[SRP.ALPHA]
-        if isinstance(alpha, list) or isinstance(alpha, tuple):
-            alpha = alpha[0]
-        mesh = alpha_shapes(point_cloud=pcd, alpha=alpha, verbose=verbose)
+    all_densities: np.ndarray = None
+    if config.surface_reconstruction_method == SRM.SCREENED_POISSON_SURFACE_RECONSTRUCTION:
+        all_densities = np.zeros(shape=(len(pcd.points),), dtype=np.float32)
 
-    elif config.surface_reconstruction_method == SRM.SCREENED_POISSON_SURFACE_RECONSTRUCTION:
-        octree_max_depth = config.surface_reconstruction_params[SRP.POISSON_OCTREE_MAX_DEPTH]
-        mesh, densities = screened_poisson_surface_reconstruction(point_cloud=pcd,
-                                                                  octree_max_depth=octree_max_depth,
-                                                                  processes=1,
-                                                                  verbose=verbose)
+    resulting_meshes: List[open3d.geometry.TriangleMesh] = []
+    for point_cloud, point_indices in tqdm.tqdm(point_clouds, desc="Meshing point clouds...", unit="pointcloud", miniters=1):
+        mesh: Optional[open3d.geometry.TriangleMesh] = None
+        densities: Optional[np.ndarray] = None
+        if config.surface_reconstruction_method == SRM.BALL_PIVOTING_ALGORITHM:
+            radii = config.surface_reconstruction_params[SRP.BPA_RADII]
+            mesh = ball_pivoting_algorithm(point_cloud=point_cloud, radii=radii, verbose=len(point_clouds) == 1)
 
-    elif config.surface_reconstruction_method == SRM.DELAUNAY_TRIANGULATION:
-        mesh = delaunay_triangulation(point_cloud=pcd, as_tris=True)
+        elif config.surface_reconstruction_method == SRM.ALPHA_SHAPES:
+            alpha = config.surface_reconstruction_params[SRP.ALPHA]
+            if isinstance(alpha, list) or isinstance(alpha, tuple):
+                alpha = alpha[0]
+            mesh = alpha_shapes(point_cloud=point_cloud, alpha=alpha, verbose=len(point_clouds) == 1)
 
-    elif verbose:
-        print(f"Unknown algorithm {config.surface_reconstruction_method}"
-              f" or invalid parameters {config.surface_reconstruction_params}.")
+        elif config.surface_reconstruction_method == SRM.SCREENED_POISSON_SURFACE_RECONSTRUCTION:
+            octree_max_depth = config.surface_reconstruction_params[SRP.POISSON_OCTREE_MAX_DEPTH]
+            mesh, densities = screened_poisson_surface_reconstruction(point_cloud=point_cloud,
+                                                                      octree_max_depth=octree_max_depth,
+                                                                      processes=1,
+                                                                      verbose=len(point_clouds) == 1)
+
+        # elif config.surface_reconstruction_method == SRM.DELAUNAY_TRIANGULATION:
+        #     mesh = delaunay_triangulation(point_cloud=pcd, as_tris=True)
+
+        elif verbose:
+            print(f"Unknown algorithm {config.surface_reconstruction_method}"
+                  f" or invalid parameters {config.surface_reconstruction_params}.")
+
+        if mesh is not None:
+            resulting_meshes.append(mesh)
+
+        if densities is not None and all_densities is None:
+            all_densities = densities
+        elif densities is not None and all_densities is not None:
+            all_densities = np.concatenate((all_densities, densities), axis=0)
 
     results.surface_reconstruction_time = time.time() - start_time
-    return mesh, densities
+
+    final_mesh = open3d.geometry.TriangleMesh()
+    for mesh in resulting_meshes:
+        final_mesh += mesh
+
+    return final_mesh, all_densities
 
 
 def alpha_shapes(point_cloud, alpha: float = 0.02, verbose=True):
@@ -175,6 +219,7 @@ def vertex_neighbours_to_triangles(vertex_neighbours: Tuple[np.ndarray, np.ndarr
             triangles.append([vertex_index, neighbours[slice_index], neighbours[slice_index + 1]])
 
     return np.array(triangles)
+
 
 def screened_poisson_surface_reconstruction(point_cloud: open3d.geometry.PointCloud,
                                             octree_max_depth=8,

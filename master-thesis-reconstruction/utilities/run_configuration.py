@@ -52,7 +52,7 @@ class RunConfiguration:
         self.name: str = "Unnamed run configuration"
         # Point Cloud Settings (incl. down sampling)
         self.point_cloud_path: Path = None
-        self.classifications_path: Path = None
+        self.segments_path: Path = None
         self.down_sample_method: Optional[DSM] = None
         self.down_sample_params: float = None
 

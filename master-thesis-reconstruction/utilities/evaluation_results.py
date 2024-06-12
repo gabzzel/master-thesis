@@ -175,6 +175,6 @@ class EvaluationResults:
             file.write(f"{discrete_curvatures_max}{delimiter}")
             file.write(f"{avg}{delimiter}")
             file.write(f"{std}{delimiter}")
-            file.write(f"{run_config.classifications_path.stem}{delimiter}")
+            file.write(f"{run_config.segments_path.stem}{delimiter}")
 
             file.write("\n")  # Make sure to end with a newline, such that the next lines are written right.
