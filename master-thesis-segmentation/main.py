@@ -48,23 +48,73 @@ def get_points_and_labels(data_path: Path,
 
 
 def execute():
+    # extract_clusters()
+
     # execute_hdbscan_on_S3DIS()
     #execute_obrg_on_S3DIS()
 
-    pointnet_checkpoint_path = "C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original_coords_colors.pth"
-    pointcloud_path = Path("E:\\etvr_datasets\\ruimte_ETVR-preprocessed-lower-only.ply")
-    result_directory = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\results\\pointnetv2\\office")
+    # pointnet_checkpoint_path = "C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original_coords_colors.pth"
+    # pointcloud_path = Path("E:\\etvr_datasets\\ruimte_ETVR-preprocessed-lower-only.ply")
+    # result_directory = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\results\\pointnetv2\\office")
 
-    points, colors, normals, _ = get_points_and_labels(pointcloud_path, down_sample_voxel_size=0.0)
-    segmentation.pointnetv2(model_checkpoint_path=pointnet_checkpoint_path,
-                            points=points,
-                            normals=None,
-                            colors=colors,
-                            working_directory=result_directory,
-                            visualize_raw_classifications=True,
-                            create_segmentations=False,
-                            segmentation_max_distance=0.02)
+    # points, colors, normals, _ = get_points_and_labels(pointcloud_path, down_sample_voxel_size=0.0)
+    # segmentation.pointnetv2(model_checkpoint_path=pointnet_checkpoint_path,
+    #                         points=points,
+    #                         normals=None,
+    #                        colors=colors,
+    #                        working_directory=result_directory,
+    #                        visualize_raw_classifications=True,
+    #                        create_segmentations=False,
+    #                        segmentation_max_distance=0.02)
 
+    config = utilities.HDBSCANConfig.HDBSCANConfigAndResult(
+        pcd_path="C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-reconstruction\\data\\etvr\\training_complex_downsampled_001_incl_oriented_normals.ply",
+        min_cluster_size=125,
+        min_samples=200,
+        include_normals=True,
+        include_colors=False,
+        visualize=True
+    )
+
+    classifications = np.load("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\results\\pointnext\\training-complex\\training_complex_downsampled_001_incl_oriented_normals_1718011697.0712814_classifications.npy")
+    n_values = np.max(classifications) + 1
+    classifications_one_hot = np.eye(n_values)[classifications]
+    pcd: open3d.geometry.PointCloud = open3d.io.read_point_cloud(config.pcd_path)
+    points = np.hstack((np.asarray(pcd.points), np.asarray(pcd.normals), np.asarray(pcd.colors), classifications_one_hot))
+    segmentation.hdbscan(points, config, verbose=True)
+    results_folder = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\results\\hdbscan_incl_pointnext")
+    utilities.HDBSCANConfig.write_multiple([config], results_folder.joinpath("result.txt"), delimiter="\n")
+    np.save(results_folder.joinpath("cluster_per_point.npy"), config.clusters)
+    print("Done!")
+
+
+def extract_clusters():
+    folder_path = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\results\\pointnext")
+    file_path = "ruimte_ETVR-preprocessed_1718021719.7522366_classifications.npy"
+    classifications = np.load(folder_path.joinpath(file_path))
+    pcd_file = file_path.replace("classifications.npy", "pcd.ply")
+    pcd = open3d.io.read_point_cloud(str(folder_path.joinpath(pcd_file)))
+    points = np.asarray(pcd.points)
+
+    start_time = time.time()
+    clusters, cluster_per_point_raw = segmentation.extract_clusters_from_labelled_points_multicore(points, classifications,
+                                                                                               max_distance=0.05)
+    clusters_dest = folder_path.joinpath(file_path.replace("classifications.npy", "clusters.npy"))
+    np.save(clusters_dest, cluster_per_point_raw)
+
+    cluster_sizes = [len(i) for i in clusters]
+    print(f"Cluster sizes: min {np.min(cluster_sizes)}, max {np.max(cluster_sizes)}, avg {np.average(cluster_sizes)}, median {np.median(cluster_sizes)}")
+    print("Saved clusters. Total time taken: {:.2f}".format(time.time() - start_time))
+
+    stats_path = folder_path.joinpath(file_path.replace("classifications.npy", "stats.txt"))
+    with open(stats_path, "a") as f:
+        f.write("Clustering time:" + str(time.time() - start_time) + "\n")
+
+    rng = np.random.default_rng()
+    colors = rng.random(size=(len(clusters), 3))
+    pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(points))
+    pcd.colors = open3d.utility.Vector3dVector(colors[cluster_per_point_raw])
+    open3d.visualization.draw_geometries([pcd])
 
 def execute_hdbscan_on_S3DIS():
     data_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis-segmentation\\data"

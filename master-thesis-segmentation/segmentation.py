@@ -46,8 +46,8 @@ def hdbscan(points: np.ndarray,
     :returns: The segment index per point and their memberships strengths, and the noise indices.
     """
 
-    assert points.ndim == 2
-    assert points.shape[1] == 9
+    # assert points.ndim == 2
+    # assert points.shape[1] == 9
 
     if verbose:
         print(f"Clustering / segmenting using HDBScan (min cluster size {config.min_cluster_size}, "
@@ -56,11 +56,17 @@ def hdbscan(points: np.ndarray,
     start_time = time.time()
 
     if config.include_normals and not config.include_colors:
-        points = points[:, :6]
+        if points.shape[1] <= 9:
+            points = points[:, :6]
+        else:
+            points = np.hstack((points[:, :6], points[:, 9:]))
     elif not config.include_normals and config.include_colors:
         points = np.hstack((points[:, :3], points[:, 6:]))
     elif not config.include_normals and not config.include_colors:
-        points = points[:, :3]
+        if points.shape[1] <= 9:
+            points = points[:, :3]
+        else:
+            points = np.hstack((points[:, :3], points[:, 9:]))
 
     sys.setrecursionlimit(15000)
     membership_strengths: np.ndarray = None
@@ -70,7 +76,7 @@ def hdbscan(points: np.ndarray,
     if use_sklearn:
         model = fast_hdbscan.HDBSCAN(min_cluster_size=config.min_cluster_size,
                                      min_samples=config.min_samples,
-                                     cluster_selection_method=config.min_samples,
+                                     cluster_selection_method=config.method,
                                      allow_single_cluster=False,
                                      cluster_selection_epsilon=0)
 
@@ -374,3 +380,62 @@ def extract_clusters_from_labelled_points(points: np.ndarray,
             cluster_index += 1
 
     return cluster_indices_per_point
+
+
+def extract_clusters_from_labelled_points_multicore(points: np.ndarray,
+                                                    labels_per_point: np.ndarray,
+                                                    max_distance: float = 0.02) -> Tuple[List[List[int]], np.ndarray]:
+
+    print(f"Clustering {len(points)} points based on labels/classifications using region growing with radius {max_distance}.")
+    points_indices_per_class = [np.nonzero(labels_per_point == i)[0] for i in range(len(CLASSES))]
+    cluster_indices_per_point = np.full(shape=(len(points),), fill_value=-1, dtype=np.int32)
+    clusters = []
+    cluster_index = 0
+
+    pbar = tqdm.tqdm(total=len(points), desc="Clustering points...", miniters=1, unit="points", smoothing=0.01)
+
+    for c in range(len(CLASSES)):
+        relevant_point_indices = points_indices_per_class[c]
+
+        # there are no points in this class
+        if len(relevant_point_indices) == 0:
+            continue
+
+        kd_tree = KDTree(points[relevant_point_indices])
+        unassigned_point_indices = relevant_point_indices.copy()
+
+        while len(unassigned_point_indices) > 0:
+            initial_seed_index = unassigned_point_indices[-1]
+            unassigned_point_indices = unassigned_point_indices[:-1]
+            pbar.update(1)
+
+            frontier = np.array([points[initial_seed_index]])
+            current_cluster = np.array([initial_seed_index])
+
+            while len(frontier) > 0:
+                # neighbours_indices = kd_tree.query_ball_tree(frontier, max_distance)
+                neighbours_indices = kd_tree.query_ball_point(frontier, max_distance, workers=-1)
+                neighbours_indices = np.concatenate([np.array(i) for i in neighbours_indices])  # https://stackoverflow.com/a/42499122
+                neighbours_indices = np.unique(neighbours_indices)
+
+                # Filter the neighbour indices that are unassigned
+                global_neighbour_idx = relevant_point_indices[neighbours_indices]
+                global_neighbour_idx = np.intersect1d(global_neighbour_idx, unassigned_point_indices)
+
+                # global_neighbour_indices_set = set(global_neighbour_indices_arr).union(unassigned_point_indices)
+                # global_neighbour_indices_arr = np.asarray(global_neighbour_indices_set)
+
+                if len(global_neighbour_idx) <= 0:
+                    break
+
+                frontier = points[global_neighbour_idx]
+                current_cluster = np.union1d(current_cluster, global_neighbour_idx)
+                unassigned_point_indices = np.setdiff1d(unassigned_point_indices, global_neighbour_idx)
+                pbar.update(len(global_neighbour_idx))
+
+            cluster_indices_per_point[current_cluster] = cluster_index
+            clusters.append(list(current_cluster))
+            cluster_index += 1
+            pbar.set_description(f"Clustering points... (Found {len(clusters)} clusters so far)")
+
+    return clusters, cluster_indices_per_point
