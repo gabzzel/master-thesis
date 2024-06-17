@@ -1,7 +1,11 @@
+import os
+from pathlib import Path
 from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import open3d
+from scipy.spatial import KDTree
+import tqdm
 
 
 def plot_aspect_ratios():
@@ -221,6 +225,25 @@ def print_octree_sizes(margin: float = 1.1):
             print(f"Octree cell size is {max_differences[j] / (2**i)} at depth {i} for {path}")
 
 
+def get_density_s3dis():
+    s3dis_root_path = Path("C:\\Users\\Gabi\\Downloads\\s3dis-excl-normals\\s3dis_npy_excl_normals")
+
+    pbar = tqdm.tqdm(os.listdir(s3dis_root_path), desc="Calculating avg density...", miniters=1, smoothing=0.01, position=0)
+
+    density = 0.0
+    for file_path in pbar:
+        data = np.load(s3dis_root_path.joinpath(file_path))
+        density_this_room = 0.0
+        points = data[:, :3]
+        kd_tree = KDTree(points)
+        neighbours = kd_tree.query_ball_tree(kd_tree, r=1.0)
+        density_this_room += kd_tree.query_ball_point(points, r=1.0, workers=-1, return_length=True)
+        density_this_room /= float(len(points))
+        density += np.sum(density_this_room) / 271.0
+        pbar.set_description(f"Calculating avg density... (Until now {density})")
+    print(density)
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     #color_points_by_distances()
@@ -228,4 +251,6 @@ if __name__ == '__main__':
     # show_meshes()
     # plot_computation_times()
     # print_octree_sizes(1.1)
-    plot_computation_times_separate()
+    # plot_computation_times_separate()
+    get_density_s3dis()
+
