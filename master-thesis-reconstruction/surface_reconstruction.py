@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 from typing import Union, Optional, Tuple, List
 
 import numpy as np
@@ -40,9 +41,9 @@ def run(pcd: open3d.geometry.PointCloud,
         config: RunConfiguration,
         results: EvaluationResults,
         verbose: bool = True) \
-        -> Tuple[Optional[open3d.geometry.TriangleMesh], Optional[np.ndarray]]:
+        -> Tuple[Optional[open3d.geometry.TriangleMesh], Optional[np.ndarray], Optional[List[open3d.geometry.TriangleMesh]]]:
 
-    start_time = time.time()
+
     if config.surface_reconstruction_method not in SRM:
         raise ValueError(f"Unknown algorithm {config.surface_reconstruction_method}. "
                          f"Must be one of {list(SRM)}")
@@ -54,17 +55,19 @@ def run(pcd: open3d.geometry.PointCloud,
     if verbose:
         print(f"Starting surface reconstruction using {config.surface_reconstruction_method}")
 
-    point_clouds = [(pcd, np.arange(len(pcd.points)))]
+    point_clouds: List[Tuple[open3d.geometry.PointCloud, np.ndarray]] = [(pcd, np.arange(len(pcd.points)))]
 
     # Apply the segmentation
-    if config.segments_path is not None:
-        point_clouds = []
+    if config.segments_path is not None and config.segments_path.exists():
+        print(f"Found segments file at {config.segments_path}")
+        point_clouds.clear()
         points = np.asarray(pcd.points)
         colors = np.asarray(pcd.colors) if pcd.has_colors() else None
         normals = np.asarray(pcd.normals) if pcd.has_normals() else None
         segments_per_point = np.load(config.segments_path)
+        assert len(segments_per_point) == len(points)
         segments = np.unique(segments_per_point)
-        for segment in segments:
+        for segment in tqdm.tqdm(segments, desc="Applying segmentation...", total=len(segments), unit="segment", miniters=1, maxinterval=1.0):
             indices = segments_per_point == segment
             relevant_points = points[indices, :]
             segmented_pcd = open3d.geometry.PointCloud(Vector3dVector(relevant_points))
@@ -75,15 +78,26 @@ def run(pcd: open3d.geometry.PointCloud,
                 relevant_normals = normals[indices, :]
                 segmented_pcd.normals = open3d.utility.Vector3dVector(relevant_normals)
             point_clouds.append((segmented_pcd, np.nonzero(indices)))
+    else:
+        print(f"Skipping meshing segments, no segments file found.")
+
+    start_time = time.time()
 
     all_densities: np.ndarray = None
-    if config.surface_reconstruction_method == SRM.SCREENED_POISSON_SURFACE_RECONSTRUCTION:
-        all_densities = np.zeros(shape=(len(pcd.points),), dtype=np.float32)
 
     resulting_meshes: List[open3d.geometry.TriangleMesh] = []
-    for point_cloud, point_indices in tqdm.tqdm(point_clouds, desc="Meshing point clouds...", unit="pointcloud", miniters=1):
+    skipped: int = 0
+    total_points_meshed: int = 0
+
+    pbar = tqdm.tqdm(point_clouds, desc="Meshing point clouds...", unit="pointcloud", miniters=1)
+    for point_cloud, point_indices in pbar:
+        pbar.set_description(f"Meshing point clouds... (Skipped {skipped} because of size or errors)")
+
+        if len(point_cloud.points) < 10:
+            skipped += 1
+            continue
+
         mesh: Optional[open3d.geometry.TriangleMesh] = None
-        densities: Optional[np.ndarray] = None
         if config.surface_reconstruction_method == SRM.BALL_PIVOTING_ALGORITHM:
             radii = config.surface_reconstruction_params[SRP.BPA_RADII]
             mesh = ball_pivoting_algorithm(point_cloud=point_cloud, radii=radii, verbose=len(point_clouds) == 1)
@@ -92,7 +106,12 @@ def run(pcd: open3d.geometry.PointCloud,
             alpha = config.surface_reconstruction_params[SRP.ALPHA]
             if isinstance(alpha, list) or isinstance(alpha, tuple):
                 alpha = alpha[0]
-            mesh = alpha_shapes(point_cloud=point_cloud, alpha=alpha, verbose=len(point_clouds) == 1)
+            try:
+                mesh = alpha_shapes(point_cloud=point_cloud, alpha=alpha, verbose=len(point_clouds) == 1)
+            except IndexError as e:
+                print(f"Skipping alpha shapes reconstruction due to {e}.")
+                skipped += 1
+                continue
 
         elif config.surface_reconstruction_method == SRM.SCREENED_POISSON_SURFACE_RECONSTRUCTION:
             octree_max_depth = config.surface_reconstruction_params[SRP.POISSON_OCTREE_MAX_DEPTH]
@@ -100,6 +119,11 @@ def run(pcd: open3d.geometry.PointCloud,
                                                                       octree_max_depth=octree_max_depth,
                                                                       processes=1,
                                                                       verbose=len(point_clouds) == 1)
+
+            if all_densities is None:
+                all_densities = densities
+            else:
+                all_densities = np.concatenate((all_densities, densities), axis=0)
 
         # elif config.surface_reconstruction_method == SRM.DELAUNAY_TRIANGULATION:
         #     mesh = delaunay_triangulation(point_cloud=pcd, as_tris=True)
@@ -109,12 +133,8 @@ def run(pcd: open3d.geometry.PointCloud,
                   f" or invalid parameters {config.surface_reconstruction_params}.")
 
         if mesh is not None:
+            total_points_meshed += len(point_cloud.points)
             resulting_meshes.append(mesh)
-
-        if densities is not None and all_densities is None:
-            all_densities = densities
-        elif densities is not None and all_densities is not None:
-            all_densities = np.concatenate((all_densities, densities), axis=0)
 
     results.surface_reconstruction_time = time.time() - start_time
 
@@ -122,7 +142,9 @@ def run(pcd: open3d.geometry.PointCloud,
     for mesh in resulting_meshes:
         final_mesh += mesh
 
-    return final_mesh, all_densities
+    print(f"Meshed {total_points_meshed}/{len(pcd.points)} ({round((total_points_meshed / float(len(pcd.points)) * 100), 4)}%) points")
+
+    return final_mesh, all_densities, resulting_meshes
 
 
 def alpha_shapes(point_cloud, alpha: float = 0.02, verbose=True):

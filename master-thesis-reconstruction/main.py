@@ -86,10 +86,10 @@ def execute_run(run_config: RunConfiguration,
 
     print("\n============= Step 2 : Surface Reconstruction =============")
     # Densities array is None if not applicable
-    mesh, densities = surface_reconstruction.run(pcd=pcd, results=results, config=run_config, verbose=verbose)
+    final_mesh, densities, meshes = surface_reconstruction.run(pcd=pcd, results=results, config=run_config, verbose=verbose)
 
     print("\n============= Step 3 : Cleaning =============")
-    aspect_ratios = mesh_cleaning.run_mesh_cleaning(mesh, run_config, results, densities=densities, verbose=verbose)
+    aspect_ratios = mesh_cleaning.run_mesh_cleaning(final_mesh, run_config, results, densities=densities, verbose=verbose)
 
     # If we have aspect ratios return from the mesh cleaning, we want the remaining after-cleaning aspect ratios
     if aspect_ratios is not None:
@@ -97,7 +97,7 @@ def execute_run(run_config: RunConfiguration,
 
     print("\n============= Step 4 : Evaluation =============")
     # Raw point cloud is used here, since we want to evaluate against the original, not the preprocessed.
-    evaluation.evaluate(mesh, raw_pcd, run_config, results, precomputed_aspect_ratios=aspect_ratios, verbose=verbose)
+    evaluation.evaluate(final_mesh, raw_pcd, run_config, results, precomputed_aspect_ratios=aspect_ratios, verbose=verbose)
 
     print("\n============= Step 5 : Saving Results =============")
     start_time = time.time()
@@ -109,11 +109,20 @@ def execute_run(run_config: RunConfiguration,
         original_path = run_config.point_cloud_path
         mesh_name = original_path.stem + "_mesh.ply"
         mesh_path = os.path.join(results_path, mesh_name)
-        open3d.io.write_triangle_mesh(filename=mesh_path, mesh=mesh)
-        print(f"Saved mesh to {mesh_path}. [{round(time.time() - start_time, 3)}s]")
+        open3d.io.write_triangle_mesh(filename=mesh_path, mesh=final_mesh)
+        print(f"Saved (final) mesh to {mesh_path}. [{round(time.time() - start_time, 3)}s]")
+
+        if meshes is not None and len(meshes) > 1:
+            start_time = time.time()
+            meshes_save_folder = results_path.joinpath("cluster_meshes")
+            os.makedirs(meshes_save_folder, exist_ok=True)
+            for i in range(len(meshes)):
+                path = meshes_save_folder.joinpath(f"mesh_{i}.ply")
+                open3d.io.write_triangle_mesh(filename=str(path), mesh=meshes[i])
+            print(f"Saved sub-meshes to {meshes_save_folder}. [{round(time.time() - start_time, 3)}s]")
 
     if draw:
-        open3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
+        open3d.visualization.draw_geometries([final_mesh], mesh_show_back_face=True)
 
     return raw_pcd, pcd
 

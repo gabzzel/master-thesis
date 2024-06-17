@@ -235,9 +235,13 @@ def pointnetv2(model_checkpoint_path: str,
     assert colors is None or colors.shape == points.shape
     assert normals is None or normals.shape == points.shape
 
+    start_time = time.time()
+
     npoint = 4096
     batches, batches_indices = convert_to_batches(points=points, colors=colors, normals=normals,
                                                   point_amount=npoint, block_size=1, stride=0.5)
+
+    batching_time = time.time() - start_time
 
     number_of_classes = len(CLASSES)  # PointNet++ is trained on the S3DIS dataset, which has 13 classes.
     channels = 9 + (0 if colors is None else 3) + (0 if normals is None else 3)
@@ -266,6 +270,8 @@ def pointnetv2(model_checkpoint_path: str,
     number_of_votes: int = 1
     votes = np.zeros(shape=(len(points), number_of_classes), dtype=np.int32)
 
+    start_time = time.time()
+
     with torch.no_grad():
         print(f"Classifying {len(batches)} batches with {number_of_votes} votes...")
         for batch_index in tqdm.trange(len(batches), desc=f"Classifying...", miniters=1):
@@ -286,6 +292,9 @@ def pointnetv2(model_checkpoint_path: str,
                     votes[indices[i, :], class_per_point[i, :]] += 1
 
     classifications: np.ndarray = votes.argmax(axis=1)
+
+    classification_time = time.time() - start_time
+
     for i in range(number_of_classes):
         print(
             f"Class {CLASSES[i]} (color {CLASS_COLORS[i][0]} : {CLASS_COLORS[i][1]}) "
@@ -306,14 +315,25 @@ def pointnetv2(model_checkpoint_path: str,
         pcd_colored_to_classes_path = working_directory_path.joinpath(f"classifications-{current_time}.ply")
         open3d.io.write_point_cloud(str(pcd_colored_to_classes_path), visualize_pcd)
 
+    start_time = time.time()
+
     cluster_index_per_point = None
     if create_segmentations:
         print("Extracting clusters...")
-        cluster_index_per_point = extract_clusters_from_labelled_points(points=points[:, :3],  # Sanity check!
-                                                                        labels_per_point=classifications,
-                                                                        max_distance=segmentation_max_distance)
+        cluster_index_per_point = extract_clusters_from_labelled_points_multicore(points=points[:, :3],  # Sanity check!
+                                                                                  labels_per_point=classifications,
+                                                                                  max_distance=segmentation_max_distance)
         clusters_save_path = working_directory_path.joinpath(f"clusters-{current_time}.npy")
         np.save(clusters_save_path, cluster_index_per_point)
+
+    clustering_time = time.time() - start_time
+
+    times_path = working_directory_path.joinpath(f"times-{current_time}.txt")
+
+    with open(times_path, "w") as f:
+        f.write(f"batching time: {batching_time}\n")
+        f.write(f"classification time: {classification_time}\n")
+        f.write(f"clustering time: {clustering_time}\n")
 
     return classifications, cluster_index_per_point
 
@@ -389,8 +409,8 @@ def extract_clusters_from_labelled_points(points: np.ndarray,
 def extract_clusters_from_labelled_points_multicore(points: np.ndarray,
                                                     labels_per_point: np.ndarray,
                                                     max_distance: float = 0.02) -> Tuple[List[List[int]], np.ndarray]:
-
-    print(f"Clustering {len(points)} points based on labels/classifications using region growing with radius {max_distance}.")
+    print(
+        f"Clustering {len(points)} points based on labels/classifications using region growing with radius {max_distance}.")
     points_indices_per_class = [np.nonzero(labels_per_point == i)[0] for i in range(len(CLASSES))]
     cluster_indices_per_point = np.full(shape=(len(points),), fill_value=-1, dtype=np.int32)
     clusters = []
@@ -419,7 +439,8 @@ def extract_clusters_from_labelled_points_multicore(points: np.ndarray,
             while len(frontier) > 0:
                 # neighbours_indices = kd_tree.query_ball_tree(frontier, max_distance)
                 neighbours_indices = kd_tree.query_ball_point(frontier, max_distance, workers=-1)
-                neighbours_indices = np.concatenate([np.array(i) for i in neighbours_indices])  # https://stackoverflow.com/a/42499122
+                neighbours_indices = np.concatenate(
+                    [np.array(i) for i in neighbours_indices])  # https://stackoverflow.com/a/42499122
                 neighbours_indices = np.unique(neighbours_indices)
 
                 # Filter the neighbour indices that are unassigned

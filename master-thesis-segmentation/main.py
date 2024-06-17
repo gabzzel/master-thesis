@@ -42,19 +42,21 @@ def execute():
     # execute_hdbscan_on_S3DIS()
     #execute_obrg_on_S3DIS()
 
-    # pointnet_checkpoint_path = "C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original_coords_colors.pth"
-    # pointcloud_path = Path("E:\\etvr_datasets\\ruimte_ETVR-preprocessed-lower-only.ply")
-    # result_directory = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\results\\pointnetv2\\office")
+    pointnet_checkpoint_path = "C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original_coords_colors.pth"
+    pointcloud_path = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-reconstruction\\data\\etvr\\office_downsampled_001_incl_oriented_normals.ply")
+    result_directory = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\results\\pointnetv2\\office")
 
-    # points, colors, normals, _ = get_points_and_labels(pointcloud_path, down_sample_voxel_size=0.0)
-    # segmentation.pointnetv2(model_checkpoint_path=pointnet_checkpoint_path,
-    #                         points=points,
-    #                         normals=None,
-    #                        colors=colors,
-    #                        working_directory=result_directory,
-    #                        visualize_raw_classifications=True,
-    #                        create_segmentations=False,
-    #                        segmentation_max_distance=0.02)
+    points, labels = get_points_and_labels(pointcloud_path)
+    segmentation.pointnetv2(model_checkpoint_path=pointnet_checkpoint_path,
+                            points=points[:, :3],
+                            normals=None,
+                            colors=points[:, 6:9],
+                            working_directory=result_directory,
+                            visualize_raw_classifications=False,
+                            create_segmentations=True,
+                            segmentation_max_distance=0.02)
+
+    return
 
     config = utilities.HDBSCANConfig.HDBSCANConfigAndResult(
         pcd_path="C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-reconstruction\\data\\etvr\\training_complex_downsampled_001_incl_oriented_normals.ply",
