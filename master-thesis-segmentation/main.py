@@ -43,8 +43,8 @@ def execute():
     #execute_obrg_on_S3DIS()
 
     pointnet_checkpoint_path = "C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original_coords_colors.pth"
-    pointcloud_path = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-reconstruction\\data\\etvr\\office_downsampled_001_incl_oriented_normals.ply")
-    result_directory = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\results\\pointnetv2\\office")
+    pointcloud_path = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-reconstruction\\data\\etvr\\ruimte_ETVR-preprocessed-lower-cleaned.ply")
+    result_directory = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\results\\pointnetv2\\office\\office downsampled lower cleaned")
 
     points, labels = get_points_and_labels(pointcloud_path)
     segmentation.pointnetv2(model_checkpoint_path=pointnet_checkpoint_path,
@@ -52,7 +52,7 @@ def execute():
                             normals=None,
                             colors=points[:, 6:9],
                             working_directory=result_directory,
-                            visualize_raw_classifications=False,
+                            visualize_raw_classifications=True,
                             create_segmentations=True,
                             segmentation_max_distance=0.02)
 

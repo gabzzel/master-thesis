@@ -24,3 +24,9 @@ master-thesis-segmentation/pointnetexternal/models/__pycache__/pointnet2_sem_seg
 master-thesis-segmentation/regionGrowingOctree/__pycache__/RegionGrowingOctree.cpython-310.pyc
 master-thesis-segmentation/regionGrowingOctree/__pycache__/RegionGrowingOctreeNode.cpython-310.pyc
 /master-thesis-segmentation/data
+/master-thesis-reconstruction/run_configs/office-alpha-shapes-4
+master-thesis-reconstruction/run_configs/office-alpha-shapes-2/results.csv
+master-thesis-reconstruction/run_configs/office-alpha-shapes-3/config.json
+master-thesis-reconstruction/run_configs/office-alpha-shapes-3/results.csv
+master-thesis-reconstruction/run_configs/office-alpha-shapes-4/config.json
+master-thesis-reconstruction/run_configs/office-alpha-shapes-4/results.csv

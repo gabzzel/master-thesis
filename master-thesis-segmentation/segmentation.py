@@ -311,7 +311,7 @@ def pointnetv2(model_checkpoint_path: str,
         colors_per_point: np.ndarray = numpy_class_colors[classifications]
         visualize_pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(points))
         visualize_pcd.colors = open3d.utility.Vector3dVector(colors_per_point)
-        open3d.visualization.draw_geometries([visualize_pcd])
+        # open3d.visualization.draw_geometries([visualize_pcd])
         pcd_colored_to_classes_path = working_directory_path.joinpath(f"classifications-{current_time}.ply")
         open3d.io.write_point_cloud(str(pcd_colored_to_classes_path), visualize_pcd)
 
@@ -320,7 +320,7 @@ def pointnetv2(model_checkpoint_path: str,
     cluster_index_per_point = None
     if create_segmentations:
         print("Extracting clusters...")
-        cluster_index_per_point = extract_clusters_from_labelled_points_multicore(points=points[:, :3],  # Sanity check!
+        _, cluster_index_per_point = extract_clusters_from_labelled_points_multicore(points=points[:, :3],  # Sanity check!
                                                                                   labels_per_point=classifications,
                                                                                   max_distance=segmentation_max_distance)
         clusters_save_path = working_directory_path.joinpath(f"clusters-{current_time}.npy")
@@ -461,6 +461,6 @@ def extract_clusters_from_labelled_points_multicore(points: np.ndarray,
             cluster_indices_per_point[current_cluster] = cluster_index
             clusters.append(list(current_cluster))
             cluster_index += 1
-            pbar.set_description(f"Clustering points... (Found {len(clusters)} clusters so far)")
+            pbar.set_description(f"Clustering points... (Found {len(clusters)} clusters, done {c} classes)")
 
     return clusters, cluster_indices_per_point
