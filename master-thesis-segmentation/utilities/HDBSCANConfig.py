@@ -30,7 +30,8 @@ class HDBSCANConfigAndResult:
                  include_normals: bool = True,
                  include_colors: bool = True,
                  noise_nearest_neighbours: int = 3,
-                 visualize: bool = False):
+                 visualize: bool = False,
+                 max_workers: int = -1):
         self.pcd_path: Union[str, PathLike] = pcd_path
         self.min_cluster_size: int = min_cluster_size
         self.min_samples: int = min_samples
@@ -39,6 +40,7 @@ class HDBSCANConfigAndResult:
         self.include_colors: bool = include_colors
         self.noise_nearest_neighbours: int = noise_nearest_neighbours
         self.visualize: bool = visualize
+        self.max_workers: int = max_workers
 
         self.clusters: np.ndarray = None
         self.noise_indices: np.ndarray = None

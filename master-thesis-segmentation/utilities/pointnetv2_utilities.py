@@ -37,8 +37,11 @@ def convert_to_batches(points: np.ndarray,
     indices = None
 
     print(f"Dividing point cloud into batches using (XY) blocks of size {block_size} and stride {stride}")
-    for index_y in tqdm.trange(0, grid_y, desc="Dividing into blocks..."):
+    pbar = tqdm.tqdm(total=grid_x * grid_y, desc="Dividing point cloud into blocks", unit="block")
+
+    for index_y in range(0, grid_y):
         for index_x in range(0, grid_x):
+            pbar.update(1)
             s_x: float = minimum_coordinates[0] + index_x * stride
             e_x: float = min(s_x + block_size, maximum_coordinates[0])
             s_x = e_x - block_size
@@ -100,6 +103,8 @@ def convert_to_batches(points: np.ndarray,
     # All the blocks, neatly in a multiple of point amount
     blocks_data = blocks_data.reshape((-1, point_amount, blocks_data.shape[1]))
     indices = indices.reshape((-1, point_amount))
+
+    return blocks_data, indices
 
     number_of_batches = int(np.ceil(blocks_data.shape[0] / block_size))
     batches = []

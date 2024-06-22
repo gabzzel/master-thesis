@@ -1,6 +1,8 @@
 import argparse
 import sys
 import time
+import tracemalloc
+from memory_profiler import memory_usage
 from typing import Optional, Tuple, Union, List
 import pathlib
 import os
@@ -66,7 +68,21 @@ def execute_run(run_config: RunConfiguration,
                 reused_point_clouds: Optional[Tuple[open3d.geometry.PointCloud, open3d.geometry.PointCloud]],
                 results_path: pathlib.Path,
                 verbose: bool = True,
-                draw: bool = False) -> Tuple[open3d.geometry.PointCloud, open3d.geometry.PointCloud]:
+                draw: bool = False,
+                measure_memory_usage: bool = False) -> Tuple[open3d.geometry.PointCloud, open3d.geometry.PointCloud]:
+    """
+    Execute a surface reconstruction algorithm on a point cloud
+
+    :param run_config: The run configuration containing the settings for the run
+    :param reused_point_clouds: optional, the point clouds that can be reused this run
+    :param results_path: The path to write the reults to
+    :param verbose: Whether to write progress to the console
+    :param draw: Whether to draw the mesh on the screen after reconstruction
+    :param measure_memory_usage: Whether to measure memory usage. If True, runs the reconstruction algorithm two times \
+        Once to measure memory, then another for the actual result.
+    :return: A point cloud that can be reused.
+    """
+
     results = EvaluationResults(name="results")
 
     print("\n============= Step 1 : Loading & Preprocessing =============")
@@ -86,10 +102,19 @@ def execute_run(run_config: RunConfiguration,
 
     print("\n============= Step 2 : Surface Reconstruction =============")
     # Densities array is None if not applicable
-    final_mesh, densities, meshes = surface_reconstruction.run(pcd=pcd, results=results, config=run_config, verbose=verbose)
+
+    if measure_memory_usage:
+        usage = memory_usage((surface_reconstruction.run, (),
+                              {"pcd": pcd, "results": results, "config": run_config, "verbose": verbose}),
+                             interval=1.0, max_usage=True)
+        print(usage)
+
+    final_mesh, densities, meshes = surface_reconstruction.run(pcd=pcd, results=results, config=run_config,
+                                                               verbose=verbose)
 
     print("\n============= Step 3 : Cleaning =============")
-    aspect_ratios = mesh_cleaning.run_mesh_cleaning(final_mesh, run_config, results, densities=densities, verbose=verbose)
+    aspect_ratios = mesh_cleaning.run_mesh_cleaning(final_mesh, run_config, results, densities=densities,
+                                                    verbose=verbose)
 
     # If we have aspect ratios return from the mesh cleaning, we want the remaining after-cleaning aspect ratios
     if aspect_ratios is not None:
@@ -97,7 +122,8 @@ def execute_run(run_config: RunConfiguration,
 
     print("\n============= Step 4 : Evaluation =============")
     # Raw point cloud is used here, since we want to evaluate against the original, not the preprocessed.
-    evaluation.evaluate(final_mesh, raw_pcd, run_config, results, precomputed_aspect_ratios=aspect_ratios, verbose=verbose)
+    evaluation.evaluate(final_mesh, raw_pcd, run_config, results, precomputed_aspect_ratios=aspect_ratios,
+                        verbose=verbose)
 
     print("\n============= Step 5 : Saving Results =============")
     start_time = time.time()
@@ -191,7 +217,6 @@ if __name__ == "__main__":
     elif main_script_path.is_file():
         config_path = main_script_path.parent.joinpath("run_configs", "config.json")
         execute(str(config_path))
-
 
     # point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\etvr\\enfsi-2023_reduced_cloud.pcd"
 

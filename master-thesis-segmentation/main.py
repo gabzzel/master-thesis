@@ -1,4 +1,5 @@
 import copy
+import math
 import os
 import sys
 import time
@@ -38,45 +39,81 @@ def get_points_and_labels(data_path: Path) -> Tuple[np.ndarray, Optional[np.ndar
 
 def execute():
     # extract_clusters()
-
     # execute_hdbscan_on_S3DIS()
     #execute_obrg_on_S3DIS()
+    execute_pointnetv2_manual()
+    # execute_hdbscan_manual()
+    print("Done!")
+
+
+def execute_hdbscan_manual():
+    datasets_path = Path("E:\\etvr_datasets")
+    datasets_names = [
+        "enfsi-2023_reduced.pcd",
+        "ruimte_ETVR.ply",
+        "Zuidberg.ply"
+    ]
+    for dataset_name in datasets_names:
+        min_cluster_size = 125
+        min_samples = 200
+
+        config = utilities.HDBSCANConfig.HDBSCANConfigAndResult(
+            pcd_path=str(datasets_path.joinpath(dataset_name)),
+            min_cluster_size=min_cluster_size,
+            min_samples=min_samples,
+            include_normals=True,
+            include_colors=False,
+            visualize=False
+        )
+
+        start_time = time.time()
+        pcd: open3d.geometry.PointCloud = open3d.io.read_point_cloud(config.pcd_path)
+        pcd = pcd.voxel_down_sample(0.01)
+        pcd.estimate_normals(open3d.geometry.KDTreeSearchParamHybrid(radius=math.sqrt(12) * 0.01, max_nn=10))
+        pcd.orient_normals_consistent_tangent_plane(k=10)
+        points = np.hstack((np.asarray(pcd.points), np.asarray(pcd.normals), np.asarray(pcd.colors)))
+        loading_time = time.time() - start_time
+
+        start_time = time.time()
+        segmentation.hdbscan(points, config, verbose=False)
+        segmentation_time = time.time() - start_time
+
+        print(f"{dataset_name};{min_samples};{min_cluster_size};{loading_time};{segmentation_time}")
+
+        # results_folder = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\results\\hdbscan")
+        # utilities.HDBSCANConfig.write_multiple([config], results_folder.joinpath("result.txt"), delimiter="\n")
+        # np.save(results_folder.joinpath("cluster_per_point.npy"), config.clusters)
+
+
+def execute_pointnetv2_manual():
 
     pointnet_checkpoint_path = "C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original_coords_colors.pth"
-    pointcloud_path = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-reconstruction\\data\\etvr\\ruimte_ETVR-preprocessed-lower-cleaned.ply")
-    result_directory = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\results\\pointnetv2\\office\\office downsampled lower cleaned")
 
-    points, labels = get_points_and_labels(pointcloud_path)
-    segmentation.pointnetv2(model_checkpoint_path=pointnet_checkpoint_path,
-                            points=points[:, :3],
-                            normals=None,
-                            colors=points[:, 6:9],
-                            working_directory=result_directory,
-                            visualize_raw_classifications=True,
-                            create_segmentations=True,
-                            segmentation_max_distance=0.02)
+    dataset_path = Path("E:\\etvr_datasets")
 
-    return
+    datasets_names = [
+        "ruimte_ETVR-preprocessed-lower-cleaned.ply",
+        "Zuidberg.ply",
+        "Zuidberg-preprocessed.ply",
+        "ruimte_ETVR.ply"
+    ]
 
-    config = utilities.HDBSCANConfig.HDBSCANConfigAndResult(
-        pcd_path="C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-reconstruction\\data\\etvr\\training_complex_downsampled_001_incl_oriented_normals.ply",
-        min_cluster_size=125,
-        min_samples=200,
-        include_normals=True,
-        include_colors=False,
-        visualize=True
-    )
+    for dataset_name in datasets_names:
+        pcd_path = dataset_path.joinpath(dataset_name)
+        result_directory = Path("E:\\thesis-results\\segmentation\\pointnetv2\\all")
+        start_time = time.time()
+        points, labels = get_points_and_labels(pcd_path)
+        loading_time = time.time() - start_time
+        print(loading_time)
 
-    classifications = np.load("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\results\\pointnext\\training-complex\\training_complex_downsampled_001_incl_oriented_normals_1718011697.0712814_classifications.npy")
-    n_values = np.max(classifications) + 1
-    classifications_one_hot = np.eye(n_values)[classifications]
-    pcd: open3d.geometry.PointCloud = open3d.io.read_point_cloud(config.pcd_path)
-    points = np.hstack((np.asarray(pcd.points), np.asarray(pcd.normals), np.asarray(pcd.colors), classifications_one_hot))
-    segmentation.hdbscan(points, config, verbose=True)
-    results_folder = Path("C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\results\\hdbscan_incl_pointnext")
-    utilities.HDBSCANConfig.write_multiple([config], results_folder.joinpath("result.txt"), delimiter="\n")
-    np.save(results_folder.joinpath("cluster_per_point.npy"), config.clusters)
-    print("Done!")
+        segmentation.pointnetv2(model_checkpoint_path=pointnet_checkpoint_path,
+                                points=points[:, :3],
+                                normals=None,
+                                colors=points[:, 6:9],
+                                working_directory=result_directory,
+                                visualize_raw_classifications=True,
+                                create_segmentations=True,
+                                segmentation_max_distance=0.02)
 
 
 def extract_clusters():

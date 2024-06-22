@@ -3,6 +3,7 @@ import time
 from os import PathLike
 from pathlib import Path
 from typing import Optional, Union, Tuple, List, Set, Dict
+import multiprocessing
 
 import fast_hdbscan
 import numpy as np
@@ -13,11 +14,13 @@ from scipy.spatial import KDTree
 
 import pointnetexternal.models.pointnet2_sem_seg
 import regionGrowingOctree.RegionGrowingOctreeVisualization
+import utilities.pointv2_dataset
 from regionGrowingOctree import RegionGrowingOctree
 from utilities.HDBSCANConfig import HDBSCANConfigAndResult
 from utilities.noise_clustering import get_noise_clusters_k1, get_noise_clusters_kx
 from utilities.pointnetv2_utilities import convert_to_batches
 from utilities.OctreeBasedRegionGrowingConfig import OctreeBasedRegionGrowingConfig
+from torch.utils.data import DataLoader
 
 CLASSES = ['ceiling', 'floor', 'wall', 'beam', 'column', 'window', 'door', 'table', 'chair', 'sofa', 'bookcase',
            'board', 'clutter']
@@ -238,10 +241,15 @@ def pointnetv2(model_checkpoint_path: str,
     start_time = time.time()
 
     npoint = 4096
-    batches, batches_indices = convert_to_batches(points=points, colors=colors, normals=normals,
-                                                  point_amount=npoint, block_size=1, stride=0.5)
+
+    dataset = utilities.pointv2_dataset.PointNetV2_CustomDataset(points, colors, None, npoint, 1.0, 0.5)
+    dataloader = DataLoader(dataset, batch_size=32, shuffle=False, num_workers=1)
+
+    #batches, batches_indices = convert_to_batches(points=points, colors=colors, normals=normals,
+    #                                              point_amount=npoint, block_size=1, stride=0.5)
 
     batching_time = time.time() - start_time
+    start_time = time.time()
 
     number_of_classes = len(CLASSES)  # PointNet++ is trained on the S3DIS dataset, which has 13 classes.
     channels = 9 + (0 if colors is None else 3) + (0 if normals is None else 3)
@@ -255,7 +263,7 @@ def pointnetv2(model_checkpoint_path: str,
     # Set the model into evaluation mode
     classifier = classifier.eval()
 
-    print(f"Created {len(batches)} batches.")
+    # print(f"Created {len(batches)} batches.")
 
     # model expects input of size B x 9 x points where B is probably batches
     # index 0,1,2 are the xyz normalized by subtracting the centroid
@@ -270,26 +278,20 @@ def pointnetv2(model_checkpoint_path: str,
     number_of_votes: int = 1
     votes = np.zeros(shape=(len(points), number_of_classes), dtype=np.int32)
 
-    start_time = time.time()
+    for batch in tqdm.tqdm(dataloader, desc=f"Classifying batches... (votes {number_of_votes})"):
+        data: torch.Tensor = torch.permute(batch[:, :, :9], (0, 2, 1)).float().cuda()
+        indices: np.ndarray = batch[:, :, -1].cpu().numpy().astype(np.int32)
+        for vote in range(number_of_votes):
+            # Actually do the prediction!
+            with torch.no_grad():
+                predictions, _ = classifier(data)
+            class_per_point = predictions.cpu().numpy().argmax(axis=2).squeeze().astype(np.int32)
 
-    with torch.no_grad():
-        print(f"Classifying {len(batches)} batches with {number_of_votes} votes...")
-        for batch_index in tqdm.trange(len(batches), desc=f"Classifying...", miniters=1):
-            batch = batches[batch_index]
-            batch = np.swapaxes(batch, 2, 1)
-            # batch = np.reshape(batch, newshape=(1, batch.shape[0], batch.shape[1]))
-            indices = batches_indices[batch_index]
-            model_input: torch.Tensor = torch.from_numpy(batch).float().cuda()
-            for vote in range(number_of_votes):
-                # Actually do the prediction!
-                predictions, _ = classifier(model_input)
-                class_per_point = predictions.cpu().numpy().argmax(axis=2).squeeze().astype(np.int32)
+            if indices.shape != class_per_point.shape:
+                class_per_point = np.reshape(class_per_point, indices.shape)
 
-                if indices.shape != class_per_point.shape:
-                    class_per_point = np.reshape(class_per_point, indices.shape)
-
-                for i in range(indices.shape[0]):
-                    votes[indices[i, :], class_per_point[i, :]] += 1
+            for i in range(indices.shape[0]):
+                votes[indices[i, :], class_per_point[i, :]] += 1
 
     classifications: np.ndarray = votes.argmax(axis=1)
 
@@ -320,7 +322,7 @@ def pointnetv2(model_checkpoint_path: str,
     cluster_index_per_point = None
     if create_segmentations:
         print("Extracting clusters...")
-        _, cluster_index_per_point = extract_clusters_from_labelled_points_multicore(points=points[:, :3],  # Sanity check!
+        _, cluster_index_per_point = extract_clusters_from_labelled_points_multiprocess(points=points[:, :3],  # Sanity check!
                                                                                   labels_per_point=classifications,
                                                                                   max_distance=segmentation_max_distance)
         clusters_save_path = working_directory_path.joinpath(f"clusters-{current_time}.npy")
@@ -329,6 +331,17 @@ def pointnetv2(model_checkpoint_path: str,
     clustering_time = time.time() - start_time
 
     times_path = working_directory_path.joinpath(f"times-{current_time}.txt")
+
+    rng = np.random.default_rng()
+    cluster_colors = rng.random(size=(len(cluster_index_per_point), 3))
+
+    if visualize_raw_classifications:
+        colors_per_point: np.ndarray = cluster_colors[cluster_index_per_point]
+        visualize_pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(points))
+        visualize_pcd.colors = open3d.utility.Vector3dVector(colors_per_point)
+        # open3d.visualization.draw_geometries([visualize_pcd])
+        pcd_colored_to_clusters = working_directory_path.joinpath(f"clusters-{current_time}.ply")
+        open3d.io.write_point_cloud(str(pcd_colored_to_clusters), visualize_pcd)
 
     with open(times_path, "w") as f:
         f.write(f"batching time: {batching_time}\n")
@@ -416,6 +429,8 @@ def extract_clusters_from_labelled_points_multicore(points: np.ndarray,
     clusters = []
     cluster_index = 0
 
+    # leaf_size = max(int(len(points) / 100_000), 10)
+
     pbar = tqdm.tqdm(total=len(points), desc="Clustering points...", miniters=1, unit="points", smoothing=0.01)
 
     for c in range(len(CLASSES)):
@@ -425,7 +440,7 @@ def extract_clusters_from_labelled_points_multicore(points: np.ndarray,
         if len(relevant_point_indices) == 0:
             continue
 
-        kd_tree = KDTree(points[relevant_point_indices])
+        kd_tree = KDTree(points[relevant_point_indices], leafsize=10)
         unassigned_point_indices = relevant_point_indices.copy()
 
         while len(unassigned_point_indices) > 0:
@@ -464,3 +479,76 @@ def extract_clusters_from_labelled_points_multicore(points: np.ndarray,
             pbar.set_description(f"Clustering points... (Found {len(clusters)} clusters, done {c} classes)")
 
     return clusters, cluster_indices_per_point
+
+
+def extract_clusters_from_labelled_points_multiprocess(points: np.ndarray,
+                                                       labels_per_point: np.ndarray,
+                                                       max_distance: float = 0.02) -> Tuple[List[List[int]], np.ndarray]:
+
+    points_indices_per_class = [np.nonzero(labels_per_point == i)[0] for i in range(len(CLASSES))]
+    cluster_indices_per_point_global = np.full(shape=(len(points),), fill_value=-1, dtype=np.int32)
+
+    with multiprocessing.Pool(13) as pool:
+        arguments = []
+        for i in range(13):
+            if np.count_nonzero(labels_per_point == i) <= 0:
+                arguments.append((i, None, None, max_distance))
+            else:
+                indices = points_indices_per_class[i]
+                relevant_points = points[indices]
+                arguments.append((i, relevant_points, indices, max_distance))
+
+        cluster_index = 0
+        for result in pool.map(extract_clusters_single_process, arguments):
+            cluster_indices_per_point, indices = result
+
+            if cluster_indices_per_point is not None and len(cluster_indices_per_point) > 0:
+                cluster_indices_per_point_global[indices] = cluster_indices_per_point + cluster_index
+                cluster_index += np.max(cluster_indices_per_point)
+
+    print(str(type(cluster_indices_per_point_global)))
+    print(cluster_indices_per_point_global.shape)
+    return None, cluster_indices_per_point_global
+
+def extract_clusters_single_process(args):
+    class_index, points, indices, max_distance = args
+
+    if points is None or len(points) == 0:
+        print(f"Class {CLASSES[class_index]} is done (had no points).")
+        return None, None
+
+    cluster_index = 0
+    # clusters = []
+    kd_tree = KDTree(points, leafsize=10)
+    unassigned_point_indices = np.arange(len(points), dtype=np.int32)
+    cluster_indices_per_point = np.full(shape=(len(points),), fill_value=-1, dtype=np.int32)
+
+    while len(unassigned_point_indices) > 0:
+        initial_seed_index = unassigned_point_indices[-1]
+        unassigned_point_indices = unassigned_point_indices[:-1]
+        frontier = np.array([points[initial_seed_index]])
+        current_cluster = np.array([initial_seed_index])
+
+        while len(frontier) > 0:
+            # neighbours_indices = kd_tree.query_ball_tree(frontier, max_distance)
+            neighbours_indices = kd_tree.query_ball_point(frontier, max_distance, workers=-1)
+            neighbours_indices = np.concatenate(
+                [np.array(i) for i in neighbours_indices])  # https://stackoverflow.com/a/42499122
+            neighbours_indices = np.unique(neighbours_indices)
+
+            # Filter the neighbour indices that are unassigned
+            global_neighbour_idx = np.intersect1d(neighbours_indices, unassigned_point_indices)
+
+            if len(global_neighbour_idx) <= 0:
+                break
+
+            frontier = points[global_neighbour_idx]
+            current_cluster = np.union1d(current_cluster, global_neighbour_idx)
+            unassigned_point_indices = np.setdiff1d(unassigned_point_indices, global_neighbour_idx)
+
+        cluster_indices_per_point[current_cluster] = cluster_index
+        # clusters.append(list(current_cluster))
+        cluster_index += 1
+
+    print(f"Class {CLASSES[class_index]} is done with {class_index + 1} clusters.")
+    return cluster_indices_per_point, indices
