@@ -241,9 +241,10 @@ def pointnetv2(model_checkpoint_path: str,
     start_time = time.time()
 
     npoint = 4096
+    batch_size = 32
 
     dataset = utilities.pointv2_dataset.PointNetV2_CustomDataset(points, colors, None, npoint, 1.0, 0.5)
-    dataloader = DataLoader(dataset, batch_size=32, shuffle=False, num_workers=1)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=2)
 
     #batches, batches_indices = convert_to_batches(points=points, colors=colors, normals=normals,
     #                                              point_amount=npoint, block_size=1, stride=0.5)
@@ -278,22 +279,21 @@ def pointnetv2(model_checkpoint_path: str,
     number_of_votes: int = 1
     votes = np.zeros(shape=(len(points), number_of_classes), dtype=np.int32)
 
+    all_predictions = torch.zeros(size=(len(points), number_of_classes))
+
     for batch in tqdm.tqdm(dataloader, desc=f"Classifying batches... (votes {number_of_votes})"):
         data: torch.Tensor = torch.permute(batch[:, :, :9], (0, 2, 1)).float().cuda()
-        indices: np.ndarray = batch[:, :, -1].cpu().numpy().astype(np.int32)
-        for vote in range(number_of_votes):
-            # Actually do the prediction!
-            with torch.no_grad():
-                predictions, _ = classifier(data)
-            class_per_point = predictions.cpu().numpy().argmax(axis=2).squeeze().astype(np.int32)
+        indices: np.ndarray = batch[:, :, -1].to(device='cpu', dtype=torch.int32)
+        # Actually do the prediction!
+        with torch.no_grad():
+            predictions, _ = classifier(data)
 
-            if indices.shape != class_per_point.shape:
-                class_per_point = np.reshape(class_per_point, indices.shape)
+        predictions = predictions.to("cpu").squeeze().reshape((batch_size * npoint, number_of_classes))
+        argmax = predictions.argmax(dim=1)
+        indices = indices.reshape((batch_size * npoint, ))
+        all_predictions[indices, argmax] += 1
 
-            for i in range(indices.shape[0]):
-                votes[indices[i, :], class_per_point[i, :]] += 1
-
-    classifications: np.ndarray = votes.argmax(axis=1)
+    classifications: np.ndarray = all_predictions.argmax(dim=1).numpy()
 
     classification_time = time.time() - start_time
 

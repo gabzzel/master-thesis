@@ -41,9 +41,44 @@ def execute():
     # extract_clusters()
     # execute_hdbscan_on_S3DIS()
     #execute_obrg_on_S3DIS()
-    execute_pointnetv2_manual()
+    # execute_pointnetv2_manual()
     # execute_hdbscan_manual()
-    print("Done!")
+    cluster_manual()
+
+
+def cluster_manual():
+    paths = [
+        "E:\\thesis-results\\segmentation\\pointnext\\office\\ruimte_ETVR-preprocessed_1719156546.4426675_classifications.npy",
+        "E:\\thesis-results\\segmentation\\pointnext\\office (cleaned)\\ruimte_ETVR-preprocessed-lower-cleaned_1719161060.2401881_classifications.npy",
+        "E:\\thesis-results\\segmentation\\pointnext\\tc\\training_complex_downsampled_001_incl_oriented_normals_1719147859.9874692_classifications.npy",
+        "E:\\thesis-results\\segmentation\\pointnext\\zuidberg\\Zuidberg-preprocessed_1719161201.6034386_classifications.npy",
+        "E:\\thesis-results\\segmentation\\pointnext\\zuidberg (cleaned)\\Zuidberg-preprocessed-clean_1719161305.087092_classifications.npy"
+    ]
+
+    for string_path in paths:
+        classification_path = Path(string_path)
+        pcd_path = string_path.replace("_classifications.npy", "_pcd.ply")
+        pcd = open3d.io.read_point_cloud(pcd_path)
+        points = np.asarray(pcd.points)
+        labels_per_point = np.load(classification_path)
+        start_time = time.time()
+        _, clusters_per_point = segmentation.extract_clusters_from_labelled_points_multiprocess(points=points,
+                                                                                                labels_per_point=labels_per_point,
+                                                                                                max_distance=0.02)
+        cluster_time = time.time() - start_time
+        stats_path = string_path.replace("_classifications.npy", "_stats.txt")
+        with open(stats_path, "a") as f:
+            f.write(f"Clustering Time={cluster_time}\n")
+        cluster_path = string_path.replace("_classifications.npy", "_clusters.npy")
+        np.save(cluster_path, clusters_per_point)
+
+        rng = np.random.default_rng()
+        colors = rng.random((np.max(clusters_per_point)+1, 3))
+        colors_per_point = colors[clusters_per_point]
+        new_pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(points))
+        new_pcd.colors = open3d.utility.Vector3dVector(colors_per_point)
+        new_pcd_path = string_path.replace("_classifications.npy", "_clusters.ply")
+        open3d.io.write_point_cloud(new_pcd_path, new_pcd)
 
 
 def execute_hdbscan_manual():
@@ -92,10 +127,7 @@ def execute_pointnetv2_manual():
     dataset_path = Path("E:\\etvr_datasets")
 
     datasets_names = [
-        "ruimte_ETVR-preprocessed-lower-cleaned.ply",
-        "Zuidberg.ply",
-        "Zuidberg-preprocessed.ply",
-        "ruimte_ETVR.ply"
+        "Zuidberg-cleaned.ply"
     ]
 
     for dataset_name in datasets_names:
