@@ -250,14 +250,19 @@ def get_run_configurations_from_json(file_name: Path) -> Tuple[List[RunConfigura
         else:
             segments_path = None
 
+        classifications_path = Path(json_data_raw['classifications_path']) if 'classifications_path' in json_data_raw else None
+
         for i in range(len(json_data_raw["runs"])):
             run_config_raw = json_data_raw["runs"][i]
             try:
                 base_config = None
                 if i > 0 and copy:
                     base_config = configs[i - 1]  # If we want to copy the previous config
-                config = get_run_config_from_json(run_config_raw, pcd_path=pcd_path, base_config=base_config,
-                                                  segments_path=segments_path)
+                config = get_run_config_from_json(run_config_raw,
+                                                  pcd_path=pcd_path,
+                                                  base_config=base_config,
+                                                  segments_path=segments_path,
+                                                  classifications_path=classifications_path)
                 configs.append(config)
             except json.JSONDecodeError as e:
                 print(f"Could not parse run {i} json config file {file_name}: {e}")
@@ -270,7 +275,8 @@ def get_run_configurations_from_json(file_name: Path) -> Tuple[List[RunConfigura
 def get_run_config_from_json(data,
                              pcd_path: Union[Path, str],
                              base_config: RunConfiguration = None,
-                             segments_path: Union[Path, str] = None) \
+                             segments_path: Union[Path, str] = None,
+                             classifications_path: Union[Path, str] = None) \
         -> RunConfiguration:
 
     config = RunConfiguration()
@@ -280,6 +286,7 @@ def get_run_config_from_json(data,
 
     config.point_cloud_path = Path(pcd_path) if isinstance(pcd_path, str) else pcd_path
     config.segments_path = Path(segments_path) if isinstance(segments_path, str) else segments_path
+    config.classifications_path = Path(classifications_path) if isinstance(classifications_path, str) else classifications_path
 
     config.set_setting(data, "down_sample_method", default=None, cast_method=pcd_utils.get_down_sample_method)
     config.set_setting(data, "down_sample_params", default=0, cast_method=float)
@@ -302,6 +309,7 @@ def get_run_config_from_json(data,
     config.set_setting(data, "ball_pivoting_radii", default=[0.1, 0.2, 0.3], cast_method=float, force_unique=True)
     config.set_setting(data, "poisson_density_quantile", default=0.1, cast_method=float)
     config.set_setting(data, "poisson_octree_max_depth", default=8, cast_method=int)
+    config.set_setting(data, "poisson_adaptive", default=False, cast_method=bool)
 
     # Mesh cleaning
     config.set_setting(data, "mesh_cleaning_methods", default=None, force_unique=True,

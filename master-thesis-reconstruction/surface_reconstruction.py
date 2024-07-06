@@ -7,12 +7,15 @@ import open3d
 import scipy.spatial
 import tqdm
 from open3d.cpu.pybind.utility import Vector3dVector
+import bisect
 
 from utilities import utils
 from utilities.enumerations import SurfaceReconstructionMethod as SRM, SurfaceReconstructionParameters as SRP
 from utilities.run_configuration import RunConfiguration
 from utilities.evaluation_results import EvaluationResults
 
+CLASSES = ['ceiling', 'floor', 'wall', 'beam', 'column', 'window', 'door', 'table', 'chair', 'sofa', 'bookcase',
+           'board', 'clutter']
 
 def get_surface_reconstruction_method(to_evaluate: Union[str, SRM]) -> SRM:
     if isinstance(to_evaluate, SRM):
@@ -41,9 +44,7 @@ def run(pcd: open3d.geometry.PointCloud,
         config: RunConfiguration,
         results: EvaluationResults,
         verbose: bool = True) \
-        -> Tuple[Optional[open3d.geometry.TriangleMesh], Optional[np.ndarray], Optional[List[open3d.geometry.TriangleMesh]]]:
-
-
+        -> Tuple[List[open3d.geometry.TriangleMesh], List[np.ndarray], List[str]]:
     if config.surface_reconstruction_method not in SRM:
         raise ValueError(f"Unknown algorithm {config.surface_reconstruction_method}. "
                          f"Must be one of {list(SRM)}")
@@ -55,43 +56,40 @@ def run(pcd: open3d.geometry.PointCloud,
     if verbose:
         print(f"Starting surface reconstruction using {config.surface_reconstruction_method}")
 
-    point_clouds: List[Tuple[open3d.geometry.PointCloud, np.ndarray]] = [(pcd, np.arange(len(pcd.points)))]
+    point_clouds: List[Tuple[open3d.geometry.PointCloud, np.ndarray, Optional[int]]] = [(pcd, np.arange(len(pcd.points)), None)]
 
     # Apply the segmentation
     if config.segments_path is not None and config.segments_path.exists():
         print(f"Found segments file at {config.segments_path}")
         point_clouds.clear()
-        points = np.asarray(pcd.points)
-        colors = np.asarray(pcd.colors) if pcd.has_colors() else None
-        normals = np.asarray(pcd.normals) if pcd.has_normals() else None
         segments_per_point = np.load(config.segments_path)
-        assert len(segments_per_point) == len(points)
-        segments = np.unique(segments_per_point)
-        for segment in tqdm.tqdm(segments, desc="Applying segmentation...", total=len(segments), unit="segment", miniters=1, maxinterval=1.0):
-            indices = segments_per_point == segment
-            relevant_points = points[indices, :]
-            segmented_pcd = open3d.geometry.PointCloud(Vector3dVector(relevant_points))
-            if pcd.has_colors():
-                relevant_colors = colors[indices, :]
-                segmented_pcd.colors = open3d.utility.Vector3dVector(relevant_colors)
-            if pcd.has_normals():
-                relevant_normals = normals[indices, :]
-                segmented_pcd.normals = open3d.utility.Vector3dVector(relevant_normals)
-            point_clouds.append((segmented_pcd, np.nonzero(indices)))
+        assert len(segments_per_point) == len(pcd.points)
+
+        classifications = None
+        if config.classifications_path is not None and config.classifications_path.exists():
+            print(f"Found classifications file at {config.classifications_path}")
+            classifications = np.load(config.classifications_path)
+
+        point_clouds = apply_segmentation(pcd=pcd,
+                                          segment_index_per_point=segments_per_point,
+                                          classifications_per_point=classifications)
     else:
         print(f"Skipping meshing segments, no segments file found.")
 
     start_time = time.time()
 
-    all_densities: np.ndarray = None
+    all_densities: List[np.ndarray] = []
+    class_per_mesh: List[str] = []
 
     resulting_meshes: List[open3d.geometry.TriangleMesh] = []
     skipped: int = 0
     total_points_meshed: int = 0
 
     pbar = tqdm.tqdm(point_clouds, desc="Meshing point clouds...", unit="pointcloud", miniters=1)
-    for point_cloud, point_indices in pbar:
-        pbar.set_description(f"Meshing point clouds... (Skipped {skipped} because of size or errors)")
+    for point_cloud, point_indices, classification in pbar:
+
+        if skipped > 0:
+            pbar.set_description(f"Meshing point clouds... (Skipped {skipped} because of size or errors)")
 
         if len(point_cloud.points) < 10:
             skipped += 1
@@ -108,22 +106,29 @@ def run(pcd: open3d.geometry.PointCloud,
                 alpha = alpha[0]
             try:
                 mesh = alpha_shapes(point_cloud=point_cloud, alpha=alpha, verbose=len(point_clouds) == 1)
-            except IndexError as e:
+            except Exception as e:
                 print(f"Skipping alpha shapes reconstruction due to {e}.")
                 skipped += 1
                 continue
 
         elif config.surface_reconstruction_method == SRM.SCREENED_POISSON_SURFACE_RECONSTRUCTION:
-            octree_max_depth = config.surface_reconstruction_params[SRP.POISSON_OCTREE_MAX_DEPTH]
+            octree_max_depth: int = config.surface_reconstruction_params[SRP.POISSON_OCTREE_MAX_DEPTH]
+
+            # Adjust the octree depth based on the size of the object that we need to mesh
+            if config.poisson_adaptive:
+                pts = np.asarray(point_cloud.points)
+                pts_max = pts.max(axis=0)
+                pts_min = pts.min(axis=0)
+                bb_max_size = np.max(
+                    np.abs(pts_max - pts_min)) * 1.1  # The size of the bounding cube, the initial octree cell
+                octree_max_depth = min(octree_max_depth, max(2, int(np.ceil(np.log2(bb_max_size / 0.01)))))
+
             mesh, densities = screened_poisson_surface_reconstruction(point_cloud=point_cloud,
                                                                       octree_max_depth=octree_max_depth,
                                                                       processes=1,
                                                                       verbose=len(point_clouds) == 1)
 
-            if all_densities is None:
-                all_densities = densities
-            else:
-                all_densities = np.concatenate((all_densities, densities), axis=0)
+            all_densities.append(densities)
 
         # elif config.surface_reconstruction_method == SRM.DELAUNAY_TRIANGULATION:
         #     mesh = delaunay_triangulation(point_cloud=pcd, as_tris=True)
@@ -135,16 +140,13 @@ def run(pcd: open3d.geometry.PointCloud,
         if mesh is not None:
             total_points_meshed += len(point_cloud.points)
             resulting_meshes.append(mesh)
+            class_per_mesh.append(CLASSES[classification])
 
     results.surface_reconstruction_time = time.time() - start_time
+    print(
+        f"Meshed {total_points_meshed}/{len(pcd.points)} ({round((total_points_meshed / float(len(pcd.points)) * 100), 4)}%) points")
 
-    final_mesh = open3d.geometry.TriangleMesh()
-    for mesh in resulting_meshes:
-        final_mesh += mesh
-
-    print(f"Meshed {total_points_meshed}/{len(pcd.points)} ({round((total_points_meshed / float(len(pcd.points)) * 100), 4)}%) points")
-
-    return final_mesh, all_densities, resulting_meshes
+    return resulting_meshes, all_densities, class_per_mesh
 
 
 def alpha_shapes(point_cloud, alpha: float = 0.02, verbose=True):
@@ -236,7 +238,7 @@ def vertex_neighbours_to_triangles(vertex_neighbours: Tuple[np.ndarray, np.ndarr
     triangles = []
 
     for vertex_index in range(len(indptr) - 1):
-        neighbours = indices[indptr[vertex_index]:indptr[vertex_index+1]]
+        neighbours = indices[indptr[vertex_index]:indptr[vertex_index + 1]]
         for slice_index in range(len(neighbours) - 1):
             triangles.append([vertex_index, neighbours[slice_index], neighbours[slice_index + 1]])
 
@@ -290,3 +292,48 @@ def tetrahedra_to_triangles_numpy(tetrahedra: np.ndarray) -> np.ndarray:
 
     triangles = np.vstack((tri1, tri2, tri3, tri4))
     return triangles
+
+
+def apply_segmentation(pcd: open3d.geometry.PointCloud,
+                       segment_index_per_point: np.ndarray,
+                       classifications_per_point: Optional[np.ndarray] = None,
+                       visualize: bool = False) \
+        -> List[Tuple[open3d.geometry.PointCloud, np.ndarray, Optional[int]]]:
+
+    results: List[Tuple[open3d.geometry.PointCloud, np.ndarray, Optional[int]]] = []
+    points = np.asarray(pcd.points)
+    normals = np.asarray(pcd.normals) if pcd.has_normals() else None
+    colors = np.asarray(pcd.colors) if pcd.has_colors() else None
+    sorted_indices = np.argsort(segment_index_per_point)
+    sorted_segment_ids = segment_index_per_point[sorted_indices]
+    max_segment_index = sorted_segment_ids[-1]
+
+    visualize_pcds = []
+    rng = np.random.default_rng()
+    colors_per_segment = rng.random(size=(max_segment_index + 1, 3))
+
+    start_index = 0
+    for segment_id in tqdm.trange(max_segment_index + 1, desc="Applying segmentation...", miniters=1, unit="segment"):
+        end_index = bisect.bisect_right(sorted_segment_ids, segment_id, lo=start_index)
+        segmented_pcd_indices = sorted_indices[start_index:end_index]
+        segmented_pcd_points = open3d.utility.Vector3dVector(points[segmented_pcd_indices])
+        segmented_pcd = open3d.geometry.PointCloud(segmented_pcd_points)
+        if colors is not None:
+            segmented_pcd.colors = open3d.utility.Vector3dVector(colors[segmented_pcd_indices])
+        if normals is not None:
+            segmented_pcd.normals = open3d.utility.Vector3dVector(normals[segmented_pcd_indices])
+
+        class_index = classifications_per_point[segmented_pcd_indices[0]] if classifications_per_point is not None else None
+        results.append((segmented_pcd, segmented_pcd_indices, class_index))
+        start_index = end_index
+
+        if visualize:
+            visualize_pcd = open3d.geometry.PointCloud(segmented_pcd_points)
+            visualize_pcd.colors = open3d.utility.Vector3dVector(np.full(shape=(len(segmented_pcd_points),3),
+                                                                         fill_value=colors_per_segment[segment_id]))
+            visualize_pcds.append(visualize_pcd)
+
+    if visualize:
+        open3d.visualization.draw_geometries(visualize_pcds)
+
+    return results

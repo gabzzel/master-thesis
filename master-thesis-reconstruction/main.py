@@ -37,7 +37,8 @@ def execute(config_file: Optional[str]):
         print(f"Invalid config file path: {config_file}.")
         return
 
-    results_path = pathlib.Path(config_file).parent
+    config_file_path = pathlib.Path(config_file)
+    results_path = config_file_path.parent.joinpath(config_file_path.stem)
 
     reused_point_clouds: Tuple[open3d.geometry.PointCloud, open3d.geometry.PointCloud] = None
 
@@ -109,20 +110,22 @@ def execute_run(run_config: RunConfiguration,
                              interval=1.0, max_usage=True)
         print(usage)
 
-    final_mesh, densities, meshes = surface_reconstruction.run(pcd=pcd, results=results, config=run_config,
-                                                               verbose=verbose)
+    meshes, densities, class_per_mesh = surface_reconstruction.run(pcd=pcd,
+                                                                   results=results,
+                                                                   config=run_config,
+                                                                   verbose=verbose)
 
     print("\n============= Step 3 : Cleaning =============")
-    aspect_ratios = mesh_cleaning.run_mesh_cleaning(final_mesh, run_config, results, densities=densities,
-                                                    verbose=verbose)
+    mesh_cleaning.run_mesh_cleaning(meshes, run_config, results, densities=densities,
+                                    verbose=verbose)
 
-    # If we have aspect ratios return from the mesh cleaning, we want the remaining after-cleaning aspect ratios
-    if aspect_ratios is not None:
-        aspect_ratios = aspect_ratios[1]
+    final_mesh = meshes[0]
+    for i in range(1, len(meshes)):
+        final_mesh += meshes[i]
 
     print("\n============= Step 4 : Evaluation =============")
     # Raw point cloud is used here, since we want to evaluate against the original, not the preprocessed.
-    evaluation.evaluate(final_mesh, raw_pcd, run_config, results, precomputed_aspect_ratios=aspect_ratios,
+    evaluation.evaluate(final_mesh, raw_pcd, run_config, results, precomputed_aspect_ratios=None,
                         verbose=verbose)
 
     print("\n============= Step 5 : Saving Results =============")
@@ -142,8 +145,12 @@ def execute_run(run_config: RunConfiguration,
             start_time = time.time()
             meshes_save_folder = results_path.joinpath("cluster_meshes")
             os.makedirs(meshes_save_folder, exist_ok=True)
-            for i in range(len(meshes)):
-                path = meshes_save_folder.joinpath(f"mesh_{i}.ply")
+            for i in range(1, len(meshes)):
+                mesh_name = f"mesh_{i}_{class_per_mesh[i]}.ply" \
+                    if class_per_mesh is not None and len(class_per_mesh) > i \
+                    else f"mesh_{i}.ply"
+
+                path = meshes_save_folder.joinpath(mesh_name)
                 open3d.io.write_triangle_mesh(filename=str(path), mesh=meshes[i])
             print(f"Saved sub-meshes to {meshes_save_folder}. [{round(time.time() - start_time, 3)}s]")
 
@@ -210,12 +217,12 @@ if __name__ == "__main__":
         config_path = None
         print("Cannot find config.")
 
-    if main_script_path.is_dir():
-        config_path = main_script_path.joinpath("run_configs", "config.json")
-        execute(str(config_path))
+    run_configs_path = main_script_path.joinpath("run_configs")
+    configs = [i for i in os.listdir(run_configs_path) if ".json" in i]
 
-    elif main_script_path.is_file():
-        config_path = main_script_path.parent.joinpath("run_configs", "config.json")
+    for i, config_name in enumerate(configs):
+        print(f"Found {len(configs)} configs, executing #{i}: {config_name}")
+        config_path = run_configs_path.joinpath(config_name)
         execute(str(config_path))
 
     # point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\etvr\\enfsi-2023_reduced_cloud.pcd"

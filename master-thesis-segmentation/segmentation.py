@@ -261,6 +261,9 @@ def pointnetv2(model_checkpoint_path: str,
     checkpoint = torch.load(model_checkpoint_path)
     classifier.load_state_dict(checkpoint['model_state_dict'])
 
+    pytorch_total_params = sum(p.numel() for p in classifier.parameters() if p.requires_grad)
+    print(f"Model parameters: {pytorch_total_params}")
+
     # Set the model into evaluation mode
     classifier = classifier.eval()
 

@@ -41,9 +41,9 @@ def execute():
     # extract_clusters()
     # execute_hdbscan_on_S3DIS()
     #execute_obrg_on_S3DIS()
-    # execute_pointnetv2_manual()
+    execute_pointnetv2_manual()
     # execute_hdbscan_manual()
-    cluster_manual()
+    #cluster_manual()
 
 
 def cluster_manual():

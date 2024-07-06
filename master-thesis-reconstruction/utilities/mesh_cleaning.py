@@ -1,7 +1,8 @@
 import time
-from typing import Union, Optional, Tuple
+from typing import Union, Optional, Tuple, List
 import numpy as np
 import open3d
+import tqdm
 
 from utilities import mesh_utils, run_configuration, utils
 from utilities.enumerations import MeshCleaningMethod
@@ -24,10 +25,10 @@ def get_cleaning_type(cleaning_type_text: str) -> Optional[MeshCleaningMethod]:
     return None
 
 
-def run_mesh_cleaning(mesh: open3d.geometry.TriangleMesh,
+def run_mesh_cleaning(meshes: List[open3d.geometry.TriangleMesh],
                       config: run_configuration.RunConfiguration,
                       results: EvaluationResults,
-                      densities: Optional[np.ndarray] = None,
+                      densities: Optional[List[np.ndarray]] = None,
                       verbose: bool = True) -> Optional[Tuple[np.ndarray, np.ndarray]]:
 
     start_time = time.time()
@@ -35,38 +36,47 @@ def run_mesh_cleaning(mesh: open3d.geometry.TriangleMesh,
         results.cleaning_time = 0.0
         return None
 
-    results.number_of_vertices_original = len(mesh.vertices)
-    results.number_of_triangles_original = len(mesh.triangles)
+    ar = None
+    ar_clean = None
 
-    poisson_density_quantile = min(1.0, max(config.poisson_density_quantile, 0.0))
-    if densities is not None and poisson_density_quantile > 0.0:
-        vertices_to_remove = densities < np.quantile(densities, poisson_density_quantile)
-        mesh.remove_vertices_by_mask(vertices_to_remove)
+    pbar = tqdm.tqdm(total=len(meshes), desc="Cleaning meshes...", miniters=1, maxinterval=0.1, smoothing=0.05)
 
-        if verbose:
-            nrv = utils.format_number(np.sum(vertices_to_remove))  # Number of Removed Vertices
-            rem_tris = utils.format_number(len(mesh.triangles))  # Remaining Triangles
-            print(f"Removed {nrv} verts in {poisson_density_quantile} density quantile, tris remaining: {rem_tris}.")
+    for i, mesh in enumerate(meshes):
+        results.number_of_vertices_original += len(mesh.vertices)
+        results.number_of_triangles_original += len(mesh.triangles)
 
-    if MeshCleaningMethod.SIMPLE in config.mesh_cleaning_methods:
-        clean_mesh_simple(mesh=mesh, verbose=verbose)
+        poisson_density_quantile = min(1.0, max(config.poisson_density_quantile, 0.0))
+        if densities is not None and len(densities) == len(meshes) and poisson_density_quantile > 0.0:
+            vertices_to_remove = densities[i] < np.quantile(densities[i], poisson_density_quantile)
+            mesh.remove_vertices_by_mask(vertices_to_remove)
 
-    if MeshCleaningMethod.EDGE_LENGTHS in config.mesh_cleaning_methods:
-        clean_mesh_metric(mesh=mesh,
-                          metric=MeshCleaningMethod.EDGE_LENGTHS,
-                          quantile=config.edge_length_cleaning_portion,
-                          verbose=True)
+            if verbose and len(meshes) == 1:
+                nrv = utils.format_number(np.sum(vertices_to_remove))  # Number of Removed Vertices
+                rem_tris = utils.format_number(len(mesh.triangles))  # Remaining Triangles
+                print(f"Removed {nrv} verts in {poisson_density_quantile} density quantile, tris remaining: {rem_tris}.")
 
-    ar = ar_clean = None
-    if MeshCleaningMethod.ASPECT_RATIOS in config.mesh_cleaning_methods:
-        ar, ar_clean = clean_mesh_metric(mesh=mesh,
-                                         metric=MeshCleaningMethod.ASPECT_RATIOS,
-                                         quantile=config.aspect_ratio_cleaning_portion,
-                                         verbose=verbose)
+        if MeshCleaningMethod.SIMPLE in config.mesh_cleaning_methods:
+            clean_mesh_simple(mesh=mesh, verbose=verbose and len(meshes) == 1)
 
-    results.number_of_vertices_after_cleaning = len(mesh.vertices)
-    results.number_of_triangles_after_cleaning = len(mesh.triangles)
+        if MeshCleaningMethod.EDGE_LENGTHS in config.mesh_cleaning_methods:
+            clean_mesh_metric(mesh=mesh,
+                              metric=MeshCleaningMethod.EDGE_LENGTHS,
+                              quantile=config.edge_length_cleaning_portion,
+                              verbose=len(meshes)==1 and verbose)
+
+        ar = ar_clean = None
+        if MeshCleaningMethod.ASPECT_RATIOS in config.mesh_cleaning_methods:
+            ar, ar_clean = clean_mesh_metric(mesh=mesh,
+                                             metric=MeshCleaningMethod.ASPECT_RATIOS,
+                                             quantile=config.aspect_ratio_cleaning_portion,
+                                             verbose=len(meshes) == 1 and verbose)
+
+        results.number_of_vertices_after_cleaning += len(mesh.vertices)
+        results.number_of_triangles_after_cleaning += len(mesh.triangles)
+        pbar.update(1)
+
     results.cleaning_time = time.time() - start_time
+
     return ar, ar_clean
 
 
@@ -168,7 +178,8 @@ def clean_mesh_metric(mesh: Union[open3d.geometry.TriangleMesh, open3d.geometry.
     else:
         threshold = absolute
 
-    print(f"Actual threshold: {threshold}")
+    if verbose:
+        print(f"Actual threshold: {threshold}")
 
     if metric == MeshCleaningMethod.ASPECT_RATIOS:
         mesh.remove_triangles_by_mask(metric_all > threshold)

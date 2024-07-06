@@ -53,6 +53,7 @@ class RunConfiguration:
         # Point Cloud Settings (incl. down sampling)
         self.point_cloud_path: Path = None
         self.segments_path: Path = None
+        self.classifications_path: Optional[Path] = None
         self.down_sample_method: Optional[DSM] = None
         self.down_sample_params: float = None
 
@@ -68,6 +69,7 @@ class RunConfiguration:
         self.ball_pivoting_radii: Union[list, set, tuple] = []
         self.poisson_density_quantile = 0.1
         self.poisson_octree_max_depth = 8
+        self.poisson_adaptive: bool = False
 
         # Mesh Cleaning Settings
         self.mesh_cleaning_methods: Optional[Set[MCM]] = None

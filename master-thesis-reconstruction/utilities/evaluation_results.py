@@ -135,7 +135,9 @@ class EvaluationResults:
             file.write(f"{self.loading_and_preprocessing_time}{delimiter}")
             file.write(f"{run_config.alpha}{delimiter}")
             file.write(f"{run_config.ball_pivoting_radii}{delimiter}")
-            file.write(f"{run_config.poisson_octree_max_depth}{delimiter}")
+
+            p_max_depth = f"{run_config.poisson_octree_max_depth} (adaptive)" if run_config.poisson_adaptive else str(run_config.poisson_octree_max_depth)
+            file.write(f"{p_max_depth}{delimiter}")
             file.write(f"{run_config.poisson_density_quantile}{delimiter}")
             file.write(f"{self.number_of_vertices_original}{delimiter}")
             file.write(f"{self.number_of_triangles_original}{delimiter}")
