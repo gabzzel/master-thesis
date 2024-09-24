@@ -1,3 +1,4 @@
+import argparse
 import copy
 import math
 import os
@@ -38,12 +39,113 @@ def get_points_and_labels(data_path: Path) -> Tuple[np.ndarray, Optional[np.ndar
 
 
 def execute():
-    # extract_clusters()
-    # execute_hdbscan_on_S3DIS()
-    #execute_obrg_on_S3DIS()
-    execute_pointnetv2_manual()
-    # execute_hdbscan_manual()
-    #cluster_manual()
+    args = parse_args()
+
+    if args.method == "hdbscan":
+        execute_hdbscan_with_args(args)
+    elif args.method == "pointnetv2":
+        execute_pointnetv2_with_args(args)
+    else:
+        print("Invalid method")
+
+
+def execute_hdbscan_with_args(args):
+    config = utilities.HDBSCANConfig.HDBSCANConfigAndResult(
+        pcd_path=args.point_cloud_path,
+        min_cluster_size=args.hdbscan_min_cluster_size,
+        min_samples=args.hdbscan_min_samples,
+        include_normals=args.include_normals,
+        include_colors=args.include_colors,
+        visualize=False
+    )
+    config.noise_nearest_neighbours = min(max(args.hdbscan_noise_nearest_neighbours, 0), 1000)
+    pcd: open3d.geometry.PointCloud = open3d.io.read_point_cloud(str(config.pcd_path))
+    if args.downsampling_method == "random":
+        pcd = pcd.random_down_sample(args.downsampling_param)
+    elif args.downsampling_method == "voxel":
+        pcd = pcd.voxel_down_sample(args.downsampling_param)
+    pcd.estimate_normals(open3d.geometry.KDTreeSearchParamHybrid(radius=args.normal_estimation_radius,
+                                                                 max_nn=args.normal_estimation_neighbours))
+    pcd.orient_normals_consistent_tangent_plane(k=args.normal_orientation_neighbours)
+    points = np.hstack((np.asarray(pcd.points), np.asarray(pcd.normals), np.asarray(pcd.colors)))
+    segmentation.hdbscan(points, config, verbose=args.verbose)
+    results_path = args.point_cloud_path.parent.joinpath(f"{args.point_cloud_path.stem}_clusters.npy")
+    np.save(results_path, config.clusters)
+
+
+def execute_pointnetv2_with_args(args):
+    pcd: open3d.geometry.PointCloud = open3d.io.read_point_cloud(str(args.point_cloud_path))
+    if args.downsampling_method == "random":
+        pcd = pcd.random_down_sample(args.downsampling_param)
+    elif args.downsampling_method == "voxel":
+        pcd = pcd.voxel_down_sample(args.downsampling_param)
+    pcd.estimate_normals(open3d.geometry.KDTreeSearchParamHybrid(radius=args.normal_estimation_radius,
+                                                                 max_nn=args.normal_estimation_neighbours))
+    pcd.orient_normals_consistent_tangent_plane(k=args.normal_orientation_neighbours)
+
+    classifications, cluster_indexes = segmentation.pointnetv2(str(args.pointnetv2_checkpoint_path),
+                                                               points=np.asarray(pcd.points),
+                                                               colors=np.asarray(pcd.colors),
+                                                               normals=None,
+                                                               working_directory=args.point_cloud_path.parent,
+                                                               visualize_raw_classifications=False,
+                                                               create_segmentations=args.do_segmentation,
+                                                               segmentation_max_distance=args.segmentation_max_distance)
+
+    classifications_path = args.point_cloud_path.parent.joinpath(f"{args.point_cloud_path.stem}_classifications.npy")
+    np.save(classifications_path, classifications)
+
+    if args.do_segmentation:
+        clusters_path = args.point_cloud_path.parent.joinpath(f"{args.point_cloud_path.stem}_clusters.npy")
+        np.save(clusters_path, cluster_indexes)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('point_cloud_path', type=Path, help='Path to the point cloud file',
+                        action='store')
+    parser.add_argument('method', type=str, help='Which segmentation method to use.', action='store',
+                        choices=['pointnetv2', 'hdbscan'])
+    parser.add_argument('-result_path', type=Path, help='Folder where the result will be saved',
+                        required=False, default=None)
+    parser.add_argument('-downsampling_method', type=str, help='Which downsampling method to use.',
+                        action='store', choices=['voxel', 'random', 'none', None], default='none')
+    parser.add_argument('-downsampling_param', type=float, action='store', default=0.1,
+                        help="Downsampling parameter. Represents voxel size if downsampling method is 'voxel' "
+                             "and sampling ratio if downsampling method is 'random'")
+    parser.add_argument('-normal_estimation_radius', type=float, action='store', default=0.1,
+                        help="The radius within which neighbours are used around a target point during normal "
+                             "estimation. Recommended value is 0.1. If using voxel downsampling, recommended to use"
+                             " approximately 3.5 * voxel size")
+    parser.add_argument('-normal_estimation_neighbours', type=int, action='store', default=10,
+                        help="The number of neighbours around a target point during normal estimation.")
+    parser.add_argument('-normal_orientation_neighbours', type=int, action='store', default=10,
+                        help="The number of neighbours used around a target point during normal orientation.")
+    parser.add_argument('-hdbscan_min_cluster_size', type=int, action='store', default=125,
+                        help="The minimum number of points in a hdbscan cluster.")
+    parser.add_argument('-hdbscan_min_samples', type=int, action='store', default=200,
+                        help="The minimum number of core points that need to be around a point for that point"
+                             " to be considered (in) a hdbscan cluster.")
+    parser.add_argument('-include_colors', action='store', default=False, type=bool,
+                        help="whether to include color-data during clustering. (Not recommended)")
+    parser.add_argument('-include_normals', action='store', default=True, type=bool,
+                        help="Whether to include normal data during clustering (highly recommended!)")
+    parser.add_argument('-verbose', action='store', default=True, type=bool,
+                        help="whether to print progress and result information.")
+    parser.add_argument('-pointnetv2_checkpoint_path', type=Path, action='store',
+                        help="Path to the checkpoint for pointnetv2 (i.e. the trained model).")
+    parser.add_argument('-do_segmentation', type=bool, action='store', default=False,
+                        help="whether to segment the point cloud after classification.")
+    parser.add_argument('-segmentation_max_distance', type=float, action='store', default=0.2,
+                        help="When creating the segmentation for pointnetv2 classifications, this is the maximum "
+                             "distance between points such that they are considered part of the same cluster.")
+    parser.add_argument('-hdbscan_noise_nearest_neighbours', type=int, action='store', default=3,
+                        help="When HDBSCAN fails to assign points to a cluster (i.e. noise points), these point can "
+                             "be forcefully assigned to the most occuring cluster of its nearest neighbours. This"
+                             "parameter determines the amount of neighbours considered for this operation. Default is 3."
+                             " Set to 0 to disable this automatic assignment of noise points.")
+    args = parser.parse_args()
+    return args
 
 
 def cluster_manual():
@@ -73,7 +175,7 @@ def cluster_manual():
         np.save(cluster_path, clusters_per_point)
 
         rng = np.random.default_rng()
-        colors = rng.random((np.max(clusters_per_point)+1, 3))
+        colors = rng.random((np.max(clusters_per_point) + 1, 3))
         colors_per_point = colors[clusters_per_point]
         new_pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(points))
         new_pcd.colors = open3d.utility.Vector3dVector(colors_per_point)
@@ -121,7 +223,6 @@ def execute_hdbscan_manual():
 
 
 def execute_pointnetv2_manual():
-
     pointnet_checkpoint_path = "C:\\Users\\admin\\gabriel-master-thesis\\master-thesis-segmentation\\pointnetexternal\\log\\sem_seg\\pointnet2_sem_seg\\checkpoints\\pretrained_original_coords_colors.pth"
 
     dataset_path = Path("E:\\etvr_datasets")
@@ -157,13 +258,15 @@ def extract_clusters():
     points = np.asarray(pcd.points)
 
     start_time = time.time()
-    clusters, cluster_per_point_raw = segmentation.extract_clusters_from_labelled_points_multicore(points, classifications,
-                                                                                               max_distance=0.05)
+    clusters, cluster_per_point_raw = segmentation.extract_clusters_from_labelled_points_multicore(points,
+                                                                                                   classifications,
+                                                                                                   max_distance=0.05)
     clusters_dest = folder_path.joinpath(file_path.replace("classifications.npy", "clusters.npy"))
     np.save(clusters_dest, cluster_per_point_raw)
 
     cluster_sizes = [len(i) for i in clusters]
-    print(f"Cluster sizes: min {np.min(cluster_sizes)}, max {np.max(cluster_sizes)}, avg {np.average(cluster_sizes)}, median {np.median(cluster_sizes)}")
+    print(
+        f"Cluster sizes: min {np.min(cluster_sizes)}, max {np.max(cluster_sizes)}, avg {np.average(cluster_sizes)}, median {np.median(cluster_sizes)}")
     print("Saved clusters. Total time taken: {:.2f}".format(time.time() - start_time))
 
     stats_path = folder_path.joinpath(file_path.replace("classifications.npy", "stats.txt"))
@@ -175,6 +278,7 @@ def extract_clusters():
     pcd = open3d.geometry.PointCloud(open3d.utility.Vector3dVector(points))
     pcd.colors = open3d.utility.Vector3dVector(colors[cluster_per_point_raw])
     open3d.visualization.draw_geometries([pcd])
+
 
 def execute_hdbscan_on_S3DIS():
     data_path = "C:\\Users\\ETVR\\Documents\\gabriel-master-thesis\\master-thesis-segmentation\\data\\s3dis_npy_incl_normals"
@@ -228,7 +332,8 @@ def execute_hdbscan_on_data(class_colors: list,
                 pcd.colors = open3d.utility.Vector3dVector(colors)
                 open3d.visualization.draw_geometries([pcd])
 
-            np.save(result_path.parent.joinpath(f"label_per_point-{current_time}.npy"), cluster_label_map[config.clusters])
+            np.save(result_path.parent.joinpath(f"label_per_point-{current_time}.npy"),
+                    cluster_label_map[config.clusters])
 
     utilities.HDBSCANConfig.write_multiple(hdbscan_configs, result_path, delimiter=";")
 

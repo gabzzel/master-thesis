@@ -219,7 +219,8 @@ def pointnetv2(model_checkpoint_path: str,
                working_directory: Union[str, PathLike],
                visualize_raw_classifications: bool = True,
                create_segmentations: bool = True,
-               segmentation_max_distance: float = 0.02) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+               segmentation_max_distance: float = 0.02,
+               write_times: bool = False) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """
     Execute a classification (and possible segmentation) using a trained PointNet++ model.
 
@@ -291,9 +292,9 @@ def pointnetv2(model_checkpoint_path: str,
         with torch.no_grad():
             predictions, _ = classifier(data)
 
-        predictions = predictions.to("cpu").squeeze().reshape((batch_size * npoint, number_of_classes))
+        predictions = predictions.to("cpu").squeeze().reshape((-1, number_of_classes))
         argmax = predictions.argmax(dim=1)
-        indices = indices.reshape((batch_size * npoint, ))
+        indices = indices.reshape((predictions.shape[0], ))
         all_predictions[indices, argmax] += 1
 
     classifications: np.ndarray = all_predictions.argmax(dim=1).numpy()
@@ -346,10 +347,11 @@ def pointnetv2(model_checkpoint_path: str,
         pcd_colored_to_clusters = working_directory_path.joinpath(f"clusters-{current_time}.ply")
         open3d.io.write_point_cloud(str(pcd_colored_to_clusters), visualize_pcd)
 
-    with open(times_path, "w") as f:
-        f.write(f"batching time: {batching_time}\n")
-        f.write(f"classification time: {classification_time}\n")
-        f.write(f"clustering time: {clustering_time}\n")
+    if write_times:
+        with open(times_path, "w") as f:
+            f.write(f"batching time: {batching_time}\n")
+            f.write(f"classification time: {classification_time}\n")
+            f.write(f"clustering time: {clustering_time}\n")
 
     return classifications, cluster_index_per_point
 

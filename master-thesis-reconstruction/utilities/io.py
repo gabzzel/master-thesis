@@ -60,7 +60,7 @@ def parse_args() -> Optional[argparse.Namespace]:
                         help='Whether to print progress and results in the console.')
 
     parser.add_argument('-surface_reconstruction_algorithm', '-sra', '-sr_alg',
-                        type=str, action='store',
+                        type=str, action='store', default='spsr',
                         help="The surface reconstruction algorithm to run. Ball Pivoting = 'bpa', 'b' or 'B' \n"
                              "Screened Poisson = 'spsr', 'SPSR', 'sp', 'SP', 's' or 'S'",
                         choices=['ball_pivoting', 'bpa', 'bp', 'b', 'poisson', 'spsr', 'P', 'p',
@@ -85,7 +85,7 @@ def parse_args() -> Optional[argparse.Namespace]:
                              "computing time. Must be between 3 and 100 (both inclusive). Recommended is between 8"
                              " and 15 depending on the size of the scene.")
 
-    parser.add_argument('-poisson_octree_min_width', '-pocs',
+    parser.add_argument('-poisson_octree_min_width', '-pomw',
                         type=float, action='store', default=0,
                         help="The minimum size of the octree cells when using Poisson Surface Reconstruction. Overrides"
                              " the max depth if used.")
