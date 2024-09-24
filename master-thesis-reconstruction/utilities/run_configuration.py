@@ -52,7 +52,7 @@ class RunConfiguration:
         self.name: str = "Unnamed run configuration"
         # Point Cloud Settings (incl. down sampling)
         self.point_cloud_path: Path = None
-        self.segments_path: Path = None
+        self.segments_path: Optional[Path] = None
         self.classifications_path: Optional[Path] = None
         self.down_sample_method: Optional[DSM] = None
         self.down_sample_params: float = None
@@ -64,11 +64,12 @@ class RunConfiguration:
         self.orient_normals: Optional[int] = None
 
         # Surface Reconstruction Settings
-        self.surface_reconstruction_method: SRM = SRM.DELAUNAY_TRIANGULATION
+        self.surface_reconstruction_method: SRM = SRM.SCREENED_POISSON_SURFACE_RECONSTRUCTION
         self.alpha: float = 0.0
         self.ball_pivoting_radii: Union[list, set, tuple] = []
         self.poisson_density_quantile = 0.1
         self.poisson_octree_max_depth = 8
+        self.poisson_octree_min_width = 0
         self.poisson_adaptive: bool = False
 
         # Mesh Cleaning Settings
@@ -81,7 +82,7 @@ class RunConfiguration:
         self.triangle_normal_deviation_method: TNDM = TNDM.NAIVE
 
         # Misc settings
-        self.store_mesh: bool = False
+        self.store_mesh: bool = True
         self.store_preprocessed_pointcloud: bool = False
         self.preprocessed_pointcloud_path: Optional[Union[str, Path]] = None
         self.processes: int = 1

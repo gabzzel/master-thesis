@@ -29,40 +29,53 @@ def execute(config_file: Optional[str]):
             time.sleep(5)
             return
         run_configs = io.get_run_configurations_from_args(args)
+        results_path = args.result_path
+        verbose = args.verbose
 
     elif pathlib.Path(config_file).is_file():
         run_configs, verbose, draw, copy = io.get_run_configurations_from_json(pathlib.Path(config_file))
+        config_file_path = pathlib.Path(config_file)
+        results_path = config_file_path.parent.joinpath(config_file_path.stem)
 
     else:
         print(f"Invalid config file path: {config_file}.")
         return
 
-    config_file_path = pathlib.Path(config_file)
-    results_path = config_file_path.parent.joinpath(config_file_path.stem)
-
     reused_point_clouds: Tuple[open3d.geometry.PointCloud, open3d.geometry.PointCloud] = None
 
-    for i in range(len(run_configs)):
-        print(f"\n================== Starting Run {i + 1} (of {len(run_configs)}) ==================")
-        prev_run_config = run_configs[i - 1] if i > 0 else None
-        run_config = run_configs[i]
-        run_config.name = str(time.time()) + "_run_" + str(i)
+    if len(run_configs) == 1:
+        run_config = run_configs[0]
+        run_config.name = "reconstruction_" + str(time.time())
+        if not results_path.exists():
+            os.makedirs(results_path)
+        execute_run(run_config,
+                    reused_point_clouds=reused_point_clouds,
+                    results_path=results_path,
+                    verbose=verbose,
+                    draw=draw)
 
-        run_result_path = results_path.joinpath(run_config.name)
-        if not run_result_path.exists():
-            os.makedirs(run_result_path)
+    elif len(run_configs) > 1:
+        for i in range(len(run_configs)):
+            print(f"\n================== Starting Run {i + 1} (of {len(run_configs)}) ==================")
+            prev_run_config = run_configs[i - 1] if i > 0 else None
+            run_config = run_configs[i]
+            run_config.name = str(time.time()) + "_run_" + str(i)
 
-        # If we have no previous run config, or we may not reuse the previous pointcloud, set this to None to force
-        # recalculation
-        may_reuse = prev_run_config is not None and prev_run_config.reuse_pointcloud
-        if not may_reuse or not run_config.eligible_for_pointcloud_reuse(prev_run_config):
-            reused_point_clouds = None
+            run_result_path = results_path.joinpath(run_config.name)
+            if not run_result_path.exists():
+                os.makedirs(run_result_path)
 
-        reused_point_clouds = execute_run(run_config,
-                                          reused_point_clouds=reused_point_clouds,
-                                          results_path=run_result_path,
-                                          verbose=verbose,
-                                          draw=draw)
+            # If we have no previous run config, or we may not reuse the previous pointcloud, set this to None to force
+            # recalculation
+            may_reuse = prev_run_config is not None and prev_run_config.reuse_pointcloud
+            if not may_reuse or not run_config.eligible_for_pointcloud_reuse(prev_run_config):
+                reused_point_clouds = None
+
+            reused_point_clouds = execute_run(run_config,
+                                              reused_point_clouds=reused_point_clouds,
+                                              results_path=run_result_path,
+                                              verbose=verbose,
+                                              draw=draw)
 
 
 def execute_run(run_config: RunConfiguration,
@@ -210,36 +223,16 @@ if __name__ == "__main__":
     #                                          down_sample_param=None,
     #                                          verbose=True)
     #open3d.visualization.draw_geometries([pcd])
-
     execute(None)
 
-    if not main_script_path.exists():
-        config_path = None
-        print("Cannot find config.")
+    # if not main_script_path.exists():
+    #     config_path = None
+    #     print("Cannot find config.")
 
-    run_configs_path = main_script_path.parent.joinpath("run_configs")
-    configs = [i for i in os.listdir(run_configs_path) if ".json" in i]
+    # run_configs_path = main_script_path.parent.joinpath("run_configs")
+    #configs = [i for i in os.listdir(run_configs_path) if ".json" in i]
 
-    for i, config_name in enumerate(configs):
-        print(f"Found {len(configs)} configs, executing #{i}: {config_name}")
-        config_path = run_configs_path.joinpath(config_name)
-        execute(str(config_path))
-
-    # point_cloud_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\etvr\\enfsi-2023_reduced_cloud.pcd"
-
-    # pcd2_tree = open3d.geometry.KDTreeFlann(pcd2)
-    # [k, idx, _] = pcd_tree.search_knn_vector_3d(pcd2.points[idx_b], 50)
-    # np.asarray(pcd.colors)[idx[1:], :] = [0, 1, 0]
-    # open3d.visualization.draw_geometries([pcd, pcd2])
-
-    # write_path = "C:\\Users\\Gabi\\master-thesis\\master-thesis\\data\\etvr\\enfsi-2023_open3D_normals.pcd"
-    # open3d.io.write_point_cloud(write_path)
-
-    # radii = [voxel_size, voxel_size*2, voxel_size*3]
-    # mesh = BPA(pcd, radii)
-    # mesh = SPSR(pcd, octree_max_depth=9, density_quantile_threshold=0.1)
-    # mesh = AlphaShapes(pcd, alpha=0.1)
-    # open3d.visualization.draw_geometries([pcd], mesh_show_back_face=True)
-
-    # DBSCAN_clustering(pcd, eps=0.05, min_points=15, verbose=True)
-    # open3d.visualization.draw_geometries([pcd])
+    # for i, config_name in enumerate(configs):
+    #     print(f"Found {len(configs)} configs, executing #{i}: {config_name}")
+    #     config_path = run_configs_path.joinpath(config_name)
+    #     execute(str(config_path))

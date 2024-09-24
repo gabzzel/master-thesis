@@ -20,38 +20,46 @@ from utilities.run_configuration import RunConfiguration
 
 def parse_args() -> Optional[argparse.Namespace]:
     parser = argparse.ArgumentParser()
+
+    # The paths to the point cloud, the segments and classifications
     parser.add_argument('point_cloud_path', type=Path, help="The path to the point cloud file.")
 
-    parser.add_argument('-down_sample_methods', '-dsm',
-                        type=str, default=None, action='append',
+    parser.add_argument('result_path', type=Path, help="The path where the results will be stored.")
+
+    parser.add_argument('-segments_path', type=Path, default=None, help="The path to the segments file.")
+    parser.add_argument('-classifications_path', type=Path, default=None, help="The path to the classification file.")
+
+    parser.add_argument('-down_sample_method', '-dsm',
+                        type=str, default=None, action='store',
                         help="The down-sampling method(s) to use. ",
                         choices=[None, 'none', 'voxel', 'random'])
 
     parser.add_argument('-down_sample_params', '-dsp',
-                        type=float, default=0.01, action='append',
+                        type=float, default=0.01, action='store',
                         help="When doing voxel down-sampling, this parameter will be the voxel size. When random "
                              "down-sampling, this parameter will be the amount of sample ratio.")
 
     parser.add_argument('-normal_estimation_neighbours', '-nen',
                         type=int, default=10, action='store',
-                        help="The number of neighbours to use during normal estimation.")
+                        help="The number of neighbours to use during normal estimation. Clipped between 0 and 1000.")
 
     parser.add_argument('-normal_estimation_radius', '-ner',
                         type=float, default=0.5, action='store',
-                        help="The radius around the point to use during normal estimation.")
+                        help="The radius around the point to use during normal estimation. Clipped between"
+                             " 0 and 1000")
 
     parser.add_argument('-skip_normalizing_normals', '-skip_nornor', '-snn',
                         action='store_true',
-                        help="Whether to skip normalizing the normals after estimation.")
+                        help="Whether to skip normalizing the normals after estimation. Not recommended.")
 
     parser.add_argument('-orient_normals', '-on', '-ornor', type=int, action='store', default=0,
                         help="Whether to orient the normals after estimation. Expensive, but might lead to better "
-                             "results.")
+                             "results. Clipped between 0 and 1000.")
 
     parser.add_argument('-verbose', '-v', action='store_true',
                         help='Whether to print progress and results in the console.')
 
-    parser.add_argument('-surface_reconstruction_algorithms', '-sra', '-sr_alg',
+    parser.add_argument('-surface_reconstruction_algorithm', '-sra', '-sr_alg',
                         type=str, action='store',
                         help="The surface reconstruction algorithm to run. Ball Pivoting = 'bpa', 'b' or 'B' \n"
                              "Screened Poisson = 'spsr', 'SPSR', 'sp', 'SP', 's' or 'S'",
@@ -71,13 +79,14 @@ def parse_args() -> Optional[argparse.Namespace]:
                              "Used to clean mesh after reconstruction using Screened Poisson Surface Reconstruction.")
 
     parser.add_argument('-poisson_octree_max_depth', '-pomd',
-                        type=int, action='store', default=8,
+                        type=int, action='store', default=0,
                         help="The maximum depth of the octree when using Poisson Surface Reconstruction. Lower values"
                              " correspond to lower resoluation and thus less detailed meshes, but reduces "
-                             "computing time.")
+                             "computing time. Must be between 3 and 100 (both inclusive). Recommended is between 8"
+                             " and 15 depending on the size of the scene.")
 
-    parser.add_argument('-poisson_octree_cell_size', '-pocs',
-                        type=float, action='store', default=0.1,
+    parser.add_argument('-poisson_octree_min_width', '-pocs',
+                        type=float, action='store', default=0,
                         help="The minimum size of the octree cells when using Poisson Surface Reconstruction. Overrides"
                              " the max depth if used.")
 
@@ -87,11 +96,13 @@ def parse_args() -> Optional[argparse.Namespace]:
 
     parser.add_argument('-edge_length_clean_portion', '-elcp',
                         required=False, action='store', type=float, default=0.95,
-                        help="The portion of the edge lengths to keep when cleaning.")
+                        help="The portion of the edge lengths to keep when cleaning. Must be between 0 and 1."
+                             "Set to 1 to not remove any edges.")
 
     parser.add_argument('-aspect_ratio_clean_portion', '-arcp',
                         required=False, action='store', type=float, default=0.95,
-                        help="The portion of triangles, sorted by aspect ratio, to keep when cleaning.")
+                        help="The portion of triangles, sorted by aspect ratio, to keep when cleaning. Must be "
+                             "between 0 and 1. Set to 1 to not remove any triangles.")
 
     parser.add_argument('-mesh_quality_metrics', '-mqm',
                         required=False, action='append', type=str,
@@ -108,6 +119,10 @@ def parse_args() -> Optional[argparse.Namespace]:
                         help="Path to the folder where to write the evaluation results.")
 
     parser.add_argument('-store_mesh', '-save_mesh', action='store_true')
+
+    parser.add_argument('-processes', action='store', type=int, default=-1,
+                        help="The number of processes to use. Set to -1 to automatically determine. Clipped between"
+                             " -1 and 100 (both inclusive). Set to 0 or 1 to run single-threaded.")
 
     parser.add_argument('-draw',
                         action='store_true',
@@ -171,56 +186,60 @@ def get_run_configurations_from_args(args: argparse.Namespace) -> List[RunConfig
 
     config = RunConfiguration()
 
-    # 1. Point cloud path. We can directly copy this, it will be checked later.
+    # 1. Important file paths. We can directly copy this, it will be checked for validity by the parser AND later.
     config.point_cloud_path = args.point_cloud_path
+    config.segments_path = args.segments_path
+    config.classifications_path = args.classifications_path
 
-    # Mesh cleaning methods
+    # 2. Downsampling parameters
+    config.down_sample_method = pcd_utils.get_down_sample_method(args.down_sample_method)
+    config.down_sample_params = args.down_sample_params
+
+    # Point cloud Normal Estimation Settings
+    config.normal_estimation_neighbours = min(max(0, args.normal_estimation_neighbours), 1000)
+    config.normal_estimation_radius = min(max(0, args.normal_estimation_radius), 1000)
+    config.skip_normalizing_normals = args.skip_normalizing_normals
+    config.orient_normals = min(max(args.orient_normals, 0), 1000)
+
+    # Surface reconstruction settings.
+    config.surface_reconstruction_method = surface_reconstruction.get_surface_reconstruction_method(args.surface_reconstruction_algorithm)
+    config.alpha = min(max(args.alpha, 0), 100)
+
+    if isinstance(args.ball_pivoting_radii, float):
+        config.ball_pivoting_radii = [args.ball_pivoting_radii]
+    elif isinstance(config.ball_pivoting_radii, list):
+        config.ball_pivoting_radii = set(args.ball_pivoting_radii)
+    config.poisson_density_quantile = min(max(args.poisson_density_quantile, 0), 1)
+
+    config.poisson_octree_min_width = min(max(args.poisson_octree_min_width, 0), 100)
+    config.poisson_octree_max_depth = min(max(args.poisson_octree_max_depth, 0), 100)
+    if config.poisson_octree_min_width == 0 and config.poisson_octree_max_depth < 2:
+        config.poisson_octree_max_depth = 3
+
+    config.poisson_adaptive = False # ?
+
+    # Mesh cleaning and evaluation
     if args.mesh_clean_methods is not None and len(args.mesh_clean_methods) > 0:
         config.mesh_cleaning_methods = set([mesh_cleaning.get_cleaning_type(m) for m in args.mesh_clean_methods])
+    config.edge_length_cleaning_portion = min(0.0, max(args.edge_length_clean_portion, 1.0))
+    config.aspect_ratio_cleaning_portion = min(0.0, max(args.aspect_ratio_clean_portion, 1.0))
 
-    edge_length_clean_portion = min(0.0, max(args.edge_length_clean_portion, 1.0))
-    aspect_ratio_clean_portion = min(0.0, max(args.aspect_ratio_clean_portion, 1.0))
-
-    if not args.down_sample_methods:
-        point_cloud_sampling = None
-    else:
-        point_cloud_sampling = [pcd_utils.get_down_sample_method(m) for m in args.down_sample_methods]
-
-    # Parse the mesh quality metrics
     if not args.mesh_quality_metrics:
-        mesh_quality_metrics = None
+        config.mesh_quality_metrics = None
     elif args.mesh_quality_metrics is 'all' or 'all' in [i.lower().strip() for i in args.mesh_quality_metrics]:
-        mesh_quality_metrics = [i for i in mesh_quality.MeshEvaluationMetric]
+        config.mesh_quality_metrics = [i for i in mesh_quality.MeshEvaluationMetric]
     else:
-        mesh_quality_metrics = set([mesh_quality.get_mesh_quality_metric(i) for i in args.mesh_quality_metrics])
+        config.mesh_quality_metrics = set([mesh_quality.get_mesh_quality_metric(i) for i in args.mesh_quality_metrics])
 
-    configs: List[RunConfiguration] = []
+    config.triangle_normal_deviation_method = TNDM.ADJANCENCY
 
-    for i in range(len(point_cloud_samplings)):
-        down_sample_method: DSM = point_cloud_samplings[i]
+    config.store_mesh = True  # Always store the mesh for ETVR
 
-        # Loop through the down sample parameters if we have multiple.
-        # If we only have a single down sample parameter, use that every time.
-        down_sample_param: float = args.down_sample_params[i % len(args.down_sample_params)] \
-            if isinstance(args.down_sample_params, type(iter)) \
-            else args.down_sample_params
+    config.processes = max(min(args.processes, 100), -1)
+    if config.processes == 0:
+        config.processes = 1
 
-        for sr_config in get_surface_reconstruction_configs(args):
-            config = RunConfiguration(pcd_path=args.point_cloud_path,
-                                      down_sample_method=down_sample_method,
-                                      down_sample_params=down_sample_param,
-                                      surface_reconstruction_method=sr_config[0],
-                                      surface_reconstruction_params=sr_config[1],
-                                      mesh_cleaning_methods=mesh_cleaning_methods,
-                                      edge_length_cleaning_portion=edge_length_clean_portion,
-                                      aspect_ratio_cleaning_portion=aspect_ratio_clean_portion,
-                                      orient_normals=args.orient_normals,
-                                      skip_normalizing_normals=args.skip_normalizing_normals,
-                                      normal_estimation_radius=args.normal_estimation_radius,
-                                      normal_estimation_neighbours=args.normal_estimation_neighbours,
-                                      mesh_evaluation_metrics=mesh_quality_metrics)
-            configs.append(config)
-
+    configs: List[RunConfiguration] = [config]
     return configs
 
 

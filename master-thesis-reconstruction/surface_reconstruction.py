@@ -21,6 +21,9 @@ def get_surface_reconstruction_method(to_evaluate: Union[str, SRM]) -> SRM:
     if isinstance(to_evaluate, SRM):
         return to_evaluate
 
+    if to_evaluate is None:
+        return SRM.SCREENED_POISSON_SURFACE_RECONSTRUCTION
+
     t = to_evaluate.lower().strip()
     t = t.replace(" ", "_")
 
@@ -126,7 +129,8 @@ def run(pcd: open3d.geometry.PointCloud,
             mesh, densities = screened_poisson_surface_reconstruction(point_cloud=point_cloud,
                                                                       octree_max_depth=octree_max_depth,
                                                                       processes=config.processes,
-                                                                      verbose=len(point_clouds) == 1)
+                                                                      width=config.poisson_octree_min_width,
+                                                                      verbose=verbose and len(point_clouds) == 1)
 
             all_densities.append(densities)
 
@@ -249,11 +253,13 @@ def vertex_neighbours_to_triangles(vertex_neighbours: Tuple[np.ndarray, np.ndarr
 def screened_poisson_surface_reconstruction(point_cloud: open3d.geometry.PointCloud,
                                             octree_max_depth=8,
                                             processes=1,
+                                            width=0,
                                             verbose=True) -> Tuple[open3d.geometry.TriangleMesh, np.ndarray]:
     """
     Create a triangulated mesh using Screened Poisson Surface Reconstruction.
     This function is a spiced up wrapper for the Open3D implementation.
 
+    :param width: The minimum size of the octree cells.
     :param processes: The amount of workers to use. Set to -1 for determining automatically.
     :param verbose: Whether to print progress, elapsed time and other information.
     :param point_cloud: The Open3D PointCloud object out of which the mesh will be constructed.
@@ -270,7 +276,7 @@ def screened_poisson_surface_reconstruction(point_cloud: open3d.geometry.PointCl
     mesh = open3d.geometry.TriangleMesh()
     mesh, densities = mesh.create_from_point_cloud_poisson(pcd=point_cloud,
                                                            depth=octree_max_depth,
-                                                           width=0,
+                                                           width=width,
                                                            scale=1.1,
                                                            linear_fit=False,
                                                            n_threads=processes)

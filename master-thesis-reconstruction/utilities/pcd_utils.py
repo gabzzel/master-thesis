@@ -10,6 +10,9 @@ from utilities.evaluation_results import EvaluationResults
 
 
 def get_down_sample_method(down_sample_method_string: str) -> Optional[DownSampleMethod]:
+    if down_sample_method_string is None:
+        return None
+
     t = down_sample_method_string.lower().strip()
     t = t.replace(" ", "_")
     if t == "voxel" or t == "v":
