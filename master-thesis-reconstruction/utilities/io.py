@@ -33,7 +33,7 @@ def parse_args() -> Optional[argparse.Namespace]:
                              "down-sampling, this parameter will be the amount of sample ratio.")
 
     parser.add_argument('-normal_estimation_neighbours', '-nen',
-                        type=int, default=30, action='store',
+                        type=int, default=10, action='store',
                         help="The number of neighbours to use during normal estimation.")
 
     parser.add_argument('-normal_estimation_radius', '-ner',
@@ -52,13 +52,10 @@ def parse_args() -> Optional[argparse.Namespace]:
                         help='Whether to print progress and results in the console.')
 
     parser.add_argument('-surface_reconstruction_algorithms', '-sra', '-sr_alg',
-                        type=str, action='append',
-                        help="The surface reconstruction algorithms to run. Use 'all' to run all 4. \n "
-                             "Delaunay = 'd' or 'D' \n"
-                             "Ball Pivoting = 'bpa', 'b' or 'B' \n"
-                             "Alpha Shapes = 'alpha', 'a' or 'A' \n"
+                        type=str, action='store',
+                        help="The surface reconstruction algorithm to run. Ball Pivoting = 'bpa', 'b' or 'B' \n"
                              "Screened Poisson = 'spsr', 'SPSR', 'sp', 'SP', 's' or 'S'",
-                        choices=['delaunay', 'D', 'd', 'ball_pivoting', 'bpa', 'bp', 'b', 'poisson', 'spsr', 'P', 'p',
+                        choices=['ball_pivoting', 'bpa', 'bp', 'b', 'poisson', 'spsr', 'P', 'p',
                                  'alpha_shapes', 'alpha', 'a', 'A'])
 
     parser.add_argument('-alpha', '-a', type=float, action='append', default=0.02,
@@ -68,20 +65,21 @@ def parse_args() -> Optional[argparse.Namespace]:
                         default=0.1, type=float, action='append',
                         help="The ball radii to for ball pivoting.")
 
-    parser.add_argument('-bpa_radii_cutoff', '-bparc',
-                        default=0, type=int, action='append',
-                        help="After how many radii a new execution of BPA should begin.")
-
     parser.add_argument('-poisson_density_quantile', '-pdq',
                         type=float, action='store', default=0.1,
                         help="The lower quantile/portion of the points sorted by density / support is removed."
                              "Used to clean mesh after reconstruction using Screened Poisson Surface Reconstruction.")
 
     parser.add_argument('-poisson_octree_max_depth', '-pomd',
-                        type=int, action='append', default=8,
+                        type=int, action='store', default=8,
                         help="The maximum depth of the octree when using Poisson Surface Reconstruction. Lower values"
                              " correspond to lower resoluation and thus less detailed meshes, but reduces "
                              "computing time.")
+
+    parser.add_argument('-poisson_octree_cell_size', '-pocs',
+                        type=float, action='store', default=0.1,
+                        help="The minimum size of the octree cells when using Poisson Surface Reconstruction. Overrides"
+                             " the max depth if used.")
 
     parser.add_argument('-mesh_clean_methods', '-mcm',
                         required=False, action='append', type=str,
@@ -170,19 +168,23 @@ def get_surface_reconstruction_configs(args: argparse.Namespace) -> List[Tuple]:
 
 
 def get_run_configurations_from_args(args: argparse.Namespace) -> List[RunConfiguration]:
-    if not args.mesh_clean_methods:
-        mesh_cleaning_methods = None
-    else:
-        mesh_cleaning_methods = set([mesh_cleaning.get_cleaning_type(m) for m in args.mesh_clean_methods])
+
+    config = RunConfiguration()
+
+    # 1. Point cloud path. We can directly copy this, it will be checked later.
+    config.point_cloud_path = args.point_cloud_path
+
+    # Mesh cleaning methods
+    if args.mesh_clean_methods is not None and len(args.mesh_clean_methods) > 0:
+        config.mesh_cleaning_methods = set([mesh_cleaning.get_cleaning_type(m) for m in args.mesh_clean_methods])
 
     edge_length_clean_portion = min(0.0, max(args.edge_length_clean_portion, 1.0))
     aspect_ratio_clean_portion = min(0.0, max(args.aspect_ratio_clean_portion, 1.0))
 
-    # Not a set, since we can have the same sampling method multiple times.
     if not args.down_sample_methods:
-        point_cloud_samplings = None
+        point_cloud_sampling = None
     else:
-        point_cloud_samplings = [pcd_utils.get_down_sample_method(m) for m in args.down_sample_methods]
+        point_cloud_sampling = [pcd_utils.get_down_sample_method(m) for m in args.down_sample_methods]
 
     # Parse the mesh quality metrics
     if not args.mesh_quality_metrics:

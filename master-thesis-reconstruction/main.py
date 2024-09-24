@@ -211,13 +211,13 @@ if __name__ == "__main__":
     #                                          verbose=True)
     #open3d.visualization.draw_geometries([pcd])
 
-    main_script_path = pathlib.Path(sys.argv[0])
+    execute(None)
 
     if not main_script_path.exists():
         config_path = None
         print("Cannot find config.")
 
-    run_configs_path = main_script_path.joinpath("run_configs")
+    run_configs_path = main_script_path.parent.joinpath("run_configs")
     configs = [i for i in os.listdir(run_configs_path) if ".json" in i]
 
     for i, config_name in enumerate(configs):

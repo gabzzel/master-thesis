@@ -125,7 +125,7 @@ def run(pcd: open3d.geometry.PointCloud,
 
             mesh, densities = screened_poisson_surface_reconstruction(point_cloud=point_cloud,
                                                                       octree_max_depth=octree_max_depth,
-                                                                      processes=1,
+                                                                      processes=config.processes,
                                                                       verbose=len(point_clouds) == 1)
 
             all_densities.append(densities)
@@ -140,7 +140,8 @@ def run(pcd: open3d.geometry.PointCloud,
         if mesh is not None:
             total_points_meshed += len(point_cloud.points)
             resulting_meshes.append(mesh)
-            class_per_mesh.append(CLASSES[classification])
+            if classification is not None:
+                class_per_mesh.append(CLASSES[classification])
 
     results.surface_reconstruction_time = time.time() - start_time
     print(
@@ -253,6 +254,7 @@ def screened_poisson_surface_reconstruction(point_cloud: open3d.geometry.PointCl
     Create a triangulated mesh using Screened Poisson Surface Reconstruction.
     This function is a spiced up wrapper for the Open3D implementation.
 
+    :param processes: The amount of workers to use. Set to -1 for determining automatically.
     :param verbose: Whether to print progress, elapsed time and other information.
     :param point_cloud: The Open3D PointCloud object out of which the mesh will be constructed.
     :param octree_max_depth: The maximum depth of the constructed octree which is used by the SPSR algorithm.
