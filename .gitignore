@@ -30,3 +30,5 @@ master-thesis-reconstruction/run_configs/office-alpha-shapes-3/config.json
 master-thesis-reconstruction/run_configs/office-alpha-shapes-3/results.csv
 master-thesis-reconstruction/run_configs/office-alpha-shapes-4/config.json
 master-thesis-reconstruction/run_configs/office-alpha-shapes-4/results.csv
+/master-thesis-reconstruction/build
+/master-thesis-reconstruction/dist

@@ -120,6 +120,9 @@ def parse_args() -> Optional[argparse.Namespace]:
 
     parser.add_argument('-store_mesh', '-save_mesh', action='store_true')
 
+    parser.add_argument('-mesh_output_format', action='store', type=str, default='.gltf',
+                        choices=['.gltf', '.obj', '.ply'])
+
     parser.add_argument('-processes', action='store', type=int, default=-1,
                         help="The number of processes to use. Set to -1 to automatically determine. Clipped between"
                              " -1 and 100 (both inclusive). Set to 0 or 1 to run single-threaded.")

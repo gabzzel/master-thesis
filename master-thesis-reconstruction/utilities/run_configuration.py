@@ -88,6 +88,7 @@ class RunConfiguration:
         self.processes: int = 1
         self.chunk_size: int = 1000
         self.reuse_pointcloud: bool = True
+        self.mesh_output_format: str = '.gltf'
 
         self.overwritten_attributes: Set[str] = set()
 

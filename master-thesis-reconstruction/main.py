@@ -149,7 +149,7 @@ def execute_run(run_config: RunConfiguration,
     if run_config.store_mesh:
         start_time = time.time()
         original_path = run_config.point_cloud_path
-        mesh_name = original_path.stem + "_mesh.ply"
+        mesh_name = original_path.stem + "_mesh" + run_config.mesh_output_format
         mesh_path = os.path.join(results_path, mesh_name)
         open3d.io.write_triangle_mesh(filename=mesh_path, mesh=final_mesh)
         print(f"Saved (final) mesh to {mesh_path}. [{round(time.time() - start_time, 3)}s]")
@@ -159,7 +159,7 @@ def execute_run(run_config: RunConfiguration,
             meshes_save_folder = results_path.joinpath("cluster_meshes")
             os.makedirs(meshes_save_folder, exist_ok=True)
             for i in range(1, len(meshes)):
-                mesh_name = f"mesh_{i}_{class_per_mesh[i]}.ply" \
+                mesh_name = f"mesh_{i}_{class_per_mesh[i]}{run_config.mesh_output_format}" \
                     if class_per_mesh is not None and len(class_per_mesh) > i \
                     else f"mesh_{i}.ply"
 
