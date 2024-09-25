@@ -87,3 +87,9 @@ Like the `pointcloud2mesh`, the `pointcloudclassification` has command line argu
 ## Using the source
 
 Make sure to install everything in the `environment.yml` files (in either the reconstruction or segmentation folder) using Anaconda or Miniconda (see [here](https://docs.anaconda.com/working-with-conda/environments/#creating-an-environment-from-an-environment-yml-file)). Make sure it creates new vitual python environments! You can then run the `main.py` files (with the arguments as described) using any IDE or command prompt equivalent you'd like.
+
+## Using PointNeXt
+
+For the PointNeXt results in my thesis, I used the repository from the PointNeXt authors: see [here](https://github.com/guochengqian/PointNeXt). However this repo **only** works on *Linux*! I modified the repo and made my own version which can be found in the zip file in the releases tab as well. You will have to modify the `main.py` and data io classes to make it work with your own data. I recommended just following the guide on the authors github to install. 
+
+The `main.py` file should be pretty self-explanatory.
