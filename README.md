@@ -3,7 +3,7 @@
 This manual contains information on how to use the executables in this project. There are zipped folders in the releases containing the `.exe` files for `pointcloud2mesh` (i.e. creating a mesh/3D model out of a point cloud) and `pointcloudclassification` for segmenting and classifying a point cloud.
 
 ## Reconstruction (pointcloud2mesh)
-You can use the `pointcloud2mesh-singular.exe` (download [here](https://github.com/gabzzel/master-thesis/releases/download/v0.1/pointcloud2mesh-singular.exe)) to create 3D meshes out of point clouds. If this executable does not work, try the `main.exe` in the 'foldered' version (download [here](https://github.com/gabzzel/master-thesis/releases/download/v0.1/pointcloud2mesh-foldered.zip)).
+You can use the `pointcloud2mesh` executable (located in the zip folder) to create 3D meshes out of point clouds. 
 
 To use this software, you *must* execute the .exe using the commandline. Opening by double clicking will not do anything.
 
@@ -22,7 +22,7 @@ If in the list below "(Required)" is not specified, you can assume the argument 
     - When using random downsampling, this value represents the ratio of the resulting (downsampled) point cloud to the original point cloud (in terms of point count), which means the value must be between 0 and 1. 
     - When using voxel downsampling, this value represents the size of the voxels used (in all dimensions). When voxel downsampling, the recommended value is approximately `0.01`. The higher the value, the larger the voxels and the lower the quality (but higher the speed.)
 7. `-normal_estimation_neighbours` or `-nen` = The number of neighbours used during normal estimation. Defaults to 10. Setting this too low will result in normals not being estimated correctly, which impacts the quality of the final mesh. Setting this too high will impact computation time. Anything between 5 and 30 should be fine.
-8. `-normal_estimation_radius` or `-ner` = The radius around a target point within which neighbours will be consired during normal estimation. Which value this should be depends on the density of the point cloud (which may be impacted by downsampling!). Setting this too low will result in neighbours not being considered, negatively impacting the quality of the resulting mesh. Setting this too high increases the probability of far away neighbours being considered, also lowering the probability of the resulting mesh. The recommended value is around 3.5 times the voxel size (when using voxel downsampling.) Using 0.1 if you don't know.
+8. `-normal_estimation_radius` or `-ner` = The radius around a target point within which neighbours will be consired during normal estimation. Which value this should be depends on the density of the point cloud (which may be impacted by downsampling!). Setting this too low will result in neighbours not being considered, negatively impacting the quality of the resulting mesh. Setting this too high increases the probability of far away neighbours being considered, also lowering the probability of the resulting mesh. The recommended value is around 3.5 times the voxel size (when using voxel downsampling.) Use 0.1 if you don't know.
 9. `-skip_normalizing_normals` or `-snn` = Skip normalizing the normals. This prevents the normals from being forced to length 1. This is not recommended. No value has to follow this argument.
 10. `-orient_normals` or `-on` = How many neighbours to use (for each point) when orienting the normals. Set to 0 to not orient normals. Defaults to 10. Orienting the normals is recommended, as doing so significantly improves mesh quality. However, orienting normals takes a long time, so be prepared.
 11. `-verbose` or `-v` = Including this argument (no value necessary) makes sure results and progress are printed to the console.
@@ -49,7 +49,7 @@ If in the list below "(Required)" is not specified, you can assume the argument 
 
 ### Examples
 
-Load a pointcloud called `point_cloud.pcd` in the documents folder, convert to a mesh using SPSR (with octree dpeth 10) and store the mesh at `D:\result_dir` in `.ply` format.
+Load a pointcloud called `point_cloud.pcd` in the documents folder, convert to a mesh using SPSR (with octree depth 10) and store the mesh at `D:\result_dir` in `.ply` format.
 ```
 pointcloud2mesh.exe C:\Users\...\Documents\point_cloud.pcd D:\result_dir -sra spsr -verbose -poisson_octree_max_depth 10 -store_mesh -mesh_output_format .ply
 ```
