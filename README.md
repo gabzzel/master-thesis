@@ -1,6 +1,6 @@
 # Manual
 
-This manual contains information on how to use the executables in this project.
+This manual contains information on how to use the executables in this project. There are zipped folders in the releases containing the `.exe` files for `pointcloud2mesh` (i.e. creating a mesh/3D model out of a point cloud) and `pointcloudclassification` for segmenting and classifying a point cloud.
 
 ## Reconstruction (pointcloud2mesh)
 You can use the `pointcloud2mesh-singular.exe` (download [here](https://github.com/gabzzel/master-thesis/releases/download/v0.1/pointcloud2mesh-singular.exe)) to create 3D meshes out of point clouds. If this executable does not work, try the `main.exe` in the 'foldered' version (download [here](https://github.com/gabzzel/master-thesis/releases/download/v0.1/pointcloud2mesh-foldered.zip)).
@@ -51,6 +51,30 @@ If in the list below "(Required)" is not specified, you can assume the argument 
 
 Load a pointcloud called `point_cloud.pcd` in the documents folder, convert to a mesh using SPSR (with octree dpeth 10) and store the mesh at `D:\result_dir` in `.ply` format.
 ```
-pointcloud2mesh.exe C:\Users\...\Documents\point_cloud.pcd
-D:\result_dir -sra spsr -verbose -poisson_octree_max_depth 10 -store_mesh -mesh_output_format .ply
+pointcloud2mesh.exe C:\Users\...\Documents\point_cloud.pcd D:\result_dir -sra spsr -verbose -poisson_octree_max_depth 10 -store_mesh -mesh_output_format .ply
 ```
+
+
+## Classification (pointcloudclassification)
+This section describes how to use the point cloud classifcation and segmentation tool.
+
+Like the `pointcloud2mesh`, the `pointcloudclassification` has command line arguments and can ONLY be used using the command line.
+
+### Command line arguments
+1. `point_cloud_path` (Required) = The path to the point cloud to classify / segment. Must be a `.ply`, `.pcd` or `.xyz` file.
+2. `method` (Required) = The classification / segment method to use. Choices are `hdbscan` and `pointnetv2`. 
+3. `-result_path` = The directory where the resulting segments and classification will be saved in `.npy` format.
+4. `-downsampling_method` = which downsampling method to use before classification / segmentation. Choices are `voxel`, `random` or `none`. Defaults to `none`.
+5. `-downsampling_param` = The parameter passed to the downsampling. For voxel downsampling, this is the voxel size. For random downsampling, this is the ratio of retained points.
+6. `-normal_estimation_radius` = See the same parameter for `pointcloud2mesh`.
+7. `-normal_estimation_neighbours` = See the same parameter for `pointcloud2mesh`
+8. `-normal_orientation_neighbours` = See the same parameter for `pointcloud2mesh`
+9. `-hdbscan_min_cluster_size` = The minimum amount of points for HDBSCAN to consider it a cluster. Recommended to set to at least 100, but depends on point cloud density. Defaults to 125. Setting this to a higher value produces less, bigger clusters. Setting this lower will product more, smaller clusters.
+10. `-hdbscan_min_samples` = The minimum amount of points another point needs to have within a radius to be considered a 'core' point by HDBSCAN. Recommended to be set a bit higher than `-hdbscan_min_cluster_size`. Defaults to 200.
+11. `-include_colors` = Whether to include color data during classification or segmentation. Not recommended for HDBSCAN, but is recommended for PointNetV2. Defaults to False.
+12. `-include_normals` = Whether to include normal data during classification or segmentation. In contrast to color data, recommended to set to true when using HDBSCAN, and false for PointNetV2.
+13. `-verbose` = Whether to print progress and results to the console.
+14. `-pointnetv2_checkpoint_path` = The path to the `.pth` file that contains the trained PointNetV2 model.
+15. `-do_segmentation` = Whether to do basic radius-based segmentation after PointNetV2 classification. Ignored when using HBDSCAN. Recommended to be set to True. Can take a while. Defaults to False (because of time reasons).
+16. `-segmentation_max_distance` = The maximum distance points can be from each other in order to be included in the same cluster during segmentation after classification. Ignored when using HDBSCAN or if `-do_segmentation` is set to False. Recommended value is below 0.5, defaults is 0.2 (which is already pretty large). 
+17. `-hdbscan_noise_nearest_neighbours` = When performing HDBSCAN, point can be left unassigned (i.e. noise). These points can be reassigned to a nearby cluster, depending on the majority class of nearby points. The amount of neighbouring points considered during this process is determined with this parameter. Defaults to 3. Recommended to be a small odd number (<10).
