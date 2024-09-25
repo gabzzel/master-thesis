@@ -66,6 +66,8 @@ This section describes how to use the point cloud classifcation and segmentation
 Like the `pointcloud2mesh`, the `pointcloudclassification` has command line arguments and can ONLY be used using the command line.
 
 The pretrained PointNetV2 model can be found in the following folder: `master-thesis/master-thesis-segmentation/pointnetexternal/log/pointnet2_sem_seg/checkpoints/pretrained_original_coords_colors.pth`, or click [this link](https://github.com/gabzzel/master-thesis/blob/main/master-thesis-segmentation/pointnetexternal/log/sem_seg/pointnet2_sem_seg/checkpoints/pretrained_original_coords_colors.pth).
+The repository containing the PointNetV2 source code can be found [here](https://github.com/yanx27/Pointnet_Pointnet2_pytorch).
+
 
 ### Command line arguments
 1. `point_cloud_path` (Required) = The path to the point cloud to classify / segment. Must be a `.ply`, `.pcd` or `.xyz` file.
