@@ -33,7 +33,7 @@ If in the list below "(Required)" is not specified, you can assume the argument 
 
     Defaults to `spsr`.
 13. `-alpha` = The value for alpha when using Alpha Shapes. Ignored otherwise. 
-14. `-ball_pivoting_radii` or `-bpar` = The radii to use for the Ball Pivoting Algorithm. It is recommended to specify 3 to 5 radii at regular intervals lower than the mean nearest neighbour distance and voxel size. For example: I got good results when using `0.001 0.009 0.024 0.048 0.1` when using voxel size of 0.01. If the program seems stuck for a long time on a certain radius, try little permutations.
+14. `-ball_pivoting_radii` or `-bpar` = The radii to use for the Ball Pivoting Algorithm. It is recommended to specify 3 to 5 radii at regular intervals lower than the mean nearest neighbour distance and voxel size. For example: I got good results when using `0.001 0.009 0.024 0.048 0.1` when using voxel size of 0.01. If the program seems stuck for a long time on a certain radius, try little permutations. For multiple values, insert the command name every time before a new value.
 15. `-poisson_density_quantile` or `-pdq` = When using SPSR, buldging can occur. This can be mitigated (or at least reduced) by cleaning the mesh based on the local density around certain points. Point with low density have lower support and can sometimes be removed without penalty. Use this parameter to remove a portion of the points (between 0 and 1) depending on their support. Recommended is to set this between 0 and 0.1.
 16. `-poisson_octree_max_depth` or `-pomd` = The maximum depth of the internal octree used when executing SPSR. A higher value results in more detailed meshes, but a higher execution time as well. Values between 8 and 15 are recommended, based on the scale of the point cloud. Use 11 if not sure. 
 17. `-poisson_octree_min_width` or `-pomw` = The minimum size of the cells (in all dimensions) of the internal octree of SPSR. Use either this or the max depth parameter, not both. A larger value results in lower resolution octree and thus a lower quality reconstruction, but higher computation speed. Recommended to keep this higher than the voxel size when voxel downsampling.
@@ -53,7 +53,12 @@ Load a pointcloud called `point_cloud.pcd` in the documents folder, convert to a
 ```
 pointcloud2mesh.exe C:\Users\...\Documents\point_cloud.pcd D:\result_dir -sra spsr -verbose -poisson_octree_max_depth 10 -store_mesh -mesh_output_format .ply
 ```
+----
+Load the same pointcloud as before, but now use BPA for the conversion with radii `0.001`, `0.05` and `0.1` during reconstruction. Output the result as an `.gltf` file.
 
+```
+pointcloud2mesh.exe C:\Users\...\Documents\point_cloud.pcd D:\result_dir -sra bpa -verbose -bpar 0.001 -bpar 0.05 -bpar 0.1 -store_mesh -mesh_output_format .gltf
+```
 
 ## Classification (pointcloudclassification)
 This section describes how to use the point cloud classifcation and segmentation tool.

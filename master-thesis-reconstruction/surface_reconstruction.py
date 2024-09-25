@@ -170,7 +170,7 @@ def ball_pivoting_algorithm(point_cloud: open3d.geometry.PointCloud,
                             radii: Union[np.ndarray, list],
                             verbose=True) -> open3d.geometry.TriangleMesh:
     start_time = time.time()
-    radii = sorted(radii)
+    radii = sorted([float(i) for i in radii])
     radii_open3d = open3d.utility.DoubleVector(radii)
     mesh = open3d.geometry.TriangleMesh()
     mesh = mesh.create_from_point_cloud_ball_pivoting(pcd=point_cloud, radii=radii_open3d)

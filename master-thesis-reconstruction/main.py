@@ -143,8 +143,11 @@ def execute_run(run_config: RunConfiguration,
 
     print("\n============= Step 5 : Saving Results =============")
     start_time = time.time()
-    results.save_to_file(run_config=run_config, folder_path=results_path, pcd=pcd, raw_pcd=raw_pcd)
-    print(f"Saved results to {results_path}. [{round(time.time() - start_time, 3)}s]")
+
+    save_results = False
+    if save_results:
+        results.save_to_file(run_config=run_config, folder_path=results_path, pcd=pcd, raw_pcd=raw_pcd)
+        print(f"Saved results to {results_path}. [{round(time.time() - start_time, 3)}s]")
 
     if run_config.store_mesh:
         start_time = time.time()

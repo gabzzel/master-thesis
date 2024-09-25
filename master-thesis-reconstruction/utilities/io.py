@@ -66,11 +66,11 @@ def parse_args() -> Optional[argparse.Namespace]:
                         choices=['ball_pivoting', 'bpa', 'bp', 'b', 'poisson', 'spsr', 'P', 'p',
                                  'alpha_shapes', 'alpha', 'a', 'A'])
 
-    parser.add_argument('-alpha', '-a', type=float, action='append', default=0.02,
+    parser.add_argument('-alpha', '-a', type=float, action='store', default=0.02,
                         help="The alpha value(s) to run Alpha Shapes with.")
 
     parser.add_argument('-ball_pivoting_radii', '-bpa_radii', '-bpar',
-                        default=0.1, type=float, action='append',
+                        default=[0.1], action='append',
                         help="The ball radii to for ball pivoting.")
 
     parser.add_argument('-poisson_density_quantile', '-pdq',
@@ -91,7 +91,7 @@ def parse_args() -> Optional[argparse.Namespace]:
                              " the max depth if used.")
 
     parser.add_argument('-mesh_clean_methods', '-mcm',
-                        required=False, action='append', type=str,
+                        required=False, action='append',
                         choices=['simple', 's', 'edge_length', 'aspect_ratio', 'el', 'ar'])
 
     parser.add_argument('-edge_length_clean_portion', '-elcp',
@@ -105,13 +105,13 @@ def parse_args() -> Optional[argparse.Namespace]:
                              "between 0 and 1. Set to 1 to not remove any triangles.")
 
     parser.add_argument('-mesh_quality_metrics', '-mqm',
-                        required=False, action='append', type=str,
+                        required=False, action='append',
                         help="Which metrics to use during evaluation of the reconstructed surface /  mesh.",
                         choices=['all', 'edge_lengths', 'el', 'aspect_ratios', 'ar', 'connectivity', 'co',
                                  'discrete_curvature', 'dc', 'normal_deviations', 'nd'])
 
     parser.add_argument('-mesh_to_cloud_metrics', '-m2cm',
-                        required=False, action='append', type=str,
+                        required=False, action='append',
                         help="Which metrics to use to evaluate to surface reconstruction to the point cloud.",
                         choices=['all', 'chamfer', 'c', 'hausdorff', 'h', 'distances', 'distance', 'd'])
 

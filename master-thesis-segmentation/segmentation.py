@@ -220,7 +220,8 @@ def pointnetv2(model_checkpoint_path: str,
                visualize_raw_classifications: bool = True,
                create_segmentations: bool = True,
                segmentation_max_distance: float = 0.02,
-               write_times: bool = False) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+               write_times: bool = False,
+               verbose: bool = False) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """
     Execute a classification (and possible segmentation) using a trained PointNet++ model.
 
@@ -244,6 +245,8 @@ def pointnetv2(model_checkpoint_path: str,
     npoint = 4096
     batch_size = 32
 
+    if verbose:
+        print("Loading point cloud as dataset...")
     dataset = utilities.pointv2_dataset.PointNetV2_CustomDataset(points, colors, None, npoint, 1.0, 0.5)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=2)
 
@@ -256,6 +259,9 @@ def pointnetv2(model_checkpoint_path: str,
     number_of_classes = len(CLASSES)  # PointNet++ is trained on the S3DIS dataset, which has 13 classes.
     channels = 9 + (0 if colors is None else 3) + (0 if normals is None else 3)
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+    if verbose:
+        print("Loading model...")
     classifier: torch.nn.Module = pointnetexternal.models.pointnet2_sem_seg.get_model(number_of_classes,
                                                                                       channels).to(device=device)
     # Load the checkpoint (i.e. the saved model)
@@ -263,7 +269,8 @@ def pointnetv2(model_checkpoint_path: str,
     classifier.load_state_dict(checkpoint['model_state_dict'])
 
     pytorch_total_params = sum(p.numel() for p in classifier.parameters() if p.requires_grad)
-    print(f"Model parameters: {pytorch_total_params}")
+    if verbose:
+        print(f"Model parameters: {pytorch_total_params}")
 
     # Set the model into evaluation mode
     classifier = classifier.eval()
@@ -278,14 +285,15 @@ def pointnetv2(model_checkpoint_path: str,
     # data[0, :3, :] = np.swapaxes(points - centroid, 0, 1)
     # data[0, 3:6, :] = np.swapaxes(colors / 255.0, 0, 1)
     # data[0, 6:9, :] = np.swapaxes(points / points.max(axis=0), 0, 1)
-    # number_of_batches = math.ceil(len(points) / batch_size)
-    # batches = np.array_split(data, number_of_batches, axis=2)
-    number_of_votes: int = 1
-    votes = np.zeros(shape=(len(points), number_of_classes), dtype=np.int32)
 
     all_predictions = torch.zeros(size=(len(points), number_of_classes))
 
-    for batch in tqdm.tqdm(dataloader, desc=f"Classifying batches... (votes {number_of_votes})"):
+    if verbose:
+        progress_bar = tqdm.tqdm(total=len(dataloader), unit='batches', desc=f"Classifying batches...")
+    else:
+        progress_bar = None
+
+    for batch in dataloader:
         data: torch.Tensor = torch.permute(batch[:, :, :9], (0, 2, 1)).float().cuda()
         indices: np.ndarray = batch[:, :, -1].to(device='cpu', dtype=torch.int32)
         # Actually do the prediction!
@@ -296,15 +304,18 @@ def pointnetv2(model_checkpoint_path: str,
         argmax = predictions.argmax(dim=1)
         indices = indices.reshape((predictions.shape[0], ))
         all_predictions[indices, argmax] += 1
+        if progress_bar is not None:
+            progress_bar.update(1)
 
     classifications: np.ndarray = all_predictions.argmax(dim=1).numpy()
 
     classification_time = time.time() - start_time
 
-    for i in range(number_of_classes):
-        print(
-            f"Class {CLASSES[i]} (color {CLASS_COLORS[i][0]} : {CLASS_COLORS[i][1]}) "
-            f"occurred {np.count_nonzero(classifications == i)} times.")
+    if verbose:
+        for i in range(number_of_classes):
+            print(
+                f"Class {CLASSES[i]} (color {CLASS_COLORS[i][0]} : {CLASS_COLORS[i][1]}) "
+                f"occurred {np.count_nonzero(classifications == i)} times.")
 
     working_directory_path = Path(working_directory)
 
@@ -325,7 +336,9 @@ def pointnetv2(model_checkpoint_path: str,
 
     cluster_index_per_point = None
     if create_segmentations:
-        print("Extracting clusters...")
+
+        if verbose:
+            print("Extracting clusters...")
         _, cluster_index_per_point = extract_clusters_from_labelled_points_multiprocess(points=points[:, :3],  # Sanity check!
                                                                                   labels_per_point=classifications,
                                                                                   max_distance=segmentation_max_distance)

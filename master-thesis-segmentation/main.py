@@ -95,34 +95,58 @@ def execute_hdbscan_with_args(args):
 
     if args.verbose:
         print("Saving results...")
-    results_path = args.results_path.joinpath(f"{args.point_cloud_path.stem}_clusters.npy")
+    results_path = args.result_path.joinpath(f"{args.point_cloud_path.stem}_clusters.npy")
     np.save(results_path, config.clusters)
 
 
 def execute_pointnetv2_with_args(args):
+
+    if args.verbose:
+        print("Loading point cloud...")
     pcd: open3d.geometry.PointCloud = open3d.io.read_point_cloud(str(args.point_cloud_path))
+
+    if args.verbose and args.downsampling_method is not None and args.downsampling_method != "none":
+        print("Downsampling point cloud...")
+
     if args.downsampling_method == "random":
         pcd = pcd.random_down_sample(args.downsampling_param)
     elif args.downsampling_method == "voxel":
         pcd = pcd.voxel_down_sample(args.downsampling_param)
-    pcd.estimate_normals(open3d.geometry.KDTreeSearchParamHybrid(radius=args.normal_estimation_radius,
-                                                                 max_nn=args.normal_estimation_neighbours))
-    pcd.orient_normals_consistent_tangent_plane(k=args.normal_orientation_neighbours)
+
+    if args.verbose and (args.normal_estimation_radius > 0 or args.normal_estimation_neighbours > 0):
+        print("Estimating normals...")
+
+    if args.normal_estimation_radius > 0 and args.normal_estimation_neighbours > 0:
+        pcd.estimate_normals(open3d.geometry.KDTreeSearchParamHybrid(radius=args.normal_estimation_radius,
+                                                                     max_nn=args.normal_estimation_neighbours))
+    elif args.normal_estimation_radius > 0:
+        pcd.estimate_normals(open3d.geometry.KDTreeSearchParamRadius(args.normal_estimation_radius))
+    elif args.normal_estimation_neighbours > 0:
+        pcd.estimate_normals(open3d.geometry.KDTreeSearchParamKNN(args.normal_estimation_neighbours))
+
+    if pcd.has_normals() and args.normal_orientation_neighbours > 0:
+        if args.verbose:
+            print("Orienting normals... (Can take a while)")
+
+        pcd.orient_normals_consistent_tangent_plane(k=args.normal_orientation_neighbours)
+
+    if args.verbose:
+        print("Classifying with PointNetV2...")
 
     classifications, cluster_indexes = segmentation.pointnetv2(str(args.pointnetv2_checkpoint_path),
                                                                points=np.asarray(pcd.points),
-                                                               colors=np.asarray(pcd.colors),
-                                                               normals=None,
+                                                               colors=np.asarray(pcd.colors) if args.include_colors else None,
+                                                               normals=np.asarray(pcd.normals) if args.include_normals else None,
                                                                working_directory=args.point_cloud_path.parent,
                                                                visualize_raw_classifications=False,
                                                                create_segmentations=args.do_segmentation,
                                                                segmentation_max_distance=args.segmentation_max_distance)
 
-    classifications_path = args.point_cloud_path.parent.joinpath(f"{args.point_cloud_path.stem}_classifications.npy")
+    classifications_path = args.result_path.joinpath(f"{args.point_cloud_path.stem}_classifications.npy")
     np.save(classifications_path, classifications)
 
     if args.do_segmentation:
-        clusters_path = args.point_cloud_path.parent.joinpath(f"{args.point_cloud_path.stem}_clusters.npy")
+        clusters_path = args.result_path.joinpath(f"{args.point_cloud_path.stem}_clusters.npy")
         np.save(clusters_path, cluster_indexes)
 
 
