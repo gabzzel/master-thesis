@@ -1,6 +1,6 @@
 # Manual
 
-This manual contains information on how to use the executables in this project. There are zipped folders in the releases containing the `.exe` files for `pointcloud2mesh` (i.e. creating a mesh/3D model out of a point cloud) and `pointcloudclassification` for segmenting and classifying a point cloud.
+This manual contains information on how to use the executables in this project or the raw code yourself. There are zipped folders in the releases containing the `.exe` files for `pointcloud2mesh` (i.e. creating a mesh/3D model out of a point cloud) and `pointcloudclassification` for segmenting and classifying a point cloud.
 
 ## Reconstruction (pointcloud2mesh)
 You can use the `pointcloud2mesh` executable (located in the zip folder) to create 3D meshes out of point clouds. 
@@ -83,3 +83,7 @@ Like the `pointcloud2mesh`, the `pointcloudclassification` has command line argu
 15. `-do_segmentation` = Whether to do basic radius-based segmentation after PointNetV2 classification. Ignored when using HBDSCAN. Recommended to be set to True. Can take a while. Defaults to False (because of time reasons).
 16. `-segmentation_max_distance` = The maximum distance points can be from each other in order to be included in the same cluster during segmentation after classification. Ignored when using HDBSCAN or if `-do_segmentation` is set to False. Recommended value is below 0.5, defaults is 0.2 (which is already pretty large). 
 17. `-hdbscan_noise_nearest_neighbours` = When performing HDBSCAN, point can be left unassigned (i.e. noise). These points can be reassigned to a nearby cluster, depending on the majority class of nearby points. The amount of neighbouring points considered during this process is determined with this parameter. Defaults to 3. Recommended to be a small odd number (<10).
+
+## Using the source
+
+Make sure to install everything in the `environment.yml` files (in either the reconstruction or segmentation folder) using Anaconda or Miniconda (see [here](https://docs.anaconda.com/working-with-conda/environments/#creating-an-environment-from-an-environment-yml-file)). Make sure it creates new vitual python environments! You can then run the `main.py` files (with the arguments as described) using any IDE or command prompt equivalent you'd like.
